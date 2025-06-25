@@ -4,6 +4,8 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { NavigationModule } from './navigation/navigation.module';
+import { Navigation } from './navigation/entities/navigation.entity';
 
 
 @Module({
@@ -20,9 +22,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       schema: process.env.DB_SCHEMA,
-      entities: [    
+      entities: [   
+        Navigation 
       ]
-    })
+    }),
+    NavigationModule
   ],
   controllers: [AppController],
   providers: [AppService],
