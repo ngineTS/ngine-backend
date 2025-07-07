@@ -4,8 +4,8 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { NavigationModule } from './navigation/navigation.module';
-import { Navigation } from './navigation/entities/navigation.entity';
+import { NavigationModule } from './domains/navigation/navigation.module';
+import { Navigation } from './domains/navigation/entities/navigation.entity';
 
 
 @Module({
