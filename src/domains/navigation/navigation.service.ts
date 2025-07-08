@@ -21,7 +21,9 @@ export class NavigationService {
       relations: [
         'navigationType',
         'children',
-        'children.navigationType'
+        'children.navigationType',
+        'children.children',
+        'children.children.navigationType',
       ]
     });
   }
