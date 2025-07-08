@@ -6,6 +6,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NavigationModule } from './domains/navigation/navigation.module';
 import { Navigation } from './domains/navigation/entities/navigation.entity';
+import { NavigationType } from './domains/navigation_type/entities/navigation_type.entity';
 
 
 @Module({
@@ -23,7 +24,8 @@ import { Navigation } from './domains/navigation/entities/navigation.entity';
       database: process.env.DB_NAME,
       schema: process.env.DB_SCHEMA,
       entities: [   
-        Navigation 
+        Navigation,
+        NavigationType
       ]
     }),
     NavigationModule

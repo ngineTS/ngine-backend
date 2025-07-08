@@ -3,7 +3,7 @@ import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Navigation } from './entities/navigation.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 
 @Injectable()
 export class NavigationService {
@@ -16,7 +16,14 @@ export class NavigationService {
   }
 
   async findAll() {
-    return await this.navigationRepository.find();
+    return await this.navigationRepository.find({
+      where: { parentId: IsNull() },
+      relations: [
+        'navigationType',
+        'children',
+        'children.navigationType'
+      ]
+    });
   }
 
   findOne(id: number) {

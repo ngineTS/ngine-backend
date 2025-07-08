@@ -1,5 +1,5 @@
-import { IsNotEmpty, IsUUID } from "class-validator";
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { NavigationType } from "src/domains/navigation_type/entities/navigation_type.entity";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Navigation {
@@ -19,4 +19,18 @@ export class Navigation {
     @Column()
     order: number;
 
+    @Column()
+    navigationTypeId: string;
+
+    @OneToOne(() => NavigationType, navigationType => navigationType)
+    @JoinColumn({ name: 'navigationTypeId', referencedColumnName: 'id' })
+    navigationType: NavigationType;
+
+    @OneToMany(() => Navigation, navigation => navigation.parent)
+    @JoinColumn({name: 'id', referencedColumnName: 'parentId'})
+    children: Navigation[];
+
+    @ManyToOne(() => Navigation, navigation => navigation.children)
+    @JoinColumn({name: 'parentId', referencedColumnName: 'id' })
+    parent: Navigation;
 }
