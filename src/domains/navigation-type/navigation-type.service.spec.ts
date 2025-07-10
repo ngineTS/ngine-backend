@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NavigationTypeService } from './navigation_type.service';
+import { NavigationTypeService } from './navigation-type.service';
 
 describe('NavigationTypeService', () => {
   let service: NavigationTypeService;

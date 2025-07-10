@@ -24,6 +24,7 @@ export class NavigationService {
         'children.navigationType',
         'children.children',
         'children.children.navigationType',
+        'children.children.testText',
       ]
     });
   }

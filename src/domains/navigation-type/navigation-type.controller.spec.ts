@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NavigationTypeController } from './navigation_type.controller';
-import { NavigationTypeService } from './navigation_type.service';
+import { NavigationTypeController } from './navigation-type.controller';
+import { NavigationTypeService } from './navigation-type.service';
 
 describe('NavigationTypeController', () => {
   let controller: NavigationTypeController;

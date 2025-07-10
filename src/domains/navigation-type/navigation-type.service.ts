@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CreateNavigationTypeDto } from './dto/create-navigation_type.dto';
-import { UpdateNavigationTypeDto } from './dto/update-navigation_type.dto';
+import { CreateNavigationTypeDto } from './dto/create-navigation-type.dto';
+import { UpdateNavigationTypeDto } from './dto/update-navigation-type.dto';
 
 @Injectable()
 export class NavigationTypeService {
