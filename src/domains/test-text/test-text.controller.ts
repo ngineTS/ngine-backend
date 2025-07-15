@@ -22,6 +22,11 @@ export class TestTextController {
     return this.testTextService.findOne(+id);
   }
 
+  @Get('/navigation/:navigationId')
+  findbyNavigationId(@Param('navigationId') navigationId: string) {
+    return this.testTextService.findByNavigationId(navigationId);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateTestTextDto: UpdateTestTextDto) {
     return this.testTextService.update(+id, updateTestTextDto);

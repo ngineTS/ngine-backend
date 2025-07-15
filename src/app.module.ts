@@ -8,6 +8,8 @@ import { NavigationModule } from './domains/navigation/navigation.module';
 import { Navigation } from './domains/navigation/entities/navigation.entity';
 import { NavigationType } from './domains/navigation-type/entities/navigation-type.entity';
 import { TestText } from './domains/test-text/entities/test-text.entity';
+import { NavigationTypeModule } from './domains/navigation-type/navigation-type.module';
+import { TestTextModule } from './domains/test-text/test-text.module';
 
 
 @Module({
@@ -30,7 +32,9 @@ import { TestText } from './domains/test-text/entities/test-text.entity';
         TestText
       ]
     }),
-    NavigationModule
+    NavigationModule,
+    NavigationTypeModule,
+    TestTextModule
   ],
   controllers: [AppController],
   providers: [AppService],
