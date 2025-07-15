@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Put } from '@nestjs/common';
 import { NavigationService } from './navigation.service';
 import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
@@ -8,8 +8,8 @@ export class NavigationController {
   constructor(private readonly navigationService: NavigationService) {}
 
   @Post()
-  create(@Body() createNavigationDto: CreateNavigationDto) {
-    return this.navigationService.create(createNavigationDto);
+  saveNavigations(@Body() createNavigationDto: CreateNavigationDto) {
+    return this.navigationService.saveNavigations(createNavigationDto);
   }
 
   @Get()

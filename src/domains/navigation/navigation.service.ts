@@ -11,20 +11,28 @@ export class NavigationService {
   constructor(@InjectRepository(Navigation)
               private navigationRepository: Repository<Navigation>) {}
 
-  create(createNavigationDto: CreateNavigationDto) {
-    return 'This action adds a new navigation';
+  async saveNavigations(createNavigationDto: CreateNavigationDto) {
+    console.log('navigations for save', createNavigationDto);
+    return await this.navigationRepository.save(createNavigationDto);
   }
 
   async findAll() {
     return await this.navigationRepository.find({
-      where: { parentId: IsNull() },
       relations: [
         'navigationType',
         'children',
         'children.navigationType',
         'children.children',
         'children.children.navigationType',
-      ]
+      ],
+      where: { parentId: IsNull() },
+      order: { 
+        order: 'ASC', children: { 
+          order: 'ASC', children: { 
+            order: 'ASC' 
+          } 
+        } 
+      }
     });
   }
 
