@@ -21,7 +21,31 @@ export class Navigation {
     order: number;
 
     @Column()
+    color: string;
+
+    @Column()
+    isDisabled: boolean;
+
+    @Column()
     navigationTypeId: string;
+
+    @Column()
+    createdBy: string;
+
+    @Column()
+    createdDate: Date;
+
+    @Column()
+    updatedBy: string;
+
+    @Column()
+    updatedDate: Date;
+
+    @Column()
+    deletedBy: string;
+
+    @Column()
+    deletedDate: Date;
 
     @OneToOne(() => NavigationType, navigationType => navigationType)
     @JoinColumn({ name: 'navigationTypeId', referencedColumnName: 'id' })
