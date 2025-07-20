@@ -13,6 +13,7 @@ export class NavigationService {
 
   async saveNavigations(createNavigationDto: CreateNavigationDto) {
     console.log('navigations for save', createNavigationDto);
+    createNavigationDto["name"] = createNavigationDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
     return await this.navigationRepository.save(createNavigationDto);
   }
 
