@@ -13,8 +13,13 @@ export class NavigationController {
   }
 
   @Get()
-  findAll() {
-    return this.navigationService.findAll();
+  findNestedNavigations() {
+    return this.navigationService.findNestedNavigations();
+  }
+
+  @Get('flat')
+  findAllNavigations() {
+    return this.navigationService.findAllNavigations();
   }
 
   @Get(':id')

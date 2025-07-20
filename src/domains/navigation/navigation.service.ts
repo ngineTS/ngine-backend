@@ -16,7 +16,17 @@ export class NavigationService {
     return await this.navigationRepository.save(createNavigationDto);
   }
 
-  async findAll() {
+  async findAllNavigations() {
+    return await this.navigationRepository.find({
+      relations: [
+        'children',
+        'navigationType',
+        'children.navigationType'
+      ]
+    });
+  }
+
+  async findNestedNavigations() {
     return await this.navigationRepository.find({
       relations: [
         'navigationType',
