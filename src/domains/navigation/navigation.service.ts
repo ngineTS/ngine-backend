@@ -11,12 +11,6 @@ export class NavigationService {
   constructor(@InjectRepository(Navigation)
               private navigationRepository: Repository<Navigation>) {}
 
-  async saveNavigations(createNavigationDto: CreateNavigationDto) {
-    console.log('navigations for save', createNavigationDto);
-    createNavigationDto["name"] = createNavigationDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
-    return await this.navigationRepository.save(createNavigationDto);
-  }
-
   async findAllNavigations() {
     return await this.navigationRepository.find({
       relations: [
@@ -51,8 +45,18 @@ export class NavigationService {
     return `This action returns a #${id} navigation`;
   }
 
-  update(id: number, updateNavigationDto: UpdateNavigationDto) {
-    return `This action updates a #${id} navigation`;
+  async saveNavigations(createNavigationDto: CreateNavigationDto) {
+    console.log('navigations for save', createNavigationDto);
+    createNavigationDto["name"] = createNavigationDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
+    createNavigationDto["createdBy"] = '00000000-0000-0000-0000-000000000000';
+    createNavigationDto["createdDate"] = new Date();
+    return await this.navigationRepository.save(createNavigationDto);
+  }
+
+  async update(id: string, updateNavigationDto: UpdateNavigationDto) {
+    updateNavigationDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+    updateNavigationDto["updatedDate"] = new Date();
+    return await this.navigationRepository.update(id, updateNavigationDto);
   }
 
   remove(id: number) {

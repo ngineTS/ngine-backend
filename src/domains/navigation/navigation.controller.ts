@@ -29,7 +29,7 @@ export class NavigationController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateNavigationDto: UpdateNavigationDto) {
-    return this.navigationService.update(+id, updateNavigationDto);
+    return this.navigationService.update(id, updateNavigationDto);
   }
 
   @Delete(':id')
