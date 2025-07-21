@@ -3,7 +3,7 @@ import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Navigation } from './entities/navigation.entity';
-import { IsNull, Repository } from 'typeorm';
+import { FindOptionsOrder, FindOptionsOrderValue, IsNull, Repository } from 'typeorm';
 
 @Injectable()
 export class NavigationService {
@@ -22,22 +22,13 @@ export class NavigationService {
   }
 
   async findNestedNavigations() {
+    const relations = new Set<string>();
+    const order: FindOptionsOrder<Navigation> = { order: 'ASC' };
+    this.generateNestedRelationsAndOrder(4, relations, order);
     return await this.navigationRepository.find({
-      relations: [
-        'navigationType',
-        'children',
-        'children.navigationType',
-        'children.children',
-        'children.children.navigationType',
-      ],
+      relations: [...relations],
       where: { parentId: IsNull() },
-      order: { 
-        order: 'ASC', children: { 
-          order: 'ASC', children: { 
-            order: 'ASC' 
-          } 
-        } 
-      }
+      order: order
     });
   }
 
@@ -46,7 +37,6 @@ export class NavigationService {
   }
 
   async saveNavigations(createNavigationDto: CreateNavigationDto) {
-    console.log('navigations for save', createNavigationDto);
     createNavigationDto["name"] = createNavigationDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
     createNavigationDto["createdBy"] = '00000000-0000-0000-0000-000000000000';
     createNavigationDto["createdDate"] = new Date();
@@ -59,7 +49,26 @@ export class NavigationService {
     return await this.navigationRepository.update(id, updateNavigationDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} navigation`;
+  async remove(id: string) {
+    return await this.navigationRepository.update(id, {
+      deletedBy: '00000000-0000-0000-0000-000000000000',
+      deletedDate: new Date()
+    });
   }
+
+  generateNestedRelationsAndOrder(
+    depth: number, 
+    relations: Set<string>, 
+    order: FindOptionsOrder<Navigation>, 
+    base: string = ''
+  ) {
+    relations.add(base + 'navigationType');
+    if(depth > 0) {
+      relations.add(base + 'children');
+      base = base + 'children.';
+      order.children = { order: 'ASC'};
+      this.generateNestedRelationsAndOrder(depth - 1, relations, order.children, base);
+    }
+  }
+
 }

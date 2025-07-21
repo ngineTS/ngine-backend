@@ -34,6 +34,6 @@ export class NavigationController {
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.navigationService.remove(+id);
+    return this.navigationService.remove(id);
   }
 }
