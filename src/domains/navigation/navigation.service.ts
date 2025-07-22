@@ -16,8 +16,9 @@ export class NavigationService {
       relations: [
         'children',
         'navigationType',
-        'children.navigationType'
-      ]
+        'children.navigationType',
+      ],
+      where: { deletedDate: IsNull() }
     });
   }
 
