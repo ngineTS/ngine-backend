@@ -8,8 +8,8 @@ export class NavigationController {
   constructor(private readonly navigationService: NavigationService) {}
 
   @Post()
-  saveNavigations(@Body() createNavigationDto: CreateNavigationDto) {
-    return this.navigationService.saveNavigations(createNavigationDto);
+  saveNavigation(@Body() createNavigationDto: CreateNavigationDto) {
+    return this.navigationService.saveNavigation(createNavigationDto);
   }
 
   @Get()
@@ -28,8 +28,8 @@ export class NavigationController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateNavigationDto: UpdateNavigationDto) {
-    return this.navigationService.update(id, updateNavigationDto);
+  updateNavigation(@Param('id') id: string, @Body() updateNavigationDto: UpdateNavigationDto) {
+    return this.navigationService.updateNavigation(id, updateNavigationDto);
   }
 
   @Delete(':id')
