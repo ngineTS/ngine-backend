@@ -36,4 +36,10 @@ export class NavigationController {
   remove(@Param('id') id: string) {
     return this.navigationService.remove(id);
   }
+
+  @Post('order')
+  saveNavigationOrders(@Body() updateOrderNavigationDto: any) {
+    return this.navigationService.saveNavigationOrders(updateOrderNavigationDto);
+  }
+
 }

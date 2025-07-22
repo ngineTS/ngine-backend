@@ -43,6 +43,12 @@ export class NavigationService {
     return await this.navigationRepository.save(createNavigationDto);
   }
 
+  async saveNavigationOrders(updateOrderNavigationDto: any) {
+    updateOrderNavigationDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+    updateOrderNavigationDto["updatedDate"] = new Date();
+    return await this.navigationRepository.save(updateOrderNavigationDto);
+  }
+
   async update(id: string, updateNavigationDto: UpdateNavigationDto) {
     updateNavigationDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
     updateNavigationDto["updatedDate"] = new Date();
@@ -70,5 +76,7 @@ export class NavigationService {
       this.generateNestedRelationsAndOrder(depth - 1, relations, order.children, base);
     }
   }
+
+
 
 }
