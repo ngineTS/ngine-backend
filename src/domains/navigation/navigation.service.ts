@@ -43,10 +43,12 @@ export class NavigationService {
     return await this.navigationRepository.save(createNavigationDto);
   }
 
-  async saveNavigationOrders(updateOrderNavigationDto: any) {
-    updateOrderNavigationDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
-    updateOrderNavigationDto["updatedDate"] = new Date();
-    return await this.navigationRepository.save(updateOrderNavigationDto);
+  async saveNavigationOrders(updateOrderNavigationDtoArray: UpdateNavigationDto[]) {
+    updateOrderNavigationDtoArray.forEach(element => {
+      element["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+      element["updatedDate"] = new Date();
+    });
+    return await this.navigationRepository.save(updateOrderNavigationDtoArray);
   }
 
   async update(id: string, updateNavigationDto: UpdateNavigationDto) {

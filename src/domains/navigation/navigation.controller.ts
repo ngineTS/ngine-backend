@@ -38,8 +38,8 @@ export class NavigationController {
   }
 
   @Post('order')
-  saveNavigationOrders(@Body() updateOrderNavigationDto: any) {
-    return this.navigationService.saveNavigationOrders(updateOrderNavigationDto);
+  saveNavigationOrders(@Body() updateOrderNavigationDtoArray: UpdateNavigationDto[]) {
+    return this.navigationService.saveNavigationOrders(updateOrderNavigationDtoArray);
   }
 
 }
