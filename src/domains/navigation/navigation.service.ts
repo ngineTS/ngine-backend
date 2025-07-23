@@ -18,7 +18,12 @@ export class NavigationService {
         'navigationType',
         'children.navigationType',
       ],
-      where: { deletedDate: IsNull() }
+      where: { 
+        deletedDate: IsNull(),
+        children: {
+          deletedDate: IsNull()
+        } 
+      }
     });
   }
 
@@ -29,12 +34,14 @@ export class NavigationService {
       deletedDate: IsNull(),
       parentId: IsNull() 
     };
-    this.generateNestedRelationsOrderAndFilters(4, relations, order, where); //TO DO: Replace 4 by the exact depth wished
-    return await this.navigationRepository.find({
+    this.generateRelationsAndOrder(4, relations, order); //TO DO: Replace 4 by the exact depth wished
+    let navigations = await this.navigationRepository.find({
       relations: [...relations],
       where: where,
       order: order
     });
+    navigations.forEach(navigation => navigation.children = this.filterOutDeletedNavigations(navigation.children));
+    return navigations;
   }
 
   findOne(id: number) {
@@ -74,11 +81,10 @@ export class NavigationService {
     return await this.navigationRepository.save(recordsToDelete);
   }
 
-  generateNestedRelationsOrderAndFilters(
+  generateRelationsAndOrder(
     depth: number, 
     relations: Set<string>, 
     order: FindOptionsOrder<Navigation>, 
-    where: FindOptionsWhere<Navigation>,
     base: string = ''
   ) {
     relations.add(base + 'navigationType');
@@ -86,11 +92,16 @@ export class NavigationService {
       relations.add(base + 'children');
       base = base + 'children.';
       order.children = { order: 'ASC'};
-      where.children = { deletedDate: IsNull() }
-      this.generateNestedRelationsOrderAndFilters(depth - 1, relations, order.children, where.children, base);
+      this.generateRelationsAndOrder(depth - 1, relations, order.children, base);
     }
   }
 
-
+  filterOutDeletedNavigations(navigations: Navigation[]) {
+    console.log(navigations);
+    for (let navigation of navigations) {
+      navigation.children = this.filterOutDeletedNavigations(navigation.children);
+    }
+    return navigations.filter(obj => !obj.deletedDate);
+  }
 
 }
