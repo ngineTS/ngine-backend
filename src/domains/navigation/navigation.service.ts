@@ -12,19 +12,15 @@ export class NavigationService {
               private navigationRepository: Repository<Navigation>) {}
 
   async findAllNavigations() {
-    return await this.navigationRepository.find({
+    let navigations = await this.navigationRepository.find({
       relations: [
         'children',
         'navigationType',
         'children.navigationType',
       ],
-      where: { 
-        deletedDate: IsNull(),
-        children: {
-          deletedDate: IsNull()
-        } 
-      }
     });
+    navigations = this.filterOutDeletedNavigations(navigations);
+    return navigations;
   }
 
   async findNestedNavigations() {
@@ -97,9 +93,10 @@ export class NavigationService {
   }
 
   filterOutDeletedNavigations(navigations: Navigation[]) {
-    console.log(navigations);
     for (let navigation of navigations) {
-      navigation.children = this.filterOutDeletedNavigations(navigation.children);
+      if(navigation.children?.length > 0) {
+        navigation.children = this.filterOutDeletedNavigations(navigation.children);
+      }
     }
     return navigations.filter(obj => !obj.deletedDate);
   }
