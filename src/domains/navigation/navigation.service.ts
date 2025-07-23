@@ -29,6 +29,7 @@ export class NavigationService {
       deletedDate: IsNull(),
       parentId: IsNull() 
     };
+    //TO DO: Replace 4 by the exact depth wished
     this.generateNestedRelationsOrderAndFilters(4, relations, order, where);
     return await this.navigationRepository.find({
       relations: [...relations],
