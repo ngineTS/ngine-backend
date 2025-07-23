@@ -37,7 +37,7 @@ export class NavigationController {
     return this.navigationService.saveNavigationOrders(updateOrderNavigationDtoArray);
   }
 
-  @Post('multiple-delete')
+  @Post('bulk-delete')
   removeNavigationAndChildren(@Body() ids: string[]) {
     return this.navigationService.removeNavigationAndChildren(ids);
   }
