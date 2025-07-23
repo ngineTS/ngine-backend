@@ -62,11 +62,16 @@ export class NavigationService {
     return await this.navigationRepository.update(id, updateNavigationDto);
   }
 
-  async remove(id: string) {
-    return await this.navigationRepository.update(id, {
-      deletedBy: '00000000-0000-0000-0000-000000000000',
-      deletedDate: new Date()
-    });
+  async removeNavigationAndChildren(ids: string[]) {
+    const recordsToDelete: Array<UpdateNavigationDto> = [];
+    ids.forEach(id => 
+      recordsToDelete.push({
+        id: id,
+        deletedBy: '00000000-0000-0000-0000-000000000000',
+        deletedDate: new Date()
+      })
+    )
+    return await this.navigationRepository.save(recordsToDelete);
   }
 
   generateNestedRelationsOrderAndFilters(

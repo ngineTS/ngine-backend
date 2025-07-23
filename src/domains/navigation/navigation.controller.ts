@@ -32,14 +32,14 @@ export class NavigationController {
     return this.navigationService.updateNavigation(id, updateNavigationDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.navigationService.remove(id);
-  }
-
   @Post('order')
   saveNavigationOrders(@Body() updateOrderNavigationDtoArray: UpdateNavigationDto[]) {
     return this.navigationService.saveNavigationOrders(updateOrderNavigationDtoArray);
+  }
+
+  @Post('multiple-delete')
+  removeNavigationAndChildren(@Body() ids: string[]) {
+    return this.navigationService.removeNavigationAndChildren(ids);
   }
 
 }
