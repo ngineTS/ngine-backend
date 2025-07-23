@@ -32,14 +32,14 @@ export class NavigationController {
     return this.navigationService.updateNavigation(id, updateNavigationDto);
   }
 
-  @Post('order')
-  saveNavigationOrders(@Body() updateOrderNavigationDtoArray: UpdateNavigationDto[]) {
-    return this.navigationService.saveNavigationOrders(updateOrderNavigationDtoArray);
+  @Post('bulk-update')
+  updateNavigations(@Body() updateNavigationDtoArray: UpdateNavigationDto[]) {
+    return this.navigationService.updateNavigations(updateNavigationDtoArray);
   }
 
   @Post('bulk-delete')
-  removeNavigationAndChildren(@Body() ids: string[]) {
-    return this.navigationService.removeNavigationAndChildren(ids);
+  removeNavigations(@Body() ids: string[]) {
+    return this.navigationService.removeNavigations(ids);
   }
 
 }

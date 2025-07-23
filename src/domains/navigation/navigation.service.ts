@@ -48,21 +48,21 @@ export class NavigationService {
     return await this.navigationRepository.save(createNavigationDto);
   }
 
-  async saveNavigationOrders(updateOrderNavigationDtoArray: UpdateNavigationDto[]) {
-    updateOrderNavigationDtoArray.forEach(element => {
-      element["updatedBy"] = '00000000-0000-0000-0000-000000000000';
-      element["updatedDate"] = new Date();
-    });
-    return await this.navigationRepository.save(updateOrderNavigationDtoArray);
-  }
-
   async updateNavigation(id: string, updateNavigationDto: UpdateNavigationDto) {
     updateNavigationDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
     updateNavigationDto["updatedDate"] = new Date();
     return await this.navigationRepository.update(id, updateNavigationDto);
   }
 
-  async removeNavigationAndChildren(ids: string[]) {
+    async updateNavigations(updateNavigationDtoArray: UpdateNavigationDto[]) {
+    updateNavigationDtoArray.forEach(element => {
+      element["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+      element["updatedDate"] = new Date();
+    });
+    return await this.navigationRepository.save(updateNavigationDtoArray);
+  }
+
+  async removeNavigations(ids: string[]) {
     const recordsToDelete: Array<UpdateNavigationDto> = [];
     ids.forEach(id => 
       recordsToDelete.push({
