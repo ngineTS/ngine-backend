@@ -29,7 +29,7 @@ export class TestTextController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateTestTextDto: UpdateTestTextDto) {
-    return this.testTextService.update(+id, updateTestTextDto);
+    return this.testTextService.update(id, updateTestTextDto);
   }
 
   @Delete(':id')

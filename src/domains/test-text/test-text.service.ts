@@ -12,7 +12,8 @@ export class TestTextService {
               private testTextRepository: Repository<TestText>) {}
 
   create(createTestTextDto: CreateTestTextDto) {
-    return 'This action adds a new testText';
+    console.log(createTestTextDto);
+    return this.testTextRepository.save(createTestTextDto);
   }
 
   findAll() {
@@ -29,8 +30,9 @@ export class TestTextService {
     })
   }
 
-  update(id: number, updateTestTextDto: UpdateTestTextDto) {
-    return `This action updates a #${id} testText`;
+  update(id: string, updateTestTextDto: UpdateTestTextDto) {
+    console.log(updateTestTextDto);
+    return this.testTextRepository.update(id, updateTestTextDto);  
   }
 
   remove(id: number) {
