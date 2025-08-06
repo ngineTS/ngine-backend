@@ -57,7 +57,7 @@ export class NavigationService {
     return await this.navigationRepository.update(id, updateNavigationDto);
   }
 
-    async updateNavigations(updateNavigationDtoArray: UpdateNavigationDto[]) {
+  async updateNavigations(updateNavigationDtoArray: UpdateNavigationDto[]) {
     updateNavigationDtoArray.forEach(element => {
       element["updatedBy"] = '00000000-0000-0000-0000-000000000000';
       element["updatedDate"] = new Date();

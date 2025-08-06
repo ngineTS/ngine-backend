@@ -10,6 +10,8 @@ import { NavigationType } from './domains/navigation-type/entities/navigation-ty
 import { TestText } from './domains/test-text/entities/test-text.entity';
 import { NavigationTypeModule } from './domains/navigation-type/navigation-type.module';
 import { TestTextModule } from './domains/test-text/test-text.module';
+import { QuillEditorModule } from './quill-editor/quill-editor.module';
+import { QuillEditor } from './quill-editor/entities/quill-editor.entity';
 
 
 @Module({
@@ -29,12 +31,14 @@ import { TestTextModule } from './domains/test-text/test-text.module';
       entities: [   
         Navigation,
         NavigationType,
-        TestText
+        TestText,
+        QuillEditor
       ]
     }),
     NavigationModule,
     NavigationTypeModule,
-    TestTextModule
+    TestTextModule,
+    QuillEditorModule
   ],
   controllers: [AppController],
   providers: [AppService],
