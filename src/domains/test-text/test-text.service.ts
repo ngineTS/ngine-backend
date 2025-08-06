@@ -35,7 +35,7 @@ export class TestTextService {
     return this.testTextRepository.update(id, updateTestTextDto);  
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} testText`;
+  remove(id: string) {
+    return this.testTextRepository.delete(id);
   }
 }

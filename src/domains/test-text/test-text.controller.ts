@@ -34,6 +34,6 @@ export class TestTextController {
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.testTextService.remove(+id);
+    return this.testTextService.remove(id);
   }
 }
