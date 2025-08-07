@@ -22,7 +22,7 @@ export class QuillEditorController {
     return this.quillEditorService.findOne(+id);
   }
 
-  @Get('/navigation/:navigationId')
+  @Get('navigation/:navigationId')
   findbyNavigationId(@Param('navigationId') navigationId: string) {
     return this.quillEditorService.findByNavigationId(navigationId);
   }

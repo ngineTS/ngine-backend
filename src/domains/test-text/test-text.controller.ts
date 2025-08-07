@@ -22,7 +22,7 @@ export class TestTextController {
     return this.testTextService.findOne(+id);
   }
 
-  @Get('/navigation/:navigationId')
+  @Get('navigation/:navigationId')
   findbyNavigationId(@Param('navigationId') navigationId: string) {
     return this.testTextService.findByNavigationId(navigationId);
   }

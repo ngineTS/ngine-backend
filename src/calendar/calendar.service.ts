@@ -27,11 +27,16 @@ export class CalendarService {
   }
 
   update(id: string, updateCalendarDto: UpdateCalendarDto) {
-    console.log(updateCalendarDto);
     return this.calendarRepository.update(id, updateCalendarDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} calendar`;
+  remove(id: string) {
+    return this.calendarRepository.delete(id);
+  }
+
+  async findCalendarEventsByNavigationId(navigationId: string) {
+    return await this.calendarRepository.find({
+      where: { navigationId: navigationId }
+    });
   }
 }

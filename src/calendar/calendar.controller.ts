@@ -22,6 +22,11 @@ export class CalendarController {
     return this.calendarService.findOne(+id);
   }
 
+  @Get('navigation/:navigationId')
+  findCalendarEventsByNavigationId(@Param('navigationId') navigationId: string) {
+    return this.calendarService.findCalendarEventsByNavigationId(navigationId);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCalendarDto: UpdateCalendarDto) {
     return this.calendarService.update(id, updateCalendarDto);
@@ -29,6 +34,6 @@ export class CalendarController {
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.calendarService.remove(+id);
+    return this.calendarService.remove(id);
   }
 }
