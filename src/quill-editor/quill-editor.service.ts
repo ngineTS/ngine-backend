@@ -5,14 +5,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { QuillEditor } from './entities/quill-editor.entity';
 import { NavigationService } from 'src/domains/navigation/navigation.service';
-import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class QuillEditorService {
 
   constructor(@InjectRepository(QuillEditor)
-                private quillEditorRepository: Repository<QuillEditor>,
-                private navigationService: NavigationService) {}
+              private quillEditorRepository: Repository<QuillEditor>,
+              private navigationService: NavigationService) {}
 
 
   create(createQuillEditorDto: CreateQuillEditorDto) {
@@ -36,7 +35,6 @@ export class QuillEditorService {
   async update(id: string, updateQuillEditorDto: UpdateQuillEditorDto) {
     const updatedResult = await this.quillEditorRepository.update(id, updateQuillEditorDto);
     if(updatedResult.affected === 1) {
-      console.log(updatedResult);
       return this.navigationService.updateNavigation(updateQuillEditorDto["navigationId"], {
         updatedBy: '00000000-0000-0000-0000-000000000000',
         updatedDate: new Date()

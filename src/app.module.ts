@@ -12,6 +12,8 @@ import { NavigationTypeModule } from './domains/navigation-type/navigation-type.
 import { TestTextModule } from './domains/test-text/test-text.module';
 import { QuillEditorModule } from './quill-editor/quill-editor.module';
 import { QuillEditor } from './quill-editor/entities/quill-editor.entity';
+import { CalendarModule } from './calendar/calendar.module';
+import { Calendar } from './calendar/entities/calendar.entity';
 
 
 @Module({
@@ -32,13 +34,15 @@ import { QuillEditor } from './quill-editor/entities/quill-editor.entity';
         Navigation,
         NavigationType,
         TestText,
-        QuillEditor
+        QuillEditor,
+        Calendar
       ]
     }),
     NavigationModule,
     NavigationTypeModule,
     TestTextModule,
-    QuillEditorModule
+    QuillEditorModule,
+    CalendarModule
   ],
   controllers: [AppController],
   providers: [AppService],
