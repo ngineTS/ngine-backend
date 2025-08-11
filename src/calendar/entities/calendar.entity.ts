@@ -29,4 +29,7 @@ export class Calendar {
 
     @Column()
     url: string;
+
+    @Column()
+    allDay: boolean;
 }
