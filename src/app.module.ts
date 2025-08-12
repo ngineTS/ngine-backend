@@ -14,6 +14,9 @@ import { QuillEditorModule } from './domains/quill-editor/quill-editor.module';
 import { QuillEditor } from './domains/quill-editor/entities/quill-editor.entity';
 import { CalendarModule } from './domains/calendar/calendar.module';
 import { Calendar } from './domains/calendar/entities/calendar.entity';
+import { Media } from './domains/media/entities/media.entity';
+import { FileManagementModule } from './domains/file-management/file-management.module';
+import { MediaModule } from './domains/media/media.module';
 
 
 @Module({
@@ -35,14 +38,17 @@ import { Calendar } from './domains/calendar/entities/calendar.entity';
         NavigationType,
         TestText,
         QuillEditor,
-        Calendar
+        Calendar,
+        Media
       ]
     }),
     NavigationModule,
     NavigationTypeModule,
     TestTextModule,
     QuillEditorModule,
-    CalendarModule
+    CalendarModule,
+    FileManagementModule,
+    MediaModule
   ],
   controllers: [AppController],
   providers: [AppService],
