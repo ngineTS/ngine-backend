@@ -10,10 +10,10 @@ import { NavigationType } from './domains/navigation-type/entities/navigation-ty
 import { TestText } from './domains/test-text/entities/test-text.entity';
 import { NavigationTypeModule } from './domains/navigation-type/navigation-type.module';
 import { TestTextModule } from './domains/test-text/test-text.module';
-import { QuillEditorModule } from './quill-editor/quill-editor.module';
-import { QuillEditor } from './quill-editor/entities/quill-editor.entity';
-import { CalendarModule } from './calendar/calendar.module';
-import { Calendar } from './calendar/entities/calendar.entity';
+import { QuillEditorModule } from './domains/quill-editor/quill-editor.module';
+import { QuillEditor } from './domains/quill-editor/entities/quill-editor.entity';
+import { CalendarModule } from './domains/calendar/calendar.module';
+import { Calendar } from './domains/calendar/entities/calendar.entity';
 
 
 @Module({
