@@ -36,7 +36,8 @@ export class CalendarService {
 
   async findCalendarEventsByNavigationId(navigationId: string) {
     return await this.calendarRepository.find({
-      where: { navigationId: navigationId }
+      where: { navigationId: navigationId },
+      relations: ['media']
     });
   }
 }

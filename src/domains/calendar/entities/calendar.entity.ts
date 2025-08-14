@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Media } from "src/domains/media/entities/media.entity";
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Calendar {
@@ -32,4 +33,8 @@ export class Calendar {
 
     @Column()
     allDay: boolean;
+
+    @OneToOne(() => Media, media => media)
+    @JoinColumn({ name: 'fileId', referencedColumnName: 'name' })
+    media: Media;
 }
