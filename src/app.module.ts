@@ -17,6 +17,10 @@ import { Calendar } from './domains/calendar/entities/calendar.entity';
 import { Media } from './domains/media/entities/media.entity';
 import { FileManagementModule } from './domains/file-management/file-management.module';
 import { MediaModule } from './domains/media/media.module';
+import { TableViz } from './domains/table-viz/entities/table-viz.entity';
+import { CustomFormInput } from './domains/custom-form/entities/custom-form-input.entity';
+import { TableVizModule } from './domains/table-viz/table-viz.module';
+import { CustomFormInputModule } from './domains/custom-form/custom-form-input.module';
 
 
 @Module({
@@ -39,7 +43,9 @@ import { MediaModule } from './domains/media/media.module';
         TestText,
         QuillEditor,
         Calendar,
-        Media
+        Media,
+        TableViz,
+        CustomFormInput
       ]
     }),
     NavigationModule,
@@ -48,7 +54,9 @@ import { MediaModule } from './domains/media/media.module';
     QuillEditorModule,
     CalendarModule,
     FileManagementModule,
-    MediaModule
+    MediaModule,
+    TableVizModule,
+    CustomFormInputModule
   ],
   controllers: [AppController],
   providers: [AppService],

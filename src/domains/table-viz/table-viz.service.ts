@@ -8,11 +8,11 @@ import { TableViz } from './entities/table-viz.entity';
 @Injectable()
 export class TableVizService {
 
-    constructor(@InjectRepository(TableViz)
-                private tableVizRepository: Repository<TableViz>) {}
+  constructor(@InjectRepository(TableViz)
+              private tableVizRepository: Repository<TableViz>) {}
 
-  create(createTableVizDto: CreateTableVizDto) {
-    return 'This action adds a new tableViz';
+  async create(createTableVizDto: CreateTableVizDto) {
+    return await this.tableVizRepository.save(createTableVizDto);
   }
 
   findAll() {
@@ -23,12 +23,17 @@ export class TableVizService {
     return `This action returns a #${id} tableViz`;
   }
 
-  findByNavigationId(navigationId) {
-
+  async findByNavigationId(navigationId) {
+    return await this.tableVizRepository.findOne({
+      where: {
+        navigationId: navigationId
+      },
+      relations: ['customFormInputs']
+    })
   }
 
-  update(id: number, updateTableVizDto: UpdateTableVizDto) {
-    return `This action updates a #${id} tableViz`;
+  async update(id: string, updateTableVizDto: UpdateTableVizDto) {
+    return await this.tableVizRepository.update(id, updateTableVizDto);
   }
 
   remove(id: number) {

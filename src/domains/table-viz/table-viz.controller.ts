@@ -29,7 +29,7 @@ export class TableVizController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateTableVizDto: UpdateTableVizDto) {
-    return this.tableVizService.update(+id, updateTableVizDto);
+    return this.tableVizService.update(id, updateTableVizDto);
   }
 
   @Delete(':id')

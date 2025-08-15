@@ -1,1 +1,1 @@
-export class CreateCustomFormDto {}
+export class CreateCustomFormInputDto {}

@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
-import { CustomFormService } from './custom-form-input.service';
-import { CustomFormController } from './custom-form-input.controller';
+import { CustomFormInputService } from './custom-form-input.service';
+import { CustomFormInputController } from './custom-form-input.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { CustomFormInput } from './entities/custom-form-input.entity';
 
 @Module({
-  controllers: [CustomFormController],
-  providers: [CustomFormService],
+  imports:[TypeOrmModule.forFeature([CustomFormInput])],
+  controllers: [CustomFormInputController],
+  providers: [CustomFormInputService],
 })
-export class CustomFormModule {}
+export class CustomFormInputModule {}

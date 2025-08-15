@@ -19,7 +19,7 @@ export class CustomFormInput {
     @Column()
     inputLabel: string;
 
-    @Column()
+    @Column('text', { array: true })
     validators: Array<string>;
 
     @ManyToOne(() => TableViz, tableViz => tableViz.customFormInputs)

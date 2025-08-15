@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CustomFormService } from './custom-form-input.service';
+import { CustomFormInputService } from './custom-form-input.service';
 
 describe('CustomFormService', () => {
-  let service: CustomFormService;
+  let service: CustomFormInputService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [CustomFormService],
+      providers: [CustomFormInputService],
     }).compile();
 
-    service = module.get<CustomFormService>(CustomFormService);
+    service = module.get<CustomFormInputService>(CustomFormInputService);
   });
 
   it('should be defined', () => {
