@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { CustomFormService } from './custom-form.service';
-import { CreateCustomFormDto } from './dto/create-custom-form.dto';
-import { UpdateCustomFormDto } from './dto/update-custom-form.dto';
+import { CustomFormService } from './custom-form-input.service';
+import { CreateCustomFormDto } from './dto/create-custom-form-input.dto';
+import { UpdateCustomFormDto } from './dto/update-custom-form-input.dto';
 
 @Controller('custom-form')
 export class CustomFormController {

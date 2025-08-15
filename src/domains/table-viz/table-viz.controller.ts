@@ -22,6 +22,11 @@ export class TableVizController {
     return this.tableVizService.findOne(+id);
   }
 
+  @Get('navigation/:navigationId')
+  findByNavigationId(@Param('navigationId') navigationId: string) {
+    return this.tableVizService.findByNavigationId(navigationId);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateTableVizDto: UpdateTableVizDto) {
     return this.tableVizService.update(+id, updateTableVizDto);

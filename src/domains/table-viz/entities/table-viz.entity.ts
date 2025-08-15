@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { CustomFormInput } from "src/domains/custom-form/entities/custom-form-input.entity";
+import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class TableViz {
@@ -11,5 +12,9 @@ export class TableViz {
 
     @Column()
     tableName: string;
+
+    @OneToMany(() => CustomFormInput, customForm => customForm.table)
+    @JoinColumn({name: 'id', referencedColumnName: 'tableId'})
+    customFormInputs: CustomFormInput[];
 
 }

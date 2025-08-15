@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CustomFormController } from './custom-form.controller';
-import { CustomFormService } from './custom-form.service';
+import { CustomFormController } from './custom-form-input.controller';
+import { CustomFormService } from './custom-form-input.service';
 
 describe('CustomFormController', () => {
   let controller: CustomFormController;

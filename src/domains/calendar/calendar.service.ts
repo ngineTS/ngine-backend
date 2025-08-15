@@ -10,8 +10,7 @@ import { NavigationService } from 'src/domains/navigation/navigation.service';
 export class CalendarService {
 
   constructor(@InjectRepository(Calendar)
-              private calendarRepository: Repository<Calendar>,
-              private navigationService: NavigationService) {}
+              private calendarRepository: Repository<Calendar>) {}
 
   create(createCalendarDto: CreateCalendarDto) {
     return this.calendarRepository.save(createCalendarDto);

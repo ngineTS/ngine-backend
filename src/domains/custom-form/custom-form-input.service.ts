@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CreateCustomFormDto } from './dto/create-custom-form.dto';
-import { UpdateCustomFormDto } from './dto/update-custom-form.dto';
+import { CreateCustomFormDto } from './dto/create-custom-form-input.dto';
+import { UpdateCustomFormDto } from './dto/update-custom-form-input.dto';
 
 @Injectable()
 export class CustomFormService {

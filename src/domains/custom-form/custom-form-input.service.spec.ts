@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CustomFormService } from './custom-form.service';
+import { CustomFormService } from './custom-form-input.service';
 
 describe('CustomFormService', () => {
   let service: CustomFormService;
