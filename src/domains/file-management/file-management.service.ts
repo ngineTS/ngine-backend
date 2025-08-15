@@ -35,7 +35,6 @@ export class FileManagementService {
 
   async s3_upload(file, bucket, name, mimetype) {
     const fileName: string = path.parse(name).name + uuidv4() + path.parse(name).ext
-    console.log(mimetype);
     const params = {
       Bucket: bucket,
       Key: fileName,
@@ -57,12 +56,10 @@ export class FileManagementService {
       Expires: 3600,
     };
     const url = this.s3.getSignedUrl('getObject', params);
-    console.log(url);
     return JSON.stringify(url);
   }
 
   async deleteFile(fileId: string){
-    console.log(fileId);
     const params = {
       Bucket: process.env.AWS_S3_BUCKET_NAME!,
       Key: fileId,

@@ -14,7 +14,6 @@ export class CalendarService {
               private navigationService: NavigationService) {}
 
   create(createCalendarDto: CreateCalendarDto) {
-    console.log(createCalendarDto);
     return this.calendarRepository.save(createCalendarDto);
   }
 
