@@ -3,8 +3,9 @@ import { CustomFormInputService } from './custom-form-input.service';
 import { CreateCustomFormInputDto } from './dto/create-custom-form-input.dto';
 import { UpdateCustomFormInputDto } from './dto/update-custom-form-input.dto';
 
-@Controller('custom-form')
+@Controller('custom-form-input')
 export class CustomFormInputController {
+
   constructor(private readonly customFormService: CustomFormInputService) {}
 
   @Post()
@@ -24,7 +25,7 @@ export class CustomFormInputController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCustomFormDto: UpdateCustomFormInputDto) {
-    return this.customFormService.update(+id, updateCustomFormDto);
+    return this.customFormService.update(id, updateCustomFormDto);
   }
 
   @Delete(':id')
