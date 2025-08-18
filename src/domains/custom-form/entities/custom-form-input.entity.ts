@@ -14,6 +14,9 @@ export class CustomFormInput {
     columnName: string;
 
     @Column()
+    columnType: string;
+
+    @Column()
     inputType: string;
 
     @Column()
@@ -21,6 +24,12 @@ export class CustomFormInput {
 
     @Column('text', { array: true })
     validators: Array<string>;
+
+    @Column()
+    bindValue: string;
+
+    @Column()
+    bindLabel: string;
 
     @ManyToOne(() => TableViz, tableViz => tableViz.customFormInputs)
     @JoinColumn({name: 'tableId', referencedColumnName: 'id'})

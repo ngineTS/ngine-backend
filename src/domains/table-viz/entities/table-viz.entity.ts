@@ -13,6 +13,12 @@ export class TableViz {
     @Column()
     tableName: string;
 
+    @Column()
+    tableLabel: string;
+
+    @Column()
+    isEditable: boolean;
+
     @OneToMany(() => CustomFormInput, customForm => customForm.table)
     @JoinColumn({name: 'id', referencedColumnName: 'tableId'})
     customFormInputs: CustomFormInput[];
