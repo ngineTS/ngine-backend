@@ -5,6 +5,7 @@ import { UpdateTableVizDto } from './dto/update-table-viz.dto';
 
 @Controller('table-viz')
 export class TableVizController {
+  
   constructor(private readonly tableVizService: TableVizService) {}
 
   @Post()

@@ -1,4 +1,4 @@
-import { CustomFormInput } from "src/domains/custom-form/entities/custom-form-input.entity";
+import { CustomFormInput } from "src/domains/custom-form-input/entities/custom-form-input.entity";
 import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()

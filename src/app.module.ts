@@ -18,9 +18,9 @@ import { Media } from './domains/media/entities/media.entity';
 import { FileManagementModule } from './domains/file-management/file-management.module';
 import { MediaModule } from './domains/media/media.module';
 import { TableViz } from './domains/table-viz/entities/table-viz.entity';
-import { CustomFormInput } from './domains/custom-form/entities/custom-form-input.entity';
+import { CustomFormInput } from './domains/custom-form-input/entities/custom-form-input.entity';
 import { TableVizModule } from './domains/table-viz/table-viz.module';
-import { CustomFormInputModule } from './domains/custom-form/custom-form-input.module';
+import { CustomFormInputModule } from './domains/custom-form-input/custom-form-input.module';
 
 
 @Module({
