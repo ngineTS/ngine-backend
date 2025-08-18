@@ -9,7 +9,7 @@ export class CustomFormInputController {
   constructor(private readonly customFormService: CustomFormInputService) {}
 
   @Post()
-  create(@Body() createCustomFormDto: CreateCustomFormInputDto) {
+  create(@Body() createCustomFormDto: CreateCustomFormInputDto[]) {
     return this.customFormService.create(createCustomFormDto);
   }
 

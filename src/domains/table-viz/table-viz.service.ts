@@ -4,6 +4,7 @@ import { UpdateTableVizDto } from './dto/update-table-viz.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TableViz } from './entities/table-viz.entity';
+import { stringToLowerCaseWithUnderscore } from 'src/core/utils/string-transfo-util';
 
 @Injectable()
 export class TableVizService {
@@ -12,6 +13,7 @@ export class TableVizService {
               private tableVizRepository: Repository<TableViz>) {}
 
   async create(createTableVizDto: CreateTableVizDto) {
+    createTableVizDto.tableName = stringToLowerCaseWithUnderscore(createTableVizDto.tableLabel);
     return await this.tableVizRepository.save(createTableVizDto);
   }
 

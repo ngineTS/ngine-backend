@@ -1,5 +1,5 @@
 import { TableViz } from "src/domains/table-viz/entities/table-viz.entity";
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, ColumnType, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class CustomFormInput {
