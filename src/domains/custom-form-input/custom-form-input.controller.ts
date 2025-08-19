@@ -8,9 +8,12 @@ export class CustomFormInputController {
 
   constructor(private readonly customFormService: CustomFormInputService) {}
 
-  @Post()
-  create(@Body() createCustomFormDto: CreateCustomFormInputDto[]) {
-    return this.customFormService.create(createCustomFormDto);
+  @Post(':tableName')
+  create(
+    @Param('tableName') tableName: string,
+    @Body() createCustomFormDto: CreateCustomFormInputDto[]
+  ) {
+    return this.customFormService.create(createCustomFormDto, tableName);
   }
 
   @Get()
