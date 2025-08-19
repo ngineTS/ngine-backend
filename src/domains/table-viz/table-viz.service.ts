@@ -10,11 +10,11 @@ import { stringToLowerCaseWithUnderscore } from 'src/core/utils/string-transfo-u
 export class TableVizService {
 
   constructor(@InjectRepository(TableViz)
-              private tableVizRepository: Repository<TableViz>) {}
+              private _tableVizRepository: Repository<TableViz>) {}
 
   async create(createTableVizDto: CreateTableVizDto) {
     createTableVizDto.tableName = stringToLowerCaseWithUnderscore(createTableVizDto.tableLabel);
-    return await this.tableVizRepository.save(createTableVizDto);
+    return await this._tableVizRepository.save(createTableVizDto);
   }
 
   findAll() {
@@ -26,7 +26,7 @@ export class TableVizService {
   }
 
   async findByNavigationId(navigationId) {
-    return await this.tableVizRepository.findOne({
+    return await this._tableVizRepository.findOne({
       where: {
         navigationId: navigationId
       },
@@ -35,7 +35,7 @@ export class TableVizService {
   }
 
   async update(id: string, updateTableVizDto: UpdateTableVizDto) {
-    return await this.tableVizRepository.update(id, updateTableVizDto);
+    return await this._tableVizRepository.update(id, updateTableVizDto);
   }
 
   remove(id: number) {

@@ -1,5 +1,6 @@
 import { TableViz } from "src/domains/table-viz/entities/table-viz.entity";
-import { Column, ColumnType, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { SimpleColumnType, SpatialColumnType, WithLengthColumnType, WithPrecisionColumnType, WithWidthColumnType } from "typeorm/driver/types/ColumnTypes";
 
 @Entity()
 export class CustomFormInput {
@@ -14,7 +15,7 @@ export class CustomFormInput {
     columnName: string;
 
     @Column()
-    columnType: string;
+    columnType: WithPrecisionColumnType | WithLengthColumnType | WithWidthColumnType | SpatialColumnType | SimpleColumnType;
 
     @Column()
     inputType: string;
