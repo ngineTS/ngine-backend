@@ -17,14 +17,6 @@ export class TableVizService {
     return await this._tableVizRepository.save(createTableVizDto);
   }
 
-  findAll() {
-    return `This action returns all tableViz`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} tableViz`;
-  }
-
   async findByNavigationId(navigationId) {
     return await this._tableVizRepository.findOne({
       where: {
@@ -38,7 +30,4 @@ export class TableVizService {
     return await this._tableVizRepository.update(id, updateTableVizDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} tableViz`;
-  }
 }

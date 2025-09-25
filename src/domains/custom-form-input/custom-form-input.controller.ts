@@ -16,23 +16,9 @@ export class CustomFormInputController {
     return this.customFormService.create(createCustomFormDto, tableName);
   }
 
-  @Get()
-  findAll() {
-    return this.customFormService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.customFormService.findOne(+id);
-  }
-
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCustomFormDto: UpdateCustomFormInputDto) {
     return this.customFormService.update(id, updateCustomFormDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.customFormService.remove(+id);
-  }
 }

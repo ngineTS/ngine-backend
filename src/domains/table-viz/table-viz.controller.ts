@@ -13,16 +13,6 @@ export class TableVizController {
     return this.tableVizService.create(createTableVizDto);
   }
 
-  @Get()
-  findAll() {
-    return this.tableVizService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.tableVizService.findOne(+id);
-  }
-
   @Get('navigation/:navigationId')
   findByNavigationId(@Param('navigationId') navigationId: string) {
     return this.tableVizService.findByNavigationId(navigationId);
@@ -33,8 +23,4 @@ export class TableVizController {
     return this.tableVizService.update(id, updateTableVizDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.tableVizService.remove(+id);
-  }
 }

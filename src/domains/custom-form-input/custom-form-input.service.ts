@@ -37,20 +37,8 @@ export class CustomFormInputService {
     return this._customFormInputRepository.save(createCustomFormDto);
   }
 
-  findAll() {
-    return `This action returns all customForm`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} customForm`;
-  }
-
   update(id: string, updateCustomFormDto: UpdateCustomFormInputDto) {
     return this._customFormInputRepository.update(id, updateCustomFormDto);
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} customForm`;
   }
 
 }
