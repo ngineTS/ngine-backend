@@ -1,17 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CustomFormController } from './custom-form-input.controller';
-import { CustomFormService } from './custom-form-input.service';
+import { CustomFormInputController } from './custom-form-input.controller';
+import { CustomFormInputService } from './custom-form-input.service';
 
 describe('CustomFormController', () => {
-  let controller: CustomFormController;
+  let controller: CustomFormInputController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [CustomFormController],
-      providers: [CustomFormService],
+      controllers: [CustomFormInputController],
+      providers: [CustomFormInputService],
     }).compile();
 
-    controller = module.get<CustomFormController>(CustomFormController);
+    controller = module.get<CustomFormInputController>(CustomFormInputController);
   });
 
   it('should be defined', () => {
