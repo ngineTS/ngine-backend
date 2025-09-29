@@ -9,5 +9,7 @@ export class CreateCustomFormInputDto {
     inputLabel: string;
     bindValue: string;
     bindLabel: string;
-    validators: Array<string>
+    validators: Array<string>;
+    dropdownItems: string;
+    dropdownRouteName: string;
 }

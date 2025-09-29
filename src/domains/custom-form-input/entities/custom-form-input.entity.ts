@@ -32,6 +32,12 @@ export class CustomFormInput {
     @Column()
     bindLabel: string;
 
+    @Column()
+    dropdownItems: string;
+
+    @Column()
+    dropdownRouteName: string;
+
     @ManyToOne(() => TableViz, tableViz => tableViz.customFormInputs)
     @JoinColumn({name: 'tableId', referencedColumnName: 'id'})
     table: TableViz[];
