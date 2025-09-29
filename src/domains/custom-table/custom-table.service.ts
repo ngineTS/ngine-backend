@@ -60,7 +60,11 @@ export class CustomTableService {
     });
 
     for (let customInput of customFormInputs) {
-      columns.push({ name: customInput.columnName, type: customInput.columnType });
+      columns.push({ 
+        name: customInput.columnName, 
+        type: customInput.columnType,
+        isArray: customInput.isList
+      });
     }
 
     const queryRunner = this._dataSource.createQueryRunner();

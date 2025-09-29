@@ -27,6 +27,9 @@ export class CustomFormInput {
     validators: Array<string>;
 
     @Column()
+    isList: boolean;
+
+    @Column()
     bindValue: string;
 
     @Column()

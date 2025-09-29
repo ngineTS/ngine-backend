@@ -30,7 +30,12 @@ export class CustomFormInputService {
 
   async create(createCustomFormDto: CreateCustomFormInputDto[], tableName: string) {
     createCustomFormDto.forEach(column => {
-      column.columnType = this.inputTypeDatabaseTypeMap.get(column.inputType)!;
+      if (column.inputType === 'dropdown') {
+        column.columnType = this.inputTypeDatabaseTypeMap.get(column.columnType)!;
+      } else {
+        column.columnType = this.inputTypeDatabaseTypeMap.get(column.inputType)!;
+      }
+    
       column.columnName = stringToLowerCaseWithUnderscore(column.inputLabel);
     });
     const result = await this._customTableService.createDatabaseTable(tableName, createCustomFormDto);

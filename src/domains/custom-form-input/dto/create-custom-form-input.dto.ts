@@ -7,6 +7,7 @@ export class CreateCustomFormInputDto {
     columnType: WithPrecisionColumnType | WithLengthColumnType | WithWidthColumnType | SpatialColumnType | SimpleColumnType;
     inputType: string;
     inputLabel: string;
+    isList: boolean;
     bindValue: string;
     bindLabel: string;
     validators: Array<string>;
