@@ -18,6 +18,16 @@ export class TableVizController {
     return this.tableVizService.findByNavigationId(navigationId);
   }
 
+  @Get('table-names') 
+  findTableNames() {
+    return this.tableVizService.findTableNames();
+  }
+
+  @Get('table-content/:tableName')
+  findTableContentByTableName(@Param('tableName') tableName: string) {
+    return this.tableVizService.findTableContentByTableName(tableName);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateTableVizDto: UpdateTableVizDto) {
     return this.tableVizService.update(id, updateTableVizDto);

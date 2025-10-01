@@ -21,7 +21,7 @@ export class CustomTableService {
     return await this._dataSource.createQueryBuilder()
       .select('*')
       .from(`custom_table.${tableName}`, 't')
-      .execute()
+      .execute();
   }
 
   async updateTableRow(tableName: string, id: string, payload: any) {
