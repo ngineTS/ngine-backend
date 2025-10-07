@@ -1,3 +1,4 @@
+import { HeaderBar } from "src/domains/header-bar/entities/header-bar.entity";
 import { NavigationType } from "src/domains/navigation-type/entities/navigation-type.entity";
 import { TestText } from "src/domains/test-text/entities/test-text.entity";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
@@ -68,4 +69,8 @@ export class Navigation {
     @OneToOne(() => TestText, testText => testText)
     @JoinColumn({name: 'id', referencedColumnName: 'navigationId'})
     testText: TestText;
+
+    @OneToOne(() => HeaderBar, headerBar => headerBar)
+    @JoinColumn({ name: 'id', referencedColumnName: 'navigationId' })
+    headerBar: HeaderBar;
 }

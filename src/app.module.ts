@@ -22,6 +22,8 @@ import { CustomFormInput } from './domains/custom-form-input/entities/custom-for
 import { TableVizModule } from './domains/table-viz/table-viz.module';
 import { CustomFormInputModule } from './domains/custom-form-input/custom-form-input.module';
 import { CustomTableModule } from './domains/custom-table/custom-table.module';
+import { HeaderBarModule } from './domains/header-bar/header-bar.module';
+import { HeaderBar } from './domains/header-bar/entities/header-bar.entity';
 
 
 @Module({
@@ -46,7 +48,8 @@ import { CustomTableModule } from './domains/custom-table/custom-table.module';
         Calendar,
         Media,
         TableViz,
-        CustomFormInput
+        CustomFormInput,
+        HeaderBar
       ]
     }),
     NavigationModule,
@@ -58,7 +61,8 @@ import { CustomTableModule } from './domains/custom-table/custom-table.module';
     MediaModule,
     TableVizModule,
     CustomFormInputModule,
-    CustomTableModule
+    CustomTableModule,
+    HeaderBarModule
   ],
   controllers: [AppController],
   providers: [AppService],

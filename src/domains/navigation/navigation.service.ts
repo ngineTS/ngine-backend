@@ -84,6 +84,7 @@ export class NavigationService {
     base: string = ''
   ) {
     relations.add(base + 'navigationType');
+    relations.add(base + 'headerBar');
     if(depth > 0) {
       relations.add(base + 'children');
       base = base + 'children.';
