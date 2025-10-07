@@ -22,9 +22,6 @@ export class Navigation {
     order: number;
 
     @Column()
-    color: string;
-
-    @Column()
     width: number;
 
     @Column()
