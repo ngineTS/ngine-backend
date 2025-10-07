@@ -37,6 +37,9 @@ export class Navigation {
     navigationTypeId: string;
 
     @Column()
+    icon: string;
+
+    @Column()
     createdBy: string;
 
     @Column()

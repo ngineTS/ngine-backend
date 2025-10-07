@@ -22,6 +22,18 @@ export class HeaderBar {
     gap: string;
 
     @Column()
+    fontFamily: string;
+
+    @Column()
+    fontSize: string;
+
+    @Column()
+    color: string;
+
+    @Column()
+    activeColor: string;
+
+    @Column()
     isVertical: boolean;
 
     @Column()
