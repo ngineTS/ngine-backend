@@ -34,6 +34,9 @@ export class HeaderBar {
     activeColor: string;
 
     @Column()
+    height: string;
+
+    @Column()
     isVertical: boolean;
 
     @Column()
