@@ -29,7 +29,7 @@ export class HeaderBarController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateHeaderBarDto: UpdateHeaderBarDto) {
-    return this.headerBarService.update(+id, updateHeaderBarDto);
+    return this.headerBarService.update(id, updateHeaderBarDto);
   }
 
   @Delete(':id')

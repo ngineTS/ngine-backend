@@ -11,8 +11,9 @@ export class HeaderBarService {
   constructor(@InjectRepository(HeaderBar)
               private headerBarRepository: Repository<HeaderBar>) {}
 
-  create(createHeaderBarDto: CreateHeaderBarDto) {
-    return 'This action adds a new headerBar';
+  async create(createHeaderBarDto: CreateHeaderBarDto) {
+    console.log('CREATE header bar', createHeaderBarDto);
+    return await this.headerBarRepository.save(createHeaderBarDto);
   }
 
   async findMainHeaderBar() {
@@ -29,8 +30,9 @@ export class HeaderBarService {
     return `This action returns a #${id} headerBar`;
   }
 
-  update(id: number, updateHeaderBarDto: UpdateHeaderBarDto) {
-    return `This action updates a #${id} headerBar`;
+  async update(id: string, updateHeaderBarDto: UpdateHeaderBarDto) {
+    console.log('UPDATE header bar', updateHeaderBarDto);
+    return await this.headerBarRepository.update(id, updateHeaderBarDto);
   }
 
   remove(id: number) {

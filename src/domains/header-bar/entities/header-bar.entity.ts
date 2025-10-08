@@ -19,13 +19,13 @@ export class HeaderBar {
     borderBottom: string;
 
     @Column()
-    gap: string;
+    gap: number;
 
     @Column()
     fontFamily: string;
 
     @Column()
-    fontSize: string;
+    fontSize: number;
 
     @Column()
     color: string;
@@ -34,7 +34,7 @@ export class HeaderBar {
     activeColor: string;
 
     @Column()
-    height: string;
+    height: number;
 
     @Column()
     isVertical: boolean;
