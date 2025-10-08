@@ -16,7 +16,7 @@ export class HeaderBar {
     imageName: string;
 
     @Column()
-    borderBottom: string;
+    borderBottom: number;
 
     @Column()
     gap: number;
