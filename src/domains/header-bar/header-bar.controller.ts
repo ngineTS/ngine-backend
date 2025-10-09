@@ -12,19 +12,9 @@ export class HeaderBarController {
     return this.headerBarService.create(createHeaderBarDto);
   }
 
-  @Get()
-  findAll() {
-    return this.headerBarService.findAll();
-  }
-
   @Get('main')
   findMainHeaderBar() {
     return this.headerBarService.findMainHeaderBar();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.headerBarService.findOne(+id);
   }
 
   @Patch(':id')

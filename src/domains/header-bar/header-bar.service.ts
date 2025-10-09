@@ -27,14 +27,6 @@ export class HeaderBarService {
     });
   }
 
-  findAll() {
-    return `This action returns all headerBar`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} headerBar`;
-  }
-
   async update(id: string, updateHeaderBarDto: UpdateHeaderBarDto) {
     return await this.headerBarRepository.update(id, updateHeaderBarDto);
   }
