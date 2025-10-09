@@ -34,6 +34,6 @@ export class HeaderBarController {
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.headerBarService.remove(+id);
+    return this.headerBarService.softDelete(id);
   }
 }

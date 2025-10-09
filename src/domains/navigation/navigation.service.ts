@@ -3,7 +3,7 @@ import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Navigation } from './entities/navigation.entity';
-import { FindOptionsOrder, FindOptionsOrderValue, FindOptionsWhere, IsNull, Repository } from 'typeorm';
+import { FindOptionsOrder, FindOptionsWhere, IsNull, Repository } from 'typeorm';
 
 @Injectable()
 export class NavigationService {
@@ -36,7 +36,7 @@ export class NavigationService {
       where: where,
       order: order
     });
-    navigations.forEach(navigation => navigation.children = this.filterOutDeletedNavigations(navigation.children));
+    navigations = this.filterOutDeletedNavigations(navigations);
     return navigations;
   }
 
@@ -95,7 +95,10 @@ export class NavigationService {
 
   filterOutDeletedNavigations(navigations: Navigation[]) {
     for (let navigation of navigations) {
-      if(navigation.children?.length > 0) {
+      if (navigation.headerBar?.deletedBy) {
+        navigation.headerBar = null;
+      }
+      if (navigation.children?.length > 0) {
         navigation.children = this.filterOutDeletedNavigations(navigation.children);
       }
     }

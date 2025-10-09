@@ -72,5 +72,5 @@ export class Navigation {
 
     @OneToOne(() => HeaderBar, headerBar => headerBar)
     @JoinColumn({ name: 'id', referencedColumnName: 'navigationId' })
-    headerBar: HeaderBar;
+    headerBar: HeaderBar | null;
 }

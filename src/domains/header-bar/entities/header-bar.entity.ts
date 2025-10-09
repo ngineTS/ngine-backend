@@ -37,8 +37,23 @@ export class HeaderBar {
     height: number;
 
     @Column()
-    isVertical: boolean;
+    isVisibleDuringNavigation: boolean;
 
     @Column()
-    isVisibleDuringNavigation: boolean;
+    createdBy: string;
+
+    @Column()
+    createdDate: Date;
+
+    @Column()
+    updatedBy: string;
+
+    @Column()
+    updatedDate: Date;
+
+    @Column()
+    deletedBy: string;
+
+    @Column()
+    deletedDate: Date;
 }
