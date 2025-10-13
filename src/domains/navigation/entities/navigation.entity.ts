@@ -19,6 +19,9 @@ export class Navigation {
     displayLabel: string;
 
     @Column()
+    description: string;
+
+    @Column()
     order: number;
 
     @Column()
