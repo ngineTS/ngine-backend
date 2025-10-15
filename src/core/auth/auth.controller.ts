@@ -9,7 +9,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
-  @Post('login')
+  @Post('sign-in')
   signIn(@Body() signInDto: Record<string, any>) {
     return this.authService.signIn(signInDto.emailAddress, signInDto.password);
   }

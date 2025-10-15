@@ -30,6 +30,7 @@ import { AuthModule } from './core/auth/auth.module';
 import { UserModule } from './domains/user/user.module';
 import { PasswordRecoveryModule } from './core/password-recovery/password-recovery.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { JwtModule } from '@nestjs/jwt';
 
 
 @Module({
@@ -37,6 +38,11 @@ import { MailerModule } from '@nestjs-modules/mailer';
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       envFilePath: `environment/${process.env.NODE_ENV || ''}.env`,
+    }),
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '2m' },
     }),
     MailerModule.forRoot({
       transport: {
