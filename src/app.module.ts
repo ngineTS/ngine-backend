@@ -24,6 +24,12 @@ import { CustomFormInputModule } from './domains/custom-form-input/custom-form-i
 import { CustomTableModule } from './domains/custom-table/custom-table.module';
 import { HeaderBarModule } from './domains/header-bar/header-bar.module';
 import { HeaderBar } from './domains/header-bar/entities/header-bar.entity';
+import { User } from './domains/user/entities/user.entity';
+import { PasswordRecovery } from './core/password-recovery/entities/password-recovery.entity';
+import { AuthModule } from './core/auth/auth.module';
+import { UserModule } from './domains/user/user.module';
+import { PasswordRecoveryModule } from './core/password-recovery/password-recovery.module';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 
 @Module({
@@ -31,6 +37,17 @@ import { HeaderBar } from './domains/header-bar/entities/header-bar.entity';
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       envFilePath: `environment/${process.env.NODE_ENV || ''}.env`,
+    }),
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_ADRESS,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+      }
     }),
     TypeOrmModule.forRoot({
       type: process.env.DB_TYPE as any,
@@ -49,7 +66,9 @@ import { HeaderBar } from './domains/header-bar/entities/header-bar.entity';
         Media,
         TableViz,
         CustomFormInput,
-        HeaderBar
+        HeaderBar,
+        User,
+        PasswordRecovery
       ]
     }),
     NavigationModule,
@@ -62,7 +81,10 @@ import { HeaderBar } from './domains/header-bar/entities/header-bar.entity';
     TableVizModule,
     CustomFormInputModule,
     CustomTableModule,
-    HeaderBarModule
+    HeaderBarModule,
+    AuthModule,
+    UserModule,
+    PasswordRecoveryModule
   ],
   controllers: [AppController],
   providers: [AppService],
