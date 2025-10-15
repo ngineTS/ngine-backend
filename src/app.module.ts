@@ -39,11 +39,6 @@ import { JwtModule } from '@nestjs/jwt';
     ConfigModule.forRoot({
       envFilePath: `environment/${process.env.NODE_ENV || ''}.env`,
     }),
-    JwtModule.register({
-      global: true,
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '2m' },
-    }),
     MailerModule.forRoot({
       transport: {
         host: 'smtp.gmail.com',
