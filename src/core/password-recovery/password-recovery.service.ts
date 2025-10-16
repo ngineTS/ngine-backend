@@ -32,7 +32,7 @@ export class PasswordRecoveryService {
       try{
         return await this.mailService.sendMail({
           to: userEmail,
-          from: `Uscale App <${process.env.EMAIL_ADRESS}>`,
+          from: `Generic Motor <${process.env.EMAIL_ADDRESS}>`,
           subject: 'Password Recovery',
           text: recoveryLink
         });
