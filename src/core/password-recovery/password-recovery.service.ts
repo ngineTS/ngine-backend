@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/domains/user/entities/user.entity';
@@ -38,14 +38,11 @@ export class PasswordRecoveryService {
         });
       }
       catch{
-        throw new HttpException({
-          status: HttpStatus.BAD_REQUEST,
-          error: 'An error occured to send the link to your email address',
-        }, HttpStatus.BAD_REQUEST);
+        throw new BadRequestException('An error occured to send the link to your email address.')
       }
     }
     else{
-      return {err: "This email address doesn't exist"}
+      throw new NotFoundException("This email address doesn't exist.")
     }
   }
 
