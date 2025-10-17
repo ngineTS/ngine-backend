@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { PasswordRecovery } from 'src/core/password-recovery/entities/password-recovery.entity';
 import { AuthService } from 'src/core/auth/auth.service';
+import { Response } from 'express';
 
 
 @Injectable()
@@ -19,7 +20,7 @@ export class UserService {
               private authService: AuthService) { }
 
 
-  async createUser(createUserDto: CreateUserDto) {
+  async createUser(createUserDto: CreateUserDto, res: Response) {
     const pass = createUserDto.password;
     
     //create encrypted user password
@@ -30,7 +31,7 @@ export class UserService {
     //save user
     const userSaved = await this.userRepository.save(createUserDto);
 
-    return await this.authService.signIn(createUserDto.emailAddress, pass);
+    return await this.authService.signIn(createUserDto.emailAddress, pass, res);
   }
 
 

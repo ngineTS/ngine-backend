@@ -17,7 +17,7 @@ import { AuthGuard } from './auth.guard';
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '1m' },
+      signOptions: { expiresIn: '5m' },
     }),
     TypeOrmModule.forFeature([User, PasswordRecovery])
   ],

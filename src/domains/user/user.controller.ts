@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request, Res } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Public } from 'src/core/auth/auth.guard';
+import { Response } from 'express';
 
 @Controller('user')
 export class UserController {
@@ -10,8 +11,10 @@ export class UserController {
 
   @Public()
   @Post('sign-up')
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.createUser(createUserDto);
+  create(
+    @Body() createUserDto: CreateUserDto,
+    @Res( {passthrough: true }) res: Response) {
+    return this.userService.createUser(createUserDto, res);
   }
 
   @Public()
