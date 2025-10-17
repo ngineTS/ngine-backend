@@ -3,7 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { IsNull, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { PasswordRecovery } from 'src/core/password-recovery/entities/password-recovery.entity';
 import { AuthService } from 'src/core/auth/auth.service';
@@ -84,8 +84,8 @@ export class UserService {
           if (!user) {
             throw new NotFoundException();
           }
-          await this.passwordRecoveryRepository.delete({token: passwordChangeDto.token});
-          return await this.userRepository.update(user.id, {password: hash});
+          await this.passwordRecoveryRepository.delete({ token: passwordChangeDto.token });
+          return await this.userRepository.update(user.id, { password: hash });
         }
         else {
           throw new BadRequestException("Passwords don't match.");
@@ -93,12 +93,12 @@ export class UserService {
 
       }
       else {
-        return JSON.stringify('This link has expired.');
+        throw new BadRequestException("This link has expired.");
       }
 
     }
     else {
-      return  JSON.stringify('This link has expired.');
+      throw new NotFoundException("This link has expired.");
     }
   }
 }
