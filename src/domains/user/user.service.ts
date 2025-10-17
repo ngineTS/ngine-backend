@@ -88,17 +88,17 @@ export class UserService {
           return await this.userRepository.update(user.id, {password: hash});
         }
         else {
-          throw new BadRequestException("Passwords don't match");
+          throw new BadRequestException("Passwords don't match.");
         }
 
       }
       else {
-        return JSON.stringify('this link has expired');
+        return JSON.stringify('This link has expired.');
       }
 
     }
     else {
-      return  JSON.stringify('this link has expired');
+      return  JSON.stringify('This link has expired.');
     }
   }
 }
