@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { RoleNavigationPermission } from "src/domains/role-navigation-permission/entities/role-navigation-permission.entity";
+import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Role {
@@ -36,4 +37,7 @@ export class Role {
     @Column()
     deletedDate: Date;
 
+    @OneToMany(() => RoleNavigationPermission, roleNavigationPermission => roleNavigationPermission.roleId)
+    @JoinColumn({name: 'id', referencedColumnName: 'roleId'})
+    roleNavigationPermissions: RoleNavigationPermission[];
 }
