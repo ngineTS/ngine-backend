@@ -30,7 +30,14 @@ import { AuthModule } from './core/auth/auth.module';
 import { UserModule } from './domains/user/user.module';
 import { PasswordRecoveryModule } from './core/password-recovery/password-recovery.module';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { JwtModule } from '@nestjs/jwt';
+import { Role } from './domains/role/entities/role.entity';
+import { UserRole } from './domains/user-role/entities/user-role.entity';
+import { RoleNavigationPermission } from './domains/role-navigation-permission/entities/role-navigation-permission.entity';
+import { Permission } from './domains/permission/entities/permission.entity';
+import { RoleModule } from './domains/role/role.module';
+import { UserRoleModule } from './domains/user-role/user-role.module';
+import { RoleNavigationPermissionModule } from './domains/role-navigation-permission/role-navigation-permission.module';
+import { PermissionModule } from './domains/permission/permission.module';
 
 
 @Module({
@@ -67,7 +74,11 @@ import { JwtModule } from '@nestjs/jwt';
         CustomFormInput,
         HeaderBar,
         User,
-        PasswordRecovery
+        PasswordRecovery,
+        Role,
+        UserRole,
+        RoleNavigationPermission,
+        Permission
       ]
     }),
     NavigationModule,
@@ -83,7 +94,11 @@ import { JwtModule } from '@nestjs/jwt';
     HeaderBarModule,
     AuthModule,
     UserModule,
-    PasswordRecoveryModule
+    PasswordRecoveryModule,
+    RoleModule,
+    UserRoleModule,
+    RoleNavigationPermissionModule,
+    PermissionModule
   ],
   controllers: [AppController],
   providers: [AppService],
