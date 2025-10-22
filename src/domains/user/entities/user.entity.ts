@@ -41,7 +41,7 @@ export class User {
   @Column()
   deletedDate: Date;
 
-  @OneToMany(() => UserRole, userRole => userRole.userId)
+  @OneToMany(() => UserRole, userRole => userRole.user)
   @JoinColumn({name: 'id', referencedColumnName: 'userId'})
   userRoles: UserRole[];
 

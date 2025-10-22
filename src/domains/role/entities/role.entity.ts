@@ -37,7 +37,7 @@ export class Role {
     @Column()
     deletedDate: Date;
 
-    @OneToMany(() => RoleNavigationPermission, roleNavigationPermission => roleNavigationPermission.roleId)
+    @OneToMany(() => RoleNavigationPermission, roleNavigationPermission => roleNavigationPermission.role)
     @JoinColumn({name: 'id', referencedColumnName: 'roleId'})
     roleNavigationPermissions: RoleNavigationPermission[];
 }
