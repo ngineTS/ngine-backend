@@ -18,6 +18,7 @@ export class RoleService {
               private _roleNavigationPermissionRepository: Repository<RoleNavigationPermission>) {}
 
   async create(createRoleDto: CreateRoleDto) {
+    createRoleDto["name"] = createRoleDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
     return await this._roleRepository.save(createRoleDto);
   }
 
