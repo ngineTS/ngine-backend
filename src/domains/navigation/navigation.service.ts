@@ -18,6 +18,9 @@ export class NavigationService {
         'navigationType',
         'children.navigationType',
       ],
+      order: {
+        displayLabel: 'ASC'
+      }
     });
     navigations = this.filterOutDeletedNavigations(navigations);
     return navigations;
