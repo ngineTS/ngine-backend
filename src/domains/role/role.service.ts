@@ -17,6 +17,12 @@ export class RoleService {
               @InjectRepository(RoleNavigationPermission)
               private _roleNavigationPermissionRepository: Repository<RoleNavigationPermission>) {}
 
+  /**
+   * Save Role.
+   * Assign name prop from displayLabel.
+   * @param createRoleDto The role payload.
+   * @returns The role saved.
+   */
   async create(createRoleDto: CreateRoleDto) {
     createRoleDto["name"] = createRoleDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
     createRoleDto["createdDate"] = new Date();
@@ -26,6 +32,10 @@ export class RoleService {
     return await this._roleRepository.save(createRoleDto);
   }
 
+  /**
+   * Get all roles with roleNavigationPermissions relations ordered by updated.
+   * @returns The roles.
+   */
   async findAll() {
     return await this._roleRepository.find({
       relations: [
@@ -38,10 +48,19 @@ export class RoleService {
         roleNavigationPermissions: {
           deletedDate: IsNull(),
         }
+      },
+      order: {
+        updatedDate: 'DESC'
       }
     });
   }
 
+  /**
+   * Update role.
+   * @param id The role id.
+   * @param updateRoleDto The role payload.
+   * @returns The update response object.
+   */
   async update(id: string, updateRoleDto: UpdateRoleDto) {
     updateRoleDto["updatedDate"] = new Date();
     updateRoleDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
