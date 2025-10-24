@@ -7,28 +7,13 @@ import { UpdateRoleNavigationPermissionDto } from './dto/update-role-navigation-
 export class RoleNavigationPermissionController {
   constructor(private readonly roleNavigationPermissionService: RoleNavigationPermissionService) {}
 
-  @Post()
-  create(@Body() createRoleNavigationPermissionDto: CreateRoleNavigationPermissionDto) {
-    return this.roleNavigationPermissionService.create(createRoleNavigationPermissionDto);
+  @Post('bulk-save')
+  create(@Body() createRoleNavigationPermissionDtoArray: Array<CreateRoleNavigationPermissionDto>) {
+    return this.roleNavigationPermissionService.saveRoleNavigationArray(createRoleNavigationPermissionDtoArray);
   }
 
-  @Get()
-  findAll() {
-    return this.roleNavigationPermissionService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.roleNavigationPermissionService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRoleNavigationPermissionDto: UpdateRoleNavigationPermissionDto) {
-    return this.roleNavigationPermissionService.update(+id, updateRoleNavigationPermissionDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.roleNavigationPermissionService.remove(+id);
+  @Post('bulk-delete')
+  remove(@Body() ids: string[]) {
+    return this.roleNavigationPermissionService.bulkRemove(ids);
   }
 }

@@ -9,9 +9,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 export class PermissionService {
 
   constructor(@InjectRepository(Permission)
-              private _permissionRepository: Repository<Permission>) {
-
-  }
+              private _permissionRepository: Repository<Permission>) { }
+              
   create(createPermissionDto: CreatePermissionDto) {
     return 'This action adds a new permission';
   }

@@ -19,6 +19,10 @@ export class RoleService {
 
   async create(createRoleDto: CreateRoleDto) {
     createRoleDto["name"] = createRoleDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
+    createRoleDto["createdDate"] = new Date();
+    createRoleDto["createdBy"] = '00000000-0000-0000-0000-000000000000';
+    createRoleDto["updatedDate"] = new Date();
+    createRoleDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
     return await this._roleRepository.save(createRoleDto);
   }
 
@@ -29,7 +33,12 @@ export class RoleService {
         'roleNavigationPermissions.navigation',
         'roleNavigationPermissions.permission'
       ],
-      where: { deletedDate: IsNull() }
+      where: { 
+        deletedDate: IsNull(),
+        roleNavigationPermissions: {
+          deletedDate: IsNull(),
+        }
+      }
     });
   }
 

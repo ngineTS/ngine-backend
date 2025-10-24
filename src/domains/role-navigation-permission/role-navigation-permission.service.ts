@@ -1,26 +1,78 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRoleNavigationPermissionDto } from './dto/create-role-navigation-permission.dto';
 import { UpdateRoleNavigationPermissionDto } from './dto/update-role-navigation-permission.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { IsNull, Repository } from 'typeorm';
+import { RoleNavigationPermission } from './entities/role-navigation-permission.entity';
 
 @Injectable()
 export class RoleNavigationPermissionService {
-  create(createRoleNavigationPermissionDto: CreateRoleNavigationPermissionDto) {
-    return 'This action adds a new roleNavigationPermission';
+
+  constructor(@InjectRepository(RoleNavigationPermission)
+              private _roleNavigationPermissionRepository: Repository<RoleNavigationPermission>) { }
+
+  async saveRoleNavigationArray(createRoleNavigationPermissionDtoArray: Array<CreateRoleNavigationPermissionDto>) {
+    /* define array of rnp ids to delete */
+    const roleNavigationPermissionIdsToDelete: string[] = [];
+    /* define array of rnp payloads to save */
+    const roleNavigationPermissionsPayloadToSave: Array<CreateRoleNavigationPermissionDto> = [];    
+    /* get existing role navigation permissions by roleId */
+    const existingRoleNavigationPermissions = await this._roleNavigationPermissionRepository.find({
+      where: {
+        roleId: createRoleNavigationPermissionDtoArray[0]["roleId"],
+        deletedDate: IsNull()
+      }
+    });
+    /* store rnp ids removed by user */
+    for (const dbRnp of existingRoleNavigationPermissions) {
+      if (!createRoleNavigationPermissionDtoArray.find(rnp => 
+        dbRnp.navigationId === rnp["navigationId"] && dbRnp.permissionId === rnp["permissionId"]
+      )) {
+        roleNavigationPermissionIdsToDelete.push(dbRnp.id);
+      }
+    }
+    /* store rnp payloads added by user */
+    for (const rnp of createRoleNavigationPermissionDtoArray) {
+      if (!existingRoleNavigationPermissions.find(dbRnp => 
+        rnp["navigationId"] === dbRnp.navigationId && rnp["permissionId"] === dbRnp.permissionId
+      )) {
+        roleNavigationPermissionsPayloadToSave.push(rnp);
+      }
+    }
+    /* add metadata to objects to save */
+    for (let element of roleNavigationPermissionsPayloadToSave) {
+      element["createdDate"] = new Date();
+      element["createdBy"] = '00000000-0000-0000-0000-000000000000';
+      element["updatedDate"] = new Date();
+      element["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+    }
+    console.log("RNP", createRoleNavigationPermissionDtoArray);
+    /* create array of records to delete based on ids retrieved above */
+    const recordsToDelete: Array<UpdateRoleNavigationPermissionDto> = [];
+    roleNavigationPermissionIdsToDelete.forEach(id => 
+      recordsToDelete.push({
+        id: id,
+        deletedBy: '00000000-0000-0000-0000-000000000000',
+        deletedDate: new Date()
+      })
+    )
+    /* soft delete records */
+    await this._roleNavigationPermissionRepository.save(recordsToDelete);
+    /* save records and return result */
+    return await this._roleNavigationPermissionRepository.save(roleNavigationPermissionsPayloadToSave);
   }
 
-  findAll() {
-    return `This action returns all roleNavigationPermission`;
-  }
 
-  findOne(id: number) {
-    return `This action returns a #${id} roleNavigationPermission`;
-  }
-
-  update(id: number, updateRoleNavigationPermissionDto: UpdateRoleNavigationPermissionDto) {
-    return `This action updates a #${id} roleNavigationPermission`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} roleNavigationPermission`;
+  async bulkRemove(ids: string[]) {
+    console.log('ids to remove', ids);
+    const recordsToDelete: Array<UpdateRoleNavigationPermissionDto> = [];
+    ids.forEach(id => 
+      recordsToDelete.push({
+        id: id,
+        deletedBy: '00000000-0000-0000-0000-000000000000',
+        deletedDate: new Date()
+      })
+    )
+    return await this._roleNavigationPermissionRepository.save(recordsToDelete);
   }
 }
