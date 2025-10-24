@@ -39,14 +39,13 @@ export class RoleNavigationPermissionService {
         roleNavigationPermissionsPayloadToSave.push(rnp);
       }
     }
-    /* add metadata to objects to save */
+    /* add metadata to records to save */
     for (let element of roleNavigationPermissionsPayloadToSave) {
       element["createdDate"] = new Date();
       element["createdBy"] = '00000000-0000-0000-0000-000000000000';
       element["updatedDate"] = new Date();
       element["updatedBy"] = '00000000-0000-0000-0000-000000000000';
     }
-    console.log("RNP", createRoleNavigationPermissionDtoArray);
     /* create array of records to delete based on ids retrieved above */
     const recordsToDelete: Array<UpdateRoleNavigationPermissionDto> = [];
     roleNavigationPermissionIdsToDelete.forEach(id => 
