@@ -33,10 +33,10 @@ export class RoleService {
   }
 
   /**
-   * Get all roles with roleNavigationPermissions relations ordered by updated.
+   * Get all roles with roleNavigationPermissions relations ordered by updated date.
    * @returns The roles.
    */
-  async findAll() {
+  async findAllRolesWithNavigationPermissions() {
     return await this._roleRepository.find({
       relations: [
         'roleNavigationPermissions',

@@ -3,7 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { PasswordRecovery } from 'src/core/password-recovery/entities/password-recovery.entity';
 import { AuthService } from 'src/core/auth/auth.service';
@@ -35,15 +35,9 @@ export class UserService {
   }
 
 
-  findAll() {
-    return `This action returns all user`;
-  }
-
-  async findUserData(userId: string){
-    return await this.userRepository.findOne({
-      where: {
-        id: userId
-      }
+  async findAll() {
+    return await this.userRepository.find({
+      where: {deletedDate: IsNull()}
     });
   }
 

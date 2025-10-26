@@ -9,6 +9,11 @@ import { Response } from 'express';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @Get()
+  findAll() {
+    return this.userService.findAll();
+  }
+
   @Public()
   @Post('sign-up')
   create(
@@ -21,11 +26,6 @@ export class UserController {
   @Post('password-change')
   changeUserPassword(@Body() passwordChangeDto: any){
     return this.userService.changeUserPassword(passwordChangeDto);
-  }
-
-  @Get()
-  findUserData(@Request() req) {
-    return this.userService.findUserData(req.user.sub);
   }
 
   @Public()

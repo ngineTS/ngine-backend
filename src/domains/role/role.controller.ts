@@ -12,9 +12,9 @@ export class RoleController {
     return this.roleService.create(createRoleDto);
   }
 
-  @Get()
-  findAll() {
-    return this.roleService.findAll();
+  @Get('rpn')
+  findAllRolesWithNavigationPermissions() {
+    return this.roleService.findAllRolesWithNavigationPermissions();
   }
 
   @Patch(':id')
