@@ -33,6 +33,16 @@ export class RoleService {
   }
 
   /**
+   * Find all roles without retlations, ordered alphabeatically.
+   */
+  async findAllRoles() {
+    return await this._roleRepository.find({
+      where: {deletedDate: IsNull()},
+      order: {displayLabel: 'ASC'}
+    })
+  }
+
+  /**
    * Get all roles with roleNavigationPermissions relations ordered by updated date.
    * @returns The roles.
    */

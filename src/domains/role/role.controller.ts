@@ -12,6 +12,11 @@ export class RoleController {
     return this.roleService.create(createRoleDto);
   }
 
+  @Get()
+  findAllRoles() {
+    return this.roleService.findAllRoles();
+  }
+
   @Get('rpn')
   findAllRolesWithNavigationPermissions() {
     return this.roleService.findAllRolesWithNavigationPermissions();
