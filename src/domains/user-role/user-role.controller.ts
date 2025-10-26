@@ -7,9 +7,12 @@ import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 export class UserRoleController {
   constructor(private readonly userRoleService: UserRoleService) {}
 
-  @Post()
-  create(@Body() createUserRoleDto: CreateUserRoleDto) {
-    return this.userRoleService.create(createUserRoleDto);
+  @Post('bulk-save/:userId')
+  bulkSaveUserRoles(
+    @Param('userId') userId: string,
+    @Body() createUserRoleDtoArray: Array<CreateUserRoleDto>
+  ) {
+    return this.userRoleService.bulkSaveUserRoles(userId, createUserRoleDtoArray);
   }
 
   @Get()
