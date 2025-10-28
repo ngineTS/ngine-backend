@@ -10,6 +10,9 @@ export class Permission {
     name: string;
 
     @Column()
+    priority: number;
+
+    @Column()
     createdBy: string;
 
     @Column()

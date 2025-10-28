@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Req, Request, } from '@nestjs/common';
 import { NavigationService } from './navigation.service';
 import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
@@ -13,8 +13,8 @@ export class NavigationController {
   }
 
   @Get()
-  findNestedNavigations() {
-    return this.navigationService.findNestedNavigations();
+  findNestedNavigations(@Request() req) {
+    return this.navigationService.findNestedNavigations(req.user.sub);
   }
 
   @Get('flat')
