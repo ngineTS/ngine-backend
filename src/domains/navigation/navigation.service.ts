@@ -174,10 +174,10 @@ export class NavigationService {
   /**
    * Set up user navigation permission based on below rules then repeat process for children.
    * 
-   * - CASE 1: Navigation permission is found but parent navigation priviledges are higher than navigation ones - navigation inherits parent navigation permission.
-   * - CASE 2: Navigation permission is found and priviledges are higher than parent ones - assign navigation permission to navigation.
-   * - CASE 3: Navigation permission is found and parent has no permission - assign 'Can view' to parent navigation.
-   * - CASE 4: No Navigation permission found but parent navigation permission found - - navigation inherits parent navigation permission.
+   * - Case 1: Navigation permission found but parent navigation priviledges are higher than navigation ones - navigation inherits parent navigation permission.
+   * - Case 2: Navigation permission found and priviledges are higher than parent ones - assign navigation permission to navigation.
+   * - Case 3: Navigation permission found and parent has no permission - assign 'Can view' to parent navigation.
+   * - Case 4: No Navigation permission found but parent navigation permission found - navigation inherits parent navigation permission.
    * 
    * @param navigation The navigation to add "permissionName" prop.
    * @param userRoleNavigationPermissions The array of user roleNavigationPermissions.
@@ -193,24 +193,24 @@ export class NavigationService {
     const navigationPermission = userRoleNavigationPermissions.find(obj => obj.navigationId === navigation.id)?.permission;
     if (navigationPermission) {
       if (parentNavigationPermission) {
-        /* CASE 1 */
+        /* Case 1 */
         if (navigationPermission.priority < parentNavigationPermission.priority) {
           navigation['permissionName'] = navigationPermission.name;
         }
-        /* CASE 2 */
+        /* Case 2 */
         else {
           navigation['permissionName'] = parentNavigationPermission.name;
         }
       }
-      /* CASE 3 */
+      /* Case 3 */
       else {
         navigation['permissionName'] = navigationPermission.name;
-        if(parentNavigation) {
+        if (parentNavigation) {
           parentNavigation['permissionName'] = 'Can view';
         }
       }
     }
-    /* CASE 4 */
+    /* Case 4 */
     else {
       if (parentNavigationPermission) {
         navigation['permissionName'] = parentNavigationPermission?.name;
