@@ -22,11 +22,6 @@ export class NavigationController {
     return this.navigationService.findAllNavigations();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.navigationService.findOne(+id);
-  }
-
   @Patch(':id')
   updateNavigation(@Param('id') id: string, @Body() updateNavigationDto: UpdateNavigationDto) {
     return this.navigationService.updateNavigation(id, updateNavigationDto);
