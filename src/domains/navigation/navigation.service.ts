@@ -190,7 +190,7 @@ export class NavigationService {
     parentNavigation?: Navigation,
     parentNavigationPermission?: Permission
   ) {
-    const navigationPermission = userRoleNavigationPermissions.find(obj => obj.navigationId === navigation.id)?.permission;
+    let navigationPermission = userRoleNavigationPermissions.find(obj => obj.navigationId === navigation.id)?.permission;
     if (navigationPermission) {
       if (parentNavigationPermission) {
         /* Case 1 */
@@ -214,6 +214,7 @@ export class NavigationService {
     else {
       if (parentNavigationPermission) {
         navigation['permissionName'] = parentNavigationPermission?.name;
+        navigationPermission = parentNavigationPermission;
       }
     }
     /* repeat process to children */
