@@ -120,6 +120,8 @@ export class NavigationService {
    * then we keep only the navigations with highest priviledge.
    * @param userId the id of the user.
    * @returns The user roleNavigationPermissions formatted.
+   * 
+   * TODO: Rework to something more fluent and performant.
    */
   async getUserRoleNavigationPermissionsFormatted(userId: string): Promise<Array<RoleNavigationPermission>> {
     /* get user roles */
