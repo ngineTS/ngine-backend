@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { HeaderBar } from './entities/header-bar.entity';
 import { IsNull, Repository } from 'typeorm';
 import { Navigation } from '../navigation/entities/navigation.entity';
+import { User } from '../user/entities/user.entity';
 
 @Injectable()
 export class HeaderBarService {
@@ -12,19 +13,53 @@ export class HeaderBarService {
   constructor(@InjectRepository(HeaderBar)
               private headerBarRepository: Repository<HeaderBar>,
               @InjectRepository(Navigation)
-              private navigationRepository: Repository<Navigation>) {}
+              private navigationRepository: Repository<Navigation>,
+              @InjectRepository(User)
+              private _userRepository: Repository<User>) {}
 
   async create(createHeaderBarDto: CreateHeaderBarDto) {
     return await this.headerBarRepository.save(createHeaderBarDto);
   }
 
-  async findMainHeaderBar() {
-    return await this.headerBarRepository.findOne({
+  async findMainHeaderBar(userId: string) {
+    /* get main header */
+    const mainHeader = await this.headerBarRepository.findOne({
       where: { 
         navigationId: IsNull(),
         deletedBy: IsNull(),
       }
     });
+    /* get user role - 'All navigation' permission only */
+    const userAllNavigationsPermission = await this._userRepository.findOne({
+      relations: [
+        'userRoles',
+        'userRoles.role',
+        'userRoles.role.roleNavigationPermissions',
+        'userRoles.role.roleNavigationPermissions.navigation',
+        'userRoles.role.roleNavigationPermissions.permission',
+      ],
+      where: {
+        id: userId,
+        deletedDate: IsNull(),
+        userRoles: {
+          deletedDate: IsNull(),
+          role: {
+            deletedDate: IsNull(),
+            roleNavigationPermissions: {
+              navigationId: '00000000-0000-0000-0000-000000000000',
+              deletedDate: IsNull(),
+            }
+          }
+        }
+      }
+    });
+    /* assign permissionName property to mainHeader */
+    if (mainHeader && userAllNavigationsPermission) {
+      mainHeader["permissionName"] =
+        userAllNavigationsPermission.userRoles[0].role.roleNavigationPermissions[0].permission.name;
+    }
+    
+    return mainHeader;
   }
 
   async update(id: string, updateHeaderBarDto: UpdateHeaderBarDto) {

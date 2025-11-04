@@ -104,7 +104,7 @@ export class NavigationService {
       }
     }
     return navigations.filter(navigation => {
-      if(filterOutNavigationWithoutPermission) {
+      if (filterOutNavigationWithoutPermission) {
         return !navigation.deletedDate && navigation['permissionName']
       }
       else {
@@ -133,7 +133,10 @@ export class NavigationService {
         'userRoles.role.roleNavigationPermissions.navigation',
         'userRoles.role.roleNavigationPermissions.permission',
       ],
-      where: {id: userId}
+      where: {
+        id: userId,
+        deletedDate: IsNull(),
+      }
     });
     /* exclude deleted user roles */
     if (userWithRoles) {
@@ -194,7 +197,7 @@ export class NavigationService {
   ) {
     /* get current navigation permission */
     let navigationPermission = userRoleNavigationPermissions.find(obj => obj.navigationId === navigation.id)?.permission;
-    /* check if all navigation permission exists and assign it to navigation if needed */
+    /* check if 'All navigations' permission exists and assign it to navigation if it is higher than navigation permission */
     let allNavigationPermissions = userRoleNavigationPermissions.find(obj => obj.navigationId === '00000000-0000-0000-0000-000000000000')?.permission;
     if (allNavigationPermissions) {
       if (!navigationPermission || allNavigationPermissions.priority < navigationPermission.priority) {
@@ -228,7 +231,7 @@ export class NavigationService {
         navigationPermission = parentNavigationPermission;
       }
     }
-    
+
     /* repeat process to children */
     for (let child of navigation.children) { 
       this.setUpUserNavigationPermission(

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request } from '@nestjs/common';
 import { HeaderBarService } from './header-bar.service';
 import { CreateHeaderBarDto } from './dto/create-header-bar.dto';
 import { UpdateHeaderBarDto } from './dto/update-header-bar.dto';
@@ -13,8 +13,8 @@ export class HeaderBarController {
   }
 
   @Get('main')
-  findMainHeaderBar() {
-    return this.headerBarService.findMainHeaderBar();
+  findMainHeaderBar(@Request() req) {
+    return this.headerBarService.findMainHeaderBar(req.user.sub);
   }
 
   @Patch(':id')
