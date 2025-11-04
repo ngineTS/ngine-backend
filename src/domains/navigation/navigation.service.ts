@@ -42,7 +42,7 @@ export class NavigationService {
    */
   async findNestedNavigations(userId: string) {
     const userRoleNavigationPermissionsFormatted = await this.getUserRoleNavigationPermissionsFormatted(userId);
-
+    console.log(userRoleNavigationPermissionsFormatted);
     const relations = new Set<string>();
     const order: FindOptionsOrder<Navigation> = { order: 'ASC' };
     const where: FindOptionsWhere<Navigation> = { 
@@ -143,7 +143,7 @@ export class NavigationService {
     /* exclude deleted user role navigation permissions */
     userWithRoles?.userRoles.forEach(userRole => {
       userRole.role.roleNavigationPermissions = userRole.role.roleNavigationPermissions
-        .filter(obj => !obj.deletedDate && !obj.navigation.deletedDate && !obj.permission.deletedDate);
+        .filter(obj => !obj.deletedDate && !obj.navigation?.deletedDate && !obj.permission.deletedDate);
     })
     /* retrieve userRoleNavigationPermissions only */
     const userRoleNavigationPermissions: RoleNavigationPermission[] = [];
@@ -155,7 +155,7 @@ export class NavigationService {
       (acc[item.navigationId] ||= []).push(item);
       return acc;
     }, {});
-    /* if multiple roleNavigationPermissions by navigationId then keep only the one with highest priority */
+    /* if multiple roleNavigationPermissions by navigationId then keep only the one with highest permission */
     const priorityUserRoleNavigationPermissionByNavigationId = Object.fromEntries(
       Object.entries<RoleNavigationPermission[]>(userRoleNavigationPermissionsByNavigationId)
         .map(([id, items]) => {
@@ -176,8 +176,8 @@ export class NavigationService {
   /**
    * Set up user navigation permission based on below rules then repeat process for children.
    * 
-   * - Case 1: Navigation permission found but parent navigation priviledges are higher than navigation ones - navigation inherits parent navigation permission.
-   * - Case 2: Navigation permission found and priviledges are higher than parent ones - assign navigation permission to navigation.
+   * - Case 1: Navigation permission found but parent permission is higher - navigation inherits parent navigation permission.
+   * - Case 2: Navigation permission found and it is higher than parent one - keep navigation permission.
    * - Case 3: Navigation permission found and parent has no permission - assign 'Can view' to parent navigation.
    * - Case 4: No Navigation permission found but parent navigation permission found - navigation inherits parent navigation permission.
    * 
@@ -192,7 +192,16 @@ export class NavigationService {
     parentNavigation?: Navigation,
     parentNavigationPermission?: Permission
   ) {
+    /* get current navigation permission */
     let navigationPermission = userRoleNavigationPermissions.find(obj => obj.navigationId === navigation.id)?.permission;
+    /* check if all navigation permission exists and assign it to navigation if needed */
+    let allNavigationPermissions = userRoleNavigationPermissions.find(obj => obj.navigationId === '00000000-0000-0000-0000-000000000000')?.permission;
+    if (allNavigationPermissions) {
+      if (!navigationPermission || allNavigationPermissions.priority < navigationPermission.priority) {
+        navigationPermission = allNavigationPermissions;
+      }
+    }
+
     if (navigationPermission) {
       if (parentNavigationPermission) {
         /* Case 1 */
@@ -219,6 +228,7 @@ export class NavigationService {
         navigationPermission = parentNavigationPermission;
       }
     }
+    
     /* repeat process to children */
     for (let child of navigation.children) { 
       this.setUpUserNavigationPermission(
