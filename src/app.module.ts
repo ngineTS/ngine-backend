@@ -7,9 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { NavigationModule } from './domains/navigation/navigation.module';
 import { Navigation } from './domains/navigation/entities/navigation.entity';
 import { NavigationType } from './domains/navigation-type/entities/navigation-type.entity';
-import { TestText } from './domains/test-text/entities/test-text.entity';
 import { NavigationTypeModule } from './domains/navigation-type/navigation-type.module';
-import { TestTextModule } from './domains/test-text/test-text.module';
 import { QuillEditorModule } from './domains/quill-editor/quill-editor.module';
 import { QuillEditor } from './domains/quill-editor/entities/quill-editor.entity';
 import { CalendarModule } from './domains/calendar/calendar.module';
@@ -66,7 +64,6 @@ import { PermissionModule } from './domains/permission/permission.module';
       entities: [   
         Navigation,
         NavigationType,
-        TestText,
         QuillEditor,
         Calendar,
         Media,
@@ -83,7 +80,6 @@ import { PermissionModule } from './domains/permission/permission.module';
     }),
     NavigationModule,
     NavigationTypeModule,
-    TestTextModule,
     QuillEditorModule,
     CalendarModule,
     FileManagementModule,
