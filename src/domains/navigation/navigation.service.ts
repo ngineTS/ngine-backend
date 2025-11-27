@@ -4,26 +4,44 @@ import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Navigation } from './entities/navigation.entity';
 import { FindOptionsOrder, FindOptionsWhere, IsNull, Repository } from 'typeorm';
+import { User } from '../user/entities/user.entity';
+import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
+import { Permission } from '../permission/entities/permission.entity';
 
 @Injectable()
 export class NavigationService {
 
   constructor(@InjectRepository(Navigation)
-              private navigationRepository: Repository<Navigation>) {}
+              private _navigationRepository: Repository<Navigation>,
+              @InjectRepository(User)
+              private _userRepository: Repository<User>) {}
 
+  /**
+   * Find all flat navigations not deleted and their first level of children.
+   * @returns The array of navigations.
+   */
   async findAllNavigations() {
-    let navigations = await this.navigationRepository.find({
+    let navigations = await this._navigationRepository.find({
       relations: [
         'children',
         'navigationType',
         'children.navigationType',
       ],
+      order: {
+        displayLabel: 'ASC'
+      }
     });
     navigations = this.filterOutDeletedNavigations(navigations);
     return navigations;
   }
 
-  async findNestedNavigations() {
+  /**
+   * Load Nested navigations filtered by user permissions.
+   * @param userId The user id from the request.
+   * @returns A nested navigations object.
+   */
+  async findNestedNavigations(userId: string) {
+    const userRoleNavigationPermissionsFormatted = await this.getUserRoleNavigationPermissionsFormatted(userId);
     const relations = new Set<string>();
     const order: FindOptionsOrder<Navigation> = { order: 'ASC' };
     const where: FindOptionsWhere<Navigation> = { 
@@ -31,52 +49,27 @@ export class NavigationService {
       parentId: IsNull() 
     };
     this.generateRelationsAndOrder(4, relations, order); //TO DO: Replace 4 by the exact depth wished
-    let navigations = await this.navigationRepository.find({
+    let navigations = await this._navigationRepository.find({
       relations: [...relations],
       where: where,
       order: order
     });
-    navigations = this.filterOutDeletedNavigations(navigations);
+    navigations.forEach(navigation => this.setUpUserNavigationPermission(
+      navigation,
+      userRoleNavigationPermissionsFormatted
+    ));
+    navigations = this.filterOutDeletedNavigations(navigations, true);
+
     return navigations;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} navigation`;
-  }
-
-  async saveNavigation(createNavigationDto: CreateNavigationDto) {
-    createNavigationDto["name"] = createNavigationDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
-    createNavigationDto["createdBy"] = '00000000-0000-0000-0000-000000000000';
-    createNavigationDto["createdDate"] = new Date();
-    return await this.navigationRepository.save(createNavigationDto);
-  }
-
-  async updateNavigation(id: string, updateNavigationDto: UpdateNavigationDto) {
-    updateNavigationDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
-    updateNavigationDto["updatedDate"] = new Date();
-    return await this.navigationRepository.update(id, updateNavigationDto);
-  }
-
-  async updateNavigations(updateNavigationDtoArray: UpdateNavigationDto[]) {
-    updateNavigationDtoArray.forEach(element => {
-      element["updatedBy"] = '00000000-0000-0000-0000-000000000000';
-      element["updatedDate"] = new Date();
-    });
-    return await this.navigationRepository.save(updateNavigationDtoArray);
-  }
-
-  async removeNavigations(ids: string[]) {
-    const recordsToDelete: Array<UpdateNavigationDto> = [];
-    ids.forEach(id => 
-      recordsToDelete.push({
-        id: id,
-        deletedBy: '00000000-0000-0000-0000-000000000000',
-        deletedDate: new Date()
-      })
-    )
-    return await this.navigationRepository.save(recordsToDelete);
-  }
-
+  /**
+   * Generate navigation relations until given depth.
+   * @param depth The number of nested levels.
+   * @param relations The existing set of relations.
+   * @param order The existing TypeORM order property.
+   * @param base The relation base.
+   */
   generateRelationsAndOrder(
     depth: number, 
     relations: Set<string>, 
@@ -88,21 +81,218 @@ export class NavigationService {
     if(depth > 0) {
       relations.add(base + 'children');
       base = base + 'children.';
-      order.children = { order: 'ASC'};
+      order.children = { order: 'ASC' };
       this.generateRelationsAndOrder(depth - 1, relations, order.children, base);
     }
   }
 
-  filterOutDeletedNavigations(navigations: Navigation[]) {
+  /**
+   * Filter out soft deleted navigations in the given navigation array.
+   * If 'filterOutNavigationWithoutPermission' is true - filter out also navigation without permissions.
+   * @param navigations The navigations to filter.
+   * @param filterOutNavigationWithoutPermission A boolean specifying if we want also to exclude the navigation without permission.
+   * @returns The array of navigations filtered.
+   */
+  filterOutDeletedNavigations(navigations: Navigation[], filterOutNavigationWithoutPermission = false) {
     for (let navigation of navigations) {
       if (navigation.headerBar?.deletedBy) {
         navigation.headerBar = null;
       }
       if (navigation.children?.length > 0) {
-        navigation.children = this.filterOutDeletedNavigations(navigation.children);
+        navigation.children = this.filterOutDeletedNavigations(navigation.children, filterOutNavigationWithoutPermission);
       }
     }
-    return navigations.filter(obj => !obj.deletedDate);
+    return navigations.filter(navigation => {
+      if (filterOutNavigationWithoutPermission) {
+        return !navigation.deletedDate && navigation['permissionName']
+      }
+      else {
+        return !navigation.deletedDate
+      }
+    });
   }
 
+  /**
+   * Format user roleNavigationPermissions.
+   * 
+   * If a user is assigned to multiple roles which share the same navigations
+   * then we keep only the navigations with highest priviledge.
+   * @param userId the id of the user.
+   * @returns The user roleNavigationPermissions formatted.
+   * 
+   * TODO: Rework to something more fluent and performant.
+   */
+  async getUserRoleNavigationPermissionsFormatted(userId: string): Promise<Array<RoleNavigationPermission>> {
+    /* get user roles */
+    const userWithRoles = await this._userRepository.findOne({
+      relations: [
+        'userRoles',
+        'userRoles.role',
+        'userRoles.role.roleNavigationPermissions',
+        'userRoles.role.roleNavigationPermissions.navigation',
+        'userRoles.role.roleNavigationPermissions.permission',
+      ],
+      where: {
+        id: userId,
+        deletedDate: IsNull(),
+      }
+    });
+    /* exclude deleted user roles */
+    if (userWithRoles) {
+      userWithRoles.userRoles = userWithRoles.userRoles
+        .filter(obj => !obj.deletedDate && !obj.role.deletedDate);
+    }
+    /* exclude deleted user role navigation permissions */
+    userWithRoles?.userRoles.forEach(userRole => {
+      userRole.role.roleNavigationPermissions = userRole.role.roleNavigationPermissions
+        .filter(obj => !obj.deletedDate && !obj.navigation?.deletedDate && !obj.permission.deletedDate);
+    })
+    /* retrieve userRoleNavigationPermissions only */
+    const userRoleNavigationPermissions: RoleNavigationPermission[] = [];
+    userWithRoles?.userRoles.forEach(userRole => {
+      userRole.role.roleNavigationPermissions.forEach(rnp => userRoleNavigationPermissions.push(rnp));
+    })
+    /* group roleNavigationPermissions by navigationId */
+    const userRoleNavigationPermissionsByNavigationId = userRoleNavigationPermissions.reduce((acc, item) => {
+      (acc[item.navigationId] ||= []).push(item);
+      return acc;
+    }, {});
+    /* if multiple roleNavigationPermissions by navigationId then keep only the one with highest permission */
+    const priorityUserRoleNavigationPermissionByNavigationId = Object.fromEntries(
+      Object.entries<RoleNavigationPermission[]>(userRoleNavigationPermissionsByNavigationId)
+        .map(([id, items]) => {
+          const lowest = items.reduce((min, item) =>
+            item.permission.priority < min.permission.priority ? item : min
+          );
+          return [id, lowest];
+        })
+    );
+    /* create final array of user roleNavigationPermissions */
+    const userRoleNavigationPermissionsFormatted: RoleNavigationPermission[] = [];
+     for (const [key, value] of Object.entries(priorityUserRoleNavigationPermissionByNavigationId)) {
+      userRoleNavigationPermissionsFormatted.push(value);
+    }
+    return userRoleNavigationPermissionsFormatted;
+  }
+
+  /**
+   * Set up user navigation permission based on below rules then repeat process for children.
+   * 
+   * - Case 1: Navigation permission found but parent permission is higher - navigation inherits parent navigation permission.
+   * - Case 2: Navigation permission found and it is higher than parent one - keep navigation permission.
+   * - Case 3: Navigation permission found and parent has no permission - assign 'Can view' to parent navigation.
+   * - Case 4: No Navigation permission found but parent navigation permission found - navigation inherits parent navigation permission.
+   * 
+   * @param navigation The navigation to add "permissionName" prop.
+   * @param userRoleNavigationPermissions The array of user roleNavigationPermissions.
+   * @param parentNavigation The parent navigation.
+   * @param parentNavigationPermission The parent navigation permission.
+   */
+  setUpUserNavigationPermission(
+    navigation: Navigation,
+    userRoleNavigationPermissions: RoleNavigationPermission[],
+    parentNavigation?: Navigation,
+    parentNavigationPermission?: Permission
+  ) {
+    /* get current navigation permission */
+    let navigationPermission = userRoleNavigationPermissions.find(obj => obj.navigationId === navigation.id)?.permission;
+    /* check if 'All navigations' permission exists and assign it to navigation if it is higher than navigation permission */
+    let allNavigationPermissions = userRoleNavigationPermissions.find(obj => obj.navigationId === '00000000-0000-0000-0000-000000000000')?.permission;
+    if (allNavigationPermissions) {
+      if (!navigationPermission || allNavigationPermissions.priority < navigationPermission.priority) {
+        navigationPermission = allNavigationPermissions;
+      }
+    }
+
+    if (navigationPermission) {
+      if (parentNavigationPermission) {
+        /* Case 1 */
+        if (navigationPermission.priority < parentNavigationPermission.priority) {
+          navigation['permissionName'] = navigationPermission.name;
+        }
+        /* Case 2 */
+        else {
+          navigation['permissionName'] = parentNavigationPermission.name;
+        }
+      }
+      /* Case 3 */
+      else {
+        navigation['permissionName'] = navigationPermission.name;
+        if (parentNavigation) {
+          parentNavigation['permissionName'] = 'Can view';
+        }
+      }
+    }
+    /* Case 4 */
+    else {
+      if (parentNavigationPermission) {
+        navigation['permissionName'] = parentNavigationPermission?.name;
+        navigationPermission = parentNavigationPermission;
+      }
+    }
+
+    /* repeat process to children */
+    for (let child of navigation.children) { 
+      this.setUpUserNavigationPermission(
+        child,
+        userRoleNavigationPermissions,
+        navigation,
+        navigationPermission
+      );
+    } 
+  }
+
+  /**
+   * Save navigation.
+   * @param createNavigationDto The navigation to save.
+   * @returns The navigation saved.
+   */
+  async saveNavigation(createNavigationDto: CreateNavigationDto): Promise<Navigation> {
+    createNavigationDto["name"] = createNavigationDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
+    createNavigationDto["createdBy"] = '00000000-0000-0000-0000-000000000000';
+    createNavigationDto["createdDate"] = new Date();
+    return await this._navigationRepository.save(createNavigationDto);
+  }
+
+  /**
+   * Update navigation properties.
+   * @param id The navigation id.
+   * @param updateNavigationDto The navigation properties to update.
+   * @returns An UpdateResponse type object.
+   */
+  async updateNavigation(id: string, updateNavigationDto: UpdateNavigationDto) {
+    updateNavigationDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+    updateNavigationDto["updatedDate"] = new Date();
+    return await this._navigationRepository.update(id, updateNavigationDto);
+  }
+
+  /**
+   * Update Array of navigations.
+   * @param updateNavigationDtoArray The array of navigations.
+   * @returns The array of navigations saved.
+   */
+  async updateNavigations(updateNavigationDtoArray: UpdateNavigationDto[]) {
+    updateNavigationDtoArray.forEach(element => {
+      element["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+      element["updatedDate"] = new Date();
+    });
+    return await this._navigationRepository.save(updateNavigationDtoArray);
+  }
+
+  /**
+   * Soft delete array of navigations.
+   * @param ids The navigation ids array to soft delete.
+   * @returns The Array of navigation that have been soft deleted.
+   */
+  async removeNavigations(ids: string[]) {
+    const recordsToDelete: Array<UpdateNavigationDto> = [];
+    ids.forEach(id => 
+      recordsToDelete.push({
+        id: id,
+        deletedBy: '00000000-0000-0000-0000-000000000000',
+        deletedDate: new Date()
+      })
+    )
+    return await this._navigationRepository.save(recordsToDelete);
+  }
 }

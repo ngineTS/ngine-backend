@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Role } from "src/domains/role/entities/role.entity";
+import { UserRole } from "src/domains/user-role/entities/user-role.entity";
+import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class User {
@@ -38,5 +40,9 @@ export class User {
 
   @Column()
   deletedDate: Date;
+
+  @OneToMany(() => UserRole, userRole => userRole.user)
+  @JoinColumn({name: 'id', referencedColumnName: 'userId'})
+  userRoles: UserRole[];
 
 }

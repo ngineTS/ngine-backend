@@ -3,12 +3,11 @@ import { QuillEditorService } from './quill-editor.service';
 import { QuillEditorController } from './quill-editor.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { QuillEditor } from './entities/quill-editor.entity';
-import { NavigationService } from 'src/domains/navigation/navigation.service';
-import { Navigation } from 'src/domains/navigation/entities/navigation.entity';
+import { NavigationModule } from '../navigation/navigation.module';
 
 @Module({
-  imports:[TypeOrmModule.forFeature([QuillEditor, Navigation])],
+  imports:[TypeOrmModule.forFeature([QuillEditor]), NavigationModule],
   controllers: [QuillEditorController],
-  providers: [QuillEditorService, NavigationService],
+  providers: [QuillEditorService],
 })
 export class QuillEditorModule {}

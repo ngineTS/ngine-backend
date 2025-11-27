@@ -9,6 +9,11 @@ import { Response } from 'express';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @Get()
+  findAll() {
+    return this.userService.findAll();
+  }
+
   @Public()
   @Post('sign-up')
   create(
@@ -23,11 +28,6 @@ export class UserController {
     return this.userService.changeUserPassword(passwordChangeDto);
   }
 
-  @Get()
-  findUserData(@Request() req) {
-    return this.userService.findUserData(req.user.sub);
-  }
-
   @Public()
   @Get('email-address/:emailAddress')
   doesEmailAddressAlreadyExists(@Param('emailAddress') emailAddress: string){
@@ -36,11 +36,11 @@ export class UserController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
+    return this.userService.update(id, updateUserDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+    return this.userService.remove(id);
   }
 }

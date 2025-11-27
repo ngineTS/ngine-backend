@@ -3,11 +3,12 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { PasswordRecovery } from 'src/core/password-recovery/entities/password-recovery.entity';
 import { AuthService } from 'src/core/auth/auth.service';
 import { Response } from 'express';
+import { UserRole } from '../user-role/entities/user-role.entity';
 
 
 @Injectable()
@@ -15,6 +16,8 @@ export class UserService {
 
   constructor(@InjectRepository(User)
               private userRepository: Repository<User>,
+              @InjectRepository(UserRole)
+              private userRoleRepository: Repository<UserRole>,
               @InjectRepository(PasswordRecovery)
               private passwordRecoveryRepository: Repository<PasswordRecovery>,
               private authService: AuthService) { }
@@ -35,24 +38,42 @@ export class UserService {
   }
 
 
-  findAll() {
-    return `This action returns all user`;
+  async findAll() {
+    const users = await this.userRepository
+    .createQueryBuilder('user')
+    .leftJoinAndSelect(
+      'user.userRoles',
+      'userRoles',
+      'userRoles.deletedDate IS NULL'
+    )
+    .where('user.deletedDate IS NULL')
+    .getMany();
+
+    return users;
   }
 
-  async findUserData(userId: string){
-    return await this.userRepository.findOne({
-      where: {
-        id: userId
-      }
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    return await this.userRepository.update(id, updateUserDto);
+  }
+
+  async remove(id: string) {
+    console.log(id);
+    let removedTotal = 0;
+    const softDeleteUserResponse = await this.userRepository.update(id, {
+      deletedDate: new Date(),
+      deletedBy: '00000000-0000-0000-0000-000000000000'
+    })
+    const userRolesToSoftDelete = await this.userRoleRepository.find({
+      where: {userId: id}
     });
-  }
+    for(let userRole of userRolesToSoftDelete) {
+      userRole.deletedDate = new Date(),
+      userRole.deletedBy = '00000000-0000-0000-0000-000000000000'
+    }
+    removedTotal = removedTotal 
+      + (await this.userRoleRepository.save(userRolesToSoftDelete)).length;
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+    return removedTotal + softDeleteUserResponse.affected!;
   }
 
   async doesEmailAddressAlreadyExists(emailAddress: string): Promise<boolean> {
