@@ -42,7 +42,6 @@ export class NavigationService {
    */
   async findNestedNavigations(userId: string) {
     const userRoleNavigationPermissionsFormatted = await this.getUserRoleNavigationPermissionsFormatted(userId);
-    console.log(userRoleNavigationPermissionsFormatted);
     const relations = new Set<string>();
     const order: FindOptionsOrder<Navigation> = { order: 'ASC' };
     const where: FindOptionsWhere<Navigation> = { 

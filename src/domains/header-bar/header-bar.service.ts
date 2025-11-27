@@ -23,7 +23,7 @@ export class HeaderBarService {
 
   async findMainHeaderBar(userId: string) {
     /* get main header */
-    const mainHeader = await this.headerBarRepository.findOne({
+    const mainHeaderBar = await this.headerBarRepository.findOne({
       where: { 
         navigationId: IsNull(),
         deletedBy: IsNull(),
@@ -54,12 +54,12 @@ export class HeaderBarService {
       }
     });
     /* assign permissionName property to mainHeader */
-    if (mainHeader && userAllNavigationsPermission) {
-      mainHeader["permissionName"] =
+    if (mainHeaderBar && userAllNavigationsPermission) {
+      mainHeaderBar["permissionName"] =
         userAllNavigationsPermission.userRoles[0].role.roleNavigationPermissions[0].permission.name;
     }
     
-    return mainHeader;
+    return mainHeaderBar;
   }
 
   async update(id: string, updateHeaderBarDto: UpdateHeaderBarDto) {
