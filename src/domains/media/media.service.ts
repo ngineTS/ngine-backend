@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateMediaDto } from './dto/create-media.dto';
 import { UpdateMediaDto } from './dto/update-media.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { Media } from './entities/media.entity';
 
 @Injectable()
@@ -15,8 +15,15 @@ export class MediaService {
     return this.mediaRepository.save(createMediaDto);
   }
 
-  findAll() {
-    return `This action returns all media`;
+  async findAll() {
+    return await this.mediaRepository.find({
+      where: {
+        deletedDate: IsNull()
+      },
+      order: {
+        createdDate: 'DESC'
+      }
+    });
   }
 
   findOne(id: number) {

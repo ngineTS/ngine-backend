@@ -21,7 +21,7 @@ export class AuthService {
     });
     
     if(!user){
-      throw new NotFoundException("This email address doesn't exists.");
+      throw new NotFoundException("This email address doesn't exist.");
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
