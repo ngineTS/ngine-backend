@@ -15,13 +15,13 @@ export class MediaService {
     return this.mediaRepository.save(createMediaDto);
   }
 
-  async findAll() {
+  async findAll(orderBy: string, order: string) {
     return await this.mediaRepository.find({
       where: {
         deletedDate: IsNull()
       },
       order: {
-        createdDate: 'DESC'
+        [orderBy]: order
       }
     });
   }

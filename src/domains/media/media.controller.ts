@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { MediaService } from './media.service';
 import { CreateMediaDto } from './dto/create-media.dto';
 import { UpdateMediaDto } from './dto/update-media.dto';
@@ -13,8 +13,11 @@ export class MediaController {
   }
 
   @Get()
-  findAll() {
-    return this.mediaService.findAll();
+  findAll(
+    @Query('orderBy') orderBy: string = 'createdDate',
+    @Query('order') order: 'ASC' | 'DESC' = 'DESC',
+  ) {
+    return this.mediaService.findAll(orderBy, order);
   }
 
   @Delete(':fileName')

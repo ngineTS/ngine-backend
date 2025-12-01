@@ -63,7 +63,6 @@ export class RoleNavigationPermissionService {
 
 
   async bulkRemove(ids: string[]) {
-    console.log('ids to remove', ids);
     const recordsToDelete: Array<UpdateRoleNavigationPermissionDto> = [];
     ids.forEach(id => 
       recordsToDelete.push({

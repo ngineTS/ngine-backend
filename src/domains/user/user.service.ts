@@ -57,7 +57,6 @@ export class UserService {
   }
 
   async remove(id: string) {
-    console.log(id);
     let removedTotal = 0;
     const softDeleteUserResponse = await this.userRepository.update(id, {
       deletedDate: new Date(),
