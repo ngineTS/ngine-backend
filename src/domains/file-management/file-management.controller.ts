@@ -12,13 +12,13 @@ export class FileManagementController {
     return await this.fileManagementService.uploadFile(file);
   }
  
-  @Get(':fileId')
-  getFile(@Param('fileId') fileId: string) {
-    return this.fileManagementService.getFile(fileId);
+  @Get(':fileName')
+  getFile(@Param('fileName') fileName: string) {
+    return this.fileManagementService.getFile(fileName);
   }
 
-  @Delete(':fileId')
-  deleteFile(@Param('fileId') fileId: string) {
-    return this.fileManagementService.deleteFile(fileId);
+  @Delete(':fileName')
+  deleteFile(@Param('fileName') fileName: string) {
+    return this.fileManagementService.deleteFile(fileName);
   }
 }

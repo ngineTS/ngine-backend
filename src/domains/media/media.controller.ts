@@ -17,8 +17,8 @@ export class MediaController {
     return this.mediaService.findAll();
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.mediaService.remove(id);
+  @Delete(':fileName')
+  remove(@Param('fileName') fileName: string) {
+    return this.mediaService.softDelete(fileName);
   }
 }

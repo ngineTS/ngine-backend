@@ -26,7 +26,13 @@ export class MediaService {
     });
   }
 
-  async remove(id: string) {
-    return await this.mediaRepository.delete(id);
+  async softDelete(fileName: string) {
+    return await this.mediaRepository.update(
+      { name: fileName }, 
+      { 
+        deletedBy: '00000000-0000-0000-0000-000000000000',
+        deletedDate: new Date(),
+      }
+    );
   }
 }

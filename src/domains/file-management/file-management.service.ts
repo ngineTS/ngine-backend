@@ -49,22 +49,23 @@ export class FileManagementService {
     return await this.s3.upload(params).promise();
   }
 
-  getFile(fileId: string){
+  getFile(fileName: string){
     const params = {
       Bucket: process.env.AWS_S3_BUCKET_NAME,
-      Key: fileId,
+      Key: fileName,
       Expires: 3600,
     };
     const url = this.s3.getSignedUrl('getObject', params);
     return JSON.stringify(url);
   }
 
-  async deleteFile(fileId: string){
+  async deleteFile(fileName: string){
     const params = {
       Bucket: process.env.AWS_S3_BUCKET_NAME!,
-      Key: fileId,
+      Key: fileName,
     }
-    const resp = await this.s3.deleteObject(params).promise();
+    await this.s3.deleteObject(params).promise();
+    await this.mediaService.softDelete(fileName);
     return JSON.stringify('deleted');
   }
 
