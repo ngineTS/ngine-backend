@@ -26,15 +26,7 @@ export class MediaService {
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} media`;
-  }
-
-  update(id: number, updateMediaDto: UpdateMediaDto) {
-    return `This action updates a #${id} media`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} media`;
+  async remove(id: string) {
+    return await this.mediaRepository.delete(id);
   }
 }
