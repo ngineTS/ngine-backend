@@ -36,6 +36,8 @@ import { RoleModule } from './domains/role/role.module';
 import { UserRoleModule } from './domains/user-role/user-role.module';
 import { RoleNavigationPermissionModule } from './domains/role-navigation-permission/role-navigation-permission.module';
 import { PermissionModule } from './domains/permission/permission.module';
+import { UserEventModule } from './domains/user-event/user-event.module';
+import { UserEvent } from './domains/user-event/entities/user-event.entity';
 
 
 @Module({
@@ -75,7 +77,8 @@ import { PermissionModule } from './domains/permission/permission.module';
         Role,
         UserRole,
         RoleNavigationPermission,
-        Permission
+        Permission,
+        UserEvent
       ]
     }),
     NavigationModule,
@@ -94,7 +97,8 @@ import { PermissionModule } from './domains/permission/permission.module';
     RoleModule,
     UserRoleModule,
     RoleNavigationPermissionModule,
-    PermissionModule
+    PermissionModule,
+    UserEventModule
   ],
   controllers: [AppController],
   providers: [AppService],
