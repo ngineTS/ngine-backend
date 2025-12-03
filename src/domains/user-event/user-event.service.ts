@@ -14,7 +14,6 @@ export class UserEventService {
   async create(createUserEventDto: CreateUserEventDto) {
     createUserEventDto['date'] = new Date();
     createUserEventDto['userId'] = '00000000-0000-0000-0000-000000000000';
-    console.log(createUserEventDto);
     return await this._userEventRepository.save(createUserEventDto);
   }
 
