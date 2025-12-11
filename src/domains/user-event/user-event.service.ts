@@ -17,19 +17,34 @@ export class UserEventService {
     return await this._userEventRepository.save(createUserEventDto);
   }
 
-  findAll() {
-    return `This action returns all userEvent`;
+  async getSessionCountByDay() {
+    return await this._userEventRepository
+      .createQueryBuilder("e")
+      .select("to_char(e.date, 'YYYY-MM-DD')", "name")
+      .addSelect("COUNT(DISTINCT e.sessionId)", "value")
+      .groupBy("to_char(e.date, 'YYYY-MM-DD')")
+      .orderBy("to_char(e.date, 'YYYY-MM-DD')", "ASC")
+      .getRawMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} userEvent`;
+  async getMonthlyActiveUsers() {
+    return await this._userEventRepository
+      .createQueryBuilder("e")
+      .select("to_char(e.date, 'YYYY-MM')", "name")
+      .addSelect("COUNT(DISTINCT e.userId)", "value")
+      .groupBy("to_char(e.date, 'YYYY-MM')")
+      .orderBy("to_char(e.date, 'YYYY-MM')", "ASC")
+      .getRawMany();
   }
 
-  update(id: number, updateUserEventDto: UpdateUserEventDto) {
-    return `This action updates a #${id} userEvent`;
+  async getNumberOfVisitByUrl() {
+    return await this._userEventRepository
+      .createQueryBuilder('e')
+      .select('url', 'name')
+      .addSelect('COUNT("userId")', 'value')
+      .groupBy('url')
+      .orderBy('url', 'ASC')
+      .getRawMany();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} userEvent`;
-  }
 }

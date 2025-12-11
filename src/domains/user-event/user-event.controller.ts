@@ -12,23 +12,19 @@ export class UserEventController {
     return this.userEventService.create(createUserEventDto);
   }
 
-  @Get()
-  findAll() {
-    return this.userEventService.findAll();
+  @Get('session-count-by-day')
+  getSessionCountByDay() {
+    return this.userEventService.getSessionCountByDay();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userEventService.findOne(+id);
+  @Get('mau')
+  getMonthlyActiveUsers() {
+    return this.userEventService.getMonthlyActiveUsers();
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserEventDto: UpdateUserEventDto) {
-    return this.userEventService.update(+id, updateUserEventDto);
+  @Get('visit-by-url')
+  getNumberOfVisitByUrl() {
+    return this.userEventService.getNumberOfVisitByUrl();
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userEventService.remove(+id);
-  }
 }
