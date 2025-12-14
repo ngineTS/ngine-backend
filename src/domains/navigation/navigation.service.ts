@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -250,6 +250,12 @@ export class NavigationService {
    */
   async saveNavigation(createNavigationDto: CreateNavigationDto): Promise<Navigation> {
     createNavigationDto["name"] = createNavigationDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
+    const navigationWithSameName = await this._navigationRepository.findOne({
+      where: { name: createNavigationDto["name"] }
+    });
+    if (navigationWithSameName) {
+      throw new BadRequestException('This name already exists');
+    }
     createNavigationDto["createdBy"] = '00000000-0000-0000-0000-000000000000';
     createNavigationDto["createdDate"] = new Date();
     return await this._navigationRepository.save(createNavigationDto);
