@@ -245,15 +245,19 @@ export class NavigationService {
 
   /**
    * Save navigation.
+   * If sister navigation with same name exists then throw error.
    * @param createNavigationDto The navigation to save.
    * @returns The navigation saved.
    */
   async saveNavigation(createNavigationDto: CreateNavigationDto): Promise<Navigation> {
     createNavigationDto["name"] = createNavigationDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
-    const navigationWithSameName = await this._navigationRepository.findOne({
-      where: { name: createNavigationDto["name"] }
+    const sisterNavigationWithSameName = await this._navigationRepository.findOne({
+      where: { 
+        name: createNavigationDto["name"],
+        parentId: createNavigationDto["parentId"]
+      }
     });
-    if (navigationWithSameName) {
+    if (sisterNavigationWithSameName) {
       throw new BadRequestException('This name already exists');
     }
     createNavigationDto["createdBy"] = '00000000-0000-0000-0000-000000000000';
