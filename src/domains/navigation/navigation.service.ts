@@ -197,10 +197,10 @@ export class NavigationService {
     /* get current navigation permission */
     let navigationPermission = userRoleNavigationPermissions.find(obj => obj.navigationId === navigation.id)?.permission;
     /* check if 'All navigations' permission exists and assign it to navigation if it is higher than navigation permission */
-    let allNavigationPermissions = userRoleNavigationPermissions.find(obj => obj.navigationId === '00000000-0000-0000-0000-000000000000')?.permission;
-    if (allNavigationPermissions) {
-      if (!navigationPermission || allNavigationPermissions.priority < navigationPermission.priority) {
-        navigationPermission = allNavigationPermissions;
+    let allNavigationsPermission = userRoleNavigationPermissions.find(obj => obj.navigationId === '00000000-0000-0000-0000-000000000000')?.permission;
+    if (allNavigationsPermission) {
+      if (!navigationPermission || allNavigationsPermission.priority < navigationPermission.priority) {
+        navigationPermission = allNavigationsPermission;
       }
     }
 
@@ -213,6 +213,7 @@ export class NavigationService {
         /* Case 2 */
         else {
           navigation['permissionName'] = parentNavigationPermission.name;
+          navigationPermission = parentNavigationPermission;
         }
       }
       /* Case 3 */
