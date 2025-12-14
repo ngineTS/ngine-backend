@@ -9,6 +9,7 @@ import { PasswordRecovery } from 'src/core/password-recovery/entities/password-r
 import { AuthService } from 'src/core/auth/auth.service';
 import { Response } from 'express';
 import { UserRole } from '../user-role/entities/user-role.entity';
+import { Role } from '../role/entities/role.entity';
 
 
 @Injectable()
@@ -18,6 +19,8 @@ export class UserService {
               private userRepository: Repository<User>,
               @InjectRepository(UserRole)
               private userRoleRepository: Repository<UserRole>,
+              @InjectRepository(Role)
+              private roleRepository: Repository<Role>,
               @InjectRepository(PasswordRecovery)
               private passwordRecoveryRepository: Repository<PasswordRecovery>,
               private authService: AuthService) { }
@@ -31,9 +34,23 @@ export class UserService {
     const hash = await bcrypt.hash(createUserDto.password, saltOrRounds);
     createUserDto.password = hash;
 
+    //Check if user table is empty (i.e no user have registered yet)
+    //This is used to assign super admin to first user
+    const users = await this.userRepository.find({ take: 1 });
+
     //save user
     const userSaved = await this.userRepository.save(createUserDto);
 
+    //if first user then assign super admin role
+    if (!users || users.length === 0) {
+      const superAdminRole = await this.roleRepository.findOne({
+        where: { name: 'super-admin' }
+      });
+      await this.userRoleRepository.save({
+        userId: userSaved.id,
+        roleId: superAdminRole?.id,
+      })
+    }
     return await this.authService.signIn(createUserDto.emailAddress, pass, res);
   }
 
