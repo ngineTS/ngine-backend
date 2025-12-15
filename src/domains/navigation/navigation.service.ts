@@ -7,12 +7,18 @@ import { FindOptionsOrder, FindOptionsWhere, IsNull, Repository } from 'typeorm'
 import { User } from '../user/entities/user.entity';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 import { Permission } from '../permission/entities/permission.entity';
+import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
+import { HeaderBar } from '../header-bar/entities/header-bar.entity';
 
 @Injectable()
 export class NavigationService {
 
   constructor(@InjectRepository(Navigation)
               private _navigationRepository: Repository<Navigation>,
+              @InjectRepository(NavigationType)
+              private _navigationTypeRepository: Repository<NavigationType>,
+              @InjectRepository(HeaderBar)
+              private _headerBarRepository: Repository<HeaderBar>,
               @InjectRepository(User)
               private _userRepository: Repository<User>) {}
 
@@ -245,21 +251,37 @@ export class NavigationService {
 
   /**
    * Save navigation.
+   * 
    * If sister navigation with same name exists then throw error.
+   * 
+   * If navigation is header and doesn't have sister (i.e first header) 
+   * then create header bar record associated to parent navigation (inherit config from parent header bar).
+   * 
    * @param createNavigationDto The navigation to save.
    * @returns The navigation saved.
    */
   async saveNavigation(createNavigationDto: CreateNavigationDto): Promise<Navigation> {
     createNavigationDto["name"] = createNavigationDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
-    const sisterNavigationWithSameName = await this._navigationRepository.findOne({
-      where: { 
-        name: createNavigationDto["name"],
-        parentId: createNavigationDto["parentId"]
-      }
+
+    const sisterNavigations = await this._navigationRepository.find({
+      where: { parentId: createNavigationDto["parentId"] }
     });
-    if (sisterNavigationWithSameName) {
+  
+    if (sisterNavigations && sisterNavigations
+      .find(navigation => navigation.name ===  createNavigationDto["name"])
+    ) {
       throw new BadRequestException('This name already exists');
     }
+
+    if (!sisterNavigations || sisterNavigations.length === 0) {
+      const headerNavigationType = await this._navigationTypeRepository.findOne({
+        where: { name: 'header'}
+      });
+      if (createNavigationDto["navigationTypeId"] === headerNavigationType?.id) {
+        await this.inheritParentHeaderBarConfig(createNavigationDto["parentId"]);
+      }
+    }
+
     createNavigationDto["createdBy"] = '00000000-0000-0000-0000-000000000000';
     createNavigationDto["createdDate"] = new Date();
     return await this._navigationRepository.save(createNavigationDto);
@@ -267,6 +289,11 @@ export class NavigationService {
 
   /**
    * Update navigation properties.
+   * 
+   * If parentId has changed:
+   * if navigation is header and doesn't have sister (i.e first header) 
+   * then create header bar record associated to parent navigation (inherit config from parent header bar).
+   * 
    * @param id The navigation id.
    * @param updateNavigationDto The navigation properties to update.
    * @returns An UpdateResponse type object.
@@ -274,6 +301,22 @@ export class NavigationService {
   async updateNavigation(id: string, updateNavigationDto: UpdateNavigationDto) {
     updateNavigationDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
     updateNavigationDto["updatedDate"] = new Date();
+    
+    if (updateNavigationDto["parentId"]) {
+      const navigation = await this._navigationRepository.findOne({
+        where: {id: id},
+        relations: ['navigationType']
+      });
+      if (navigation?.navigationType.name === 'header') {
+        const navigationSisters = await this._navigationRepository.find({
+          where: { parentId: updateNavigationDto["parentId"] }
+        });
+        if (!navigationSisters ||navigationSisters.length === 0) {
+          await this.inheritParentHeaderBarConfig(updateNavigationDto["parentId"]);
+        }
+      }
+    }
+
     return await this._navigationRepository.update(id, updateNavigationDto);
   }
 
@@ -305,5 +348,24 @@ export class NavigationService {
       })
     )
     return await this._navigationRepository.save(recordsToDelete);
+  }
+
+  /**
+   * Get the parent header bar configuration and create header bar for given navigation.
+   * @param navigationId The navigationId which we want to create a header bar.
+   */
+  async inheritParentHeaderBarConfig(navigationId: string) {
+    const navigation = await this._navigationRepository.findOne({
+      where: {id: navigationId}
+    });
+
+    const parentHeaderBar = await this._headerBarRepository.findOne({
+      where: { navigationId: navigation?.parentId ?? IsNull() }
+    });
+
+    const { id, imageName, ...headerBarPayload } = parentHeaderBar!;
+    headerBarPayload.navigationId = navigationId;
+
+    await this._headerBarRepository.save(headerBarPayload);
   }
 }
