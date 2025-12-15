@@ -18,14 +18,6 @@ export class QuillEditorService {
     return this.quillEditorRepository.save(createQuillEditorDto);
   }
 
-  findAll() {
-    return `This action returns all quillEditor`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} quillEditor`;
-  }
-
   async findByNavigationId(navigationId: string){
     return await this.quillEditorRepository.findOne({
       where: { navigationId: navigationId }
@@ -43,9 +35,5 @@ export class QuillEditorService {
     else {
       throw new NotFoundException()
     }
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} quillEditor`;
   }
 }

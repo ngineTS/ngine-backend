@@ -28,7 +28,9 @@ export class FileManagementService {
       displayName: originalname,
       type: file.mimetype,
       createdBy: '00000000-0000-0000-0000-000000000000',
-      createdDate: new Date()
+      createdDate: new Date(),
+      updatedBy: '00000000-0000-0000-0000-000000000000',
+      updatedDate: new Date()
     }
     return await this.mediaService.create(media);
   }

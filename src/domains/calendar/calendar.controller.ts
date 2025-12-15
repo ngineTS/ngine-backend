@@ -11,17 +11,7 @@ export class CalendarController {
   create(@Body() createCalendarDto: CreateCalendarDto) {
     return this.calendarService.create(createCalendarDto);
   }
-
-  @Get()
-  findAll() {
-    return this.calendarService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.calendarService.findOne(+id);
-  }
-
+  
   @Get('navigation/:navigationId')
   findCalendarEventsByNavigationId(@Param('navigationId') navigationId: string) {
     return this.calendarService.findCalendarEventsByNavigationId(navigationId);

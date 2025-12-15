@@ -16,14 +16,6 @@ export class CalendarService {
     return this.calendarRepository.save(createCalendarDto);
   }
 
-  findAll() {
-    return `This action returns all calendar`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} calendar`;
-  }
-
   update(id: string, updateCalendarDto: UpdateCalendarDto) {
     return this.calendarRepository.update(id, updateCalendarDto);
   }

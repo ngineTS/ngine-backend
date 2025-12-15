@@ -18,6 +18,10 @@ export class HeaderBarService {
               private _userRepository: Repository<User>) {}
 
   async create(createHeaderBarDto: CreateHeaderBarDto) {
+    createHeaderBarDto["createdBy"] = '00000000-0000-0000-0000-000000000000';
+    createHeaderBarDto["createdDate"] = new Date();
+    createHeaderBarDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+    createHeaderBarDto["updatedDate"] = new Date();
     return await this.headerBarRepository.save(createHeaderBarDto);
   }
 

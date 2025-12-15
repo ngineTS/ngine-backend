@@ -12,16 +12,6 @@ export class QuillEditorController {
     return this.quillEditorService.create(createQuillEditorDto);
   }
 
-  @Get()
-  findAll() {
-    return this.quillEditorService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.quillEditorService.findOne(+id);
-  }
-
   @Get('navigation/:navigationId')
   findbyNavigationId(@Param('navigationId') navigationId: string) {
     return this.quillEditorService.findByNavigationId(navigationId);
@@ -30,10 +20,5 @@ export class QuillEditorController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateQuillEditorDto: UpdateQuillEditorDto) {
     return this.quillEditorService.update(id, updateQuillEditorDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.quillEditorService.remove(+id);
   }
 }

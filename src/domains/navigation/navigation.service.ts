@@ -284,6 +284,8 @@ export class NavigationService {
 
     createNavigationDto["createdBy"] = '00000000-0000-0000-0000-000000000000';
     createNavigationDto["createdDate"] = new Date();
+    createNavigationDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+    createNavigationDto["updatedDate"] = new Date();
     return await this._navigationRepository.save(createNavigationDto);
   }
 
