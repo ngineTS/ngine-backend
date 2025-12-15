@@ -39,6 +39,7 @@ export class UserService {
     const users = await this.userRepository.find({ take: 1 });
 
     //save user
+    createUserDto["emailAddress"] = createUserDto["emailAddress"].toLowerCase();
     const userSaved = await this.userRepository.save(createUserDto);
 
     //if first user then assign super admin role
