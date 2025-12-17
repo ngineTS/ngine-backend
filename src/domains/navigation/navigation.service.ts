@@ -267,7 +267,10 @@ export class NavigationService {
     createNavigationDto["name"] = createNavigationDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
 
     const sisterNavigations = await this._navigationRepository.find({
-      where: { parentId: createNavigationDto["parentId"] }
+      where: { 
+        parentId: createNavigationDto["parentId"],
+        deletedDate: IsNull()
+      }
     });
   
     if (sisterNavigations && sisterNavigations
@@ -318,10 +321,13 @@ export class NavigationService {
         relations: ['navigationType']
       });
       if (navigation?.navigationType.name === 'header') {
-        const navigationSisters = await this._navigationRepository.find({
-          where: { parentId: updateNavigationDto["parentId"] }
+        const sisterNavigations = await this._navigationRepository.find({
+          where: { 
+            parentId: updateNavigationDto["parentId"],
+            deletedDate: IsNull()
+          }  
         });
-        if (!navigationSisters ||navigationSisters.length === 0) {
+        if (!sisterNavigations ||sisterNavigations.length === 0) {
           await this.inheritParentHeaderBarConfig(updateNavigationDto["parentId"], userId);
         }
       }
