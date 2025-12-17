@@ -252,7 +252,7 @@ export class NavigationService {
   /**
    * Save navigation.
    * 
-   * If sister navigation with same name exists then throw error.
+   * If sister navigation with same name exists then throw BadRequest error.
    * 
    * If navigation is header and doesn't have sister (i.e first header)
    * then create header bar record associated to parent navigation (inherit config from parent header bar).
@@ -273,14 +273,15 @@ export class NavigationService {
       }
     });
   
-    if (sisterNavigations && sisterNavigations
-      .find(navigation => navigation.name ===  createNavigationDto["name"])
-    ) {
+    if (sisterNavigations?.find(navigation => navigation.name ===  createNavigationDto["name"])) {
       throw new BadRequestException('This name already exists');
     }
 
     //if parentId null no need to create header bar because main header bar already created.
-    if (createNavigationDto["parentId"] && (!sisterNavigations || sisterNavigations.length === 0)) {
+    if (
+      createNavigationDto["parentId"]
+      && (!sisterNavigations || sisterNavigations.length === 0)
+    ) {
       const headerNavigationType = await this._navigationTypeRepository.findOne({
         where: { name: 'header'}
       });
@@ -327,7 +328,7 @@ export class NavigationService {
             deletedDate: IsNull()
           }  
         });
-        if (!sisterNavigations ||sisterNavigations.length === 0) {
+        if (!sisterNavigations || sisterNavigations.length === 0) {
           await this.inheritParentHeaderBarConfig(updateNavigationDto["parentId"], userId);
         }
       }

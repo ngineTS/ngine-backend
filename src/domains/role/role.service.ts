@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,15 +20,26 @@ export class RoleService {
   /**
    * Save Role.
    * Assign name prop from displayLabel.
+   * If name already exists then throw BadRequest error.
    * @param createRoleDto The role payload.
    * @returns The role saved.
    */
   async create(createRoleDto: CreateRoleDto, userId: string) {
     createRoleDto["name"] = createRoleDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
+
+    const roles = await this._roleRepository.find({
+      where: { deletedDate: IsNull() }
+    });
+    
+    if (roles?.find(role => role.name === createRoleDto['name'])) {
+      throw new BadRequestException('This name already exists');
+    }
+
     createRoleDto["createdDate"] = new Date();
     createRoleDto["createdBy"] = userId;
     createRoleDto["updatedDate"] = new Date();
     createRoleDto["updatedBy"] = userId;
+
     return await this._roleRepository.save(createRoleDto);
   }
 
@@ -72,8 +83,21 @@ export class RoleService {
    * @returns The update response object.
    */
   async update(id: string, updateRoleDto: UpdateRoleDto, userId: string) {
+    if (updateRoleDto['displayLabel']) {
+      updateRoleDto["name"] = updateRoleDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
+
+      const roles = await this._roleRepository.find({
+        where: { deletedDate: IsNull() }
+      });
+    
+      if (roles?.find(role => role.name === updateRoleDto['name'] && role.id !== id)) {
+        throw new BadRequestException('This name already exists');
+      }
+    }
+
     updateRoleDto["updatedDate"] = new Date();
     updateRoleDto["updatedBy"] = userId;
+
     return await this._roleRepository.update(id, updateRoleDto);
   }
 
