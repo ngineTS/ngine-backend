@@ -26,11 +26,11 @@ export class MediaService {
     });
   }
 
-  async softDelete(fileName: string) {
+  async softDelete(fileName: string, userId: string) {
     return await this.mediaRepository.update(
       { name: fileName }, 
       { 
-        deletedBy: '00000000-0000-0000-0000-000000000000',
+        deletedBy: userId,
         deletedDate: new Date(),
       }
     );

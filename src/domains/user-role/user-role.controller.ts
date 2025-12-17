@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { UserRoleService } from './user-role.service';
 import { CreateUserRoleDto } from './dto/create-user-role.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { UserId } from 'src/core/decorators/user.decorator';
 
 @Controller('user-role')
 export class UserRoleController {
@@ -10,8 +11,9 @@ export class UserRoleController {
   @Post('bulk-save/:userId')
   bulkSaveUserRoles(
     @Param('userId') userId: string,
-    @Body() createUserRoleDtoArray: Array<CreateUserRoleDto>
+    @Body() createUserRoleDtoArray: Array<CreateUserRoleDto>,
+    @UserId() createdBy: string
   ) {
-    return this.userRoleService.bulkSaveUserRoles(userId, createUserRoleDtoArray);
+    return this.userRoleService.bulkSaveUserRoles(userId, createUserRoleDtoArray, createdBy);
   }
 }

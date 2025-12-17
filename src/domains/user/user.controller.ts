@@ -4,6 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Public } from 'src/core/auth/auth.guard';
 import { Response } from 'express';
+import { UserId } from 'src/core/decorators/user.decorator';
 
 @Controller('user')
 export class UserController {
@@ -40,7 +41,10 @@ export class UserController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @UserId() userId: string
+  ) {
+    return this.userService.remove(id, userId);
   }
 }

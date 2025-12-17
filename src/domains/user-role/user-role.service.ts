@@ -11,7 +11,11 @@ export class UserRoleService {
   constructor(@InjectRepository(UserRole)
               private _userRoleRepository: Repository<UserRole>) {}
 
-  async bulkSaveUserRoles(userId: string, createUserRoleDtoArray: Array<CreateUserRoleDto>) {
+  async bulkSaveUserRoles(
+    userId: string,
+    createUserRoleDtoArray: Array<CreateUserRoleDto>,
+    createdBy: string
+  ) {
     /* define array of user role ids to delete */
         const userRoleIdsToDelete: string[] = [];
         /* define array of user role payloads to save */
@@ -38,16 +42,16 @@ export class UserRoleService {
         /* add metadata to records to save */
         for (let element of userRolesPayloadToSave) {
           element["createdDate"] = new Date();
-          element["createdBy"] = '00000000-0000-0000-0000-000000000000';
+          element["createdBy"] = createdBy;
           element["updatedDate"] = new Date();
-          element["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+          element["updatedBy"] = createdBy;
         }
         /* create array of records to delete based on ids retrieved above */
         const recordsToDelete: Array<UpdateUserRoleDto> = [];
         userRoleIdsToDelete.forEach(id => 
           recordsToDelete.push({
             id: id,
-            deletedBy: '00000000-0000-0000-0000-000000000000',
+            deletedBy: createdBy,
             deletedDate: new Date()
           })
         )

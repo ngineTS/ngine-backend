@@ -17,10 +17,10 @@ export class HeaderBarService {
               @InjectRepository(User)
               private _userRepository: Repository<User>) {}
 
-  async create(createHeaderBarDto: CreateHeaderBarDto) {
-    createHeaderBarDto["createdBy"] = '00000000-0000-0000-0000-000000000000';
+  async create(createHeaderBarDto: CreateHeaderBarDto, userId: string) {
+    createHeaderBarDto["createdBy"] = userId;
     createHeaderBarDto["createdDate"] = new Date();
-    createHeaderBarDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+    createHeaderBarDto["updatedBy"] = userId;
     createHeaderBarDto["updatedDate"] = new Date();
     return await this.headerBarRepository.save(createHeaderBarDto);
   }
@@ -70,7 +70,7 @@ export class HeaderBarService {
     return await this.headerBarRepository.update(id, updateHeaderBarDto);
   }
 
-  async softDelete(id: string) {
+  async softDelete(id: string, userId: string) {
     const headerBar = await this.headerBarRepository.findOne({
       where: { id: id }
     });
@@ -78,7 +78,7 @@ export class HeaderBarService {
       where: { parentId: headerBar?.navigationId }
     });
     for (let navigation of navigstionsToDelete) {
-      navigation.deletedBy = '00000000-0000-0000-0000-000000000000';
+      navigation.deletedBy = userId;
       navigation.deletedDate = new Date();
     }
     await this.navigationRepository.save(navigstionsToDelete);

@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { QuillEditorService } from './quill-editor.service';
 import { CreateQuillEditorDto } from './dto/create-quill-editor.dto';
 import { UpdateQuillEditorDto } from './dto/update-quill-editor.dto';
+import { UserId } from 'src/core/decorators/user.decorator';
 
 @Controller('quill-editor')
 export class QuillEditorController {
@@ -18,7 +19,11 @@ export class QuillEditorController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateQuillEditorDto: UpdateQuillEditorDto) {
-    return this.quillEditorService.update(id, updateQuillEditorDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateQuillEditorDto: UpdateQuillEditorDto,
+    @UserId() userId: string
+  ) {
+    return this.quillEditorService.update(id, updateQuillEditorDto, userId);
   }
 }

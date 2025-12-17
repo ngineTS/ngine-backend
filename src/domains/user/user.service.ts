@@ -74,18 +74,18 @@ export class UserService {
     return await this.userRepository.update(id, updateUserDto);
   }
 
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
     let removedTotal = 0;
     const softDeleteUserResponse = await this.userRepository.update(id, {
       deletedDate: new Date(),
-      deletedBy: '00000000-0000-0000-0000-000000000000'
+      deletedBy: userId
     })
     const userRolesToSoftDelete = await this.userRoleRepository.find({
       where: {userId: id}
     });
     for(let userRole of userRolesToSoftDelete) {
       userRole.deletedDate = new Date(),
-      userRole.deletedBy = '00000000-0000-0000-0000-000000000000'
+      userRole.deletedBy = userId
     }
     removedTotal = removedTotal 
       + (await this.userRoleRepository.save(userRolesToSoftDelete)).length;

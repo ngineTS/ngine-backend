@@ -11,9 +11,9 @@ export class UserEventService {
   constructor(@InjectRepository(UserEvent)
               private _userEventRepository: Repository<UserEvent>) {}
   
-  async create(createUserEventDto: CreateUserEventDto) {
+  async create(createUserEventDto: CreateUserEventDto, userId: string) {
     createUserEventDto['date'] = new Date();
-    createUserEventDto['userId'] = '00000000-0000-0000-0000-000000000000';
+    createUserEventDto['userId'] = userId;
     return await this._userEventRepository.save(createUserEventDto);
   }
 

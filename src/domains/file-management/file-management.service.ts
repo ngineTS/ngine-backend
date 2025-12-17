@@ -15,7 +15,7 @@ export class FileManagementService {
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   });
 
-  async uploadFile(file) {
+  async uploadFile(file, userId: string) {
     const { originalname } = file;
     const s3Response = await this.s3_upload(
       file.buffer,
@@ -27,9 +27,9 @@ export class FileManagementService {
       name: s3Response.Key,
       displayName: originalname,
       type: file.mimetype,
-      createdBy: '00000000-0000-0000-0000-000000000000',
+      createdBy: userId,
       createdDate: new Date(),
-      updatedBy: '00000000-0000-0000-0000-000000000000',
+      updatedBy: userId,
       updatedDate: new Date()
     }
     return await this.mediaService.create(media);
@@ -61,13 +61,13 @@ export class FileManagementService {
     return JSON.stringify(url);
   }
 
-  async deleteFile(fileName: string){
+  async deleteFile(fileName: string, userId){
     const params = {
       Bucket: process.env.AWS_S3_BUCKET_NAME!,
       Key: fileName,
     }
     await this.s3.deleteObject(params).promise();
-    await this.mediaService.softDelete(fileName);
+    await this.mediaService.softDelete(fileName, userId);
     return JSON.stringify('deleted');
   }
 

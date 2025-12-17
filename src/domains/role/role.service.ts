@@ -23,12 +23,12 @@ export class RoleService {
    * @param createRoleDto The role payload.
    * @returns The role saved.
    */
-  async create(createRoleDto: CreateRoleDto) {
+  async create(createRoleDto: CreateRoleDto, userId: string) {
     createRoleDto["name"] = createRoleDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
     createRoleDto["createdDate"] = new Date();
-    createRoleDto["createdBy"] = '00000000-0000-0000-0000-000000000000';
+    createRoleDto["createdBy"] = userId;
     createRoleDto["updatedDate"] = new Date();
-    createRoleDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+    createRoleDto["updatedBy"] = userId;
     return await this._roleRepository.save(createRoleDto);
   }
 
@@ -71,9 +71,9 @@ export class RoleService {
    * @param updateRoleDto The role payload.
    * @returns The update response object.
    */
-  async update(id: string, updateRoleDto: UpdateRoleDto) {
+  async update(id: string, updateRoleDto: UpdateRoleDto, userId: string) {
     updateRoleDto["updatedDate"] = new Date();
-    updateRoleDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+    updateRoleDto["updatedBy"] = userId;
     return await this._roleRepository.update(id, updateRoleDto);
   }
 
@@ -81,11 +81,11 @@ export class RoleService {
    * Remove role and his relations.
    * @param id The role id to remove.
    */
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
     let removedTotal = 0;
     const updateRoleResponse = await this._roleRepository.update(id, {
       deletedDate: new Date(),
-      deletedBy: '00000000-0000-0000-0000-000000000000'
+      deletedBy: userId
     });
     
     if (updateRoleResponse && updateRoleResponse.affected === 0) {
@@ -97,7 +97,7 @@ export class RoleService {
     });
     for(let userRole of userRolesToRemove) {
       userRole["deletedDate"] = new Date();
-      userRole["deletedBy"] = '00000000-0000-0000-0000-000000000000';
+      userRole["deletedBy"] = userId;
     }
     removedTotal = removedTotal 
       + (await this._userRoleRepository.save(userRolesToRemove)).length;
@@ -107,7 +107,7 @@ export class RoleService {
     });
     for(let roleNavigationPermission of roleNavigationPermissionsToDelete) {
       roleNavigationPermission["deletedDate"] = new Date();
-      roleNavigationPermission["deletedBy"] = '00000000-0000-0000-0000-000000000000';
+      roleNavigationPermission["deletedBy"] = userId;
     }
     removedTotal = removedTotal 
       + (await this._userRoleRepository.save(roleNavigationPermissionsToDelete)).length;    

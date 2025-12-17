@@ -11,7 +11,10 @@ export class RoleNavigationPermissionService {
   constructor(@InjectRepository(RoleNavigationPermission)
               private _roleNavigationPermissionRepository: Repository<RoleNavigationPermission>) { }
 
-  async saveRoleNavigationArray(createRoleNavigationPermissionDtoArray: Array<CreateRoleNavigationPermissionDto>) {
+  async saveRoleNavigationArray(
+    createRoleNavigationPermissionDtoArray: Array<CreateRoleNavigationPermissionDto>,
+    userId: string
+  ) {
     /* define array of rnp ids to delete */
     const roleNavigationPermissionIdsToDelete: string[] = [];
     /* define array of rnp payloads to save */
@@ -42,16 +45,16 @@ export class RoleNavigationPermissionService {
     /* add metadata to records to save */
     for (let element of roleNavigationPermissionsPayloadToSave) {
       element["createdDate"] = new Date();
-      element["createdBy"] = '00000000-0000-0000-0000-000000000000';
+      element["createdBy"] = userId;
       element["updatedDate"] = new Date();
-      element["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+      element["updatedBy"] = userId;
     }
     /* create array of records to delete based on ids retrieved above */
     const recordsToDelete: Array<UpdateRoleNavigationPermissionDto> = [];
     roleNavigationPermissionIdsToDelete.forEach(id => 
       recordsToDelete.push({
         id: id,
-        deletedBy: '00000000-0000-0000-0000-000000000000',
+        deletedBy: userId,
         deletedDate: new Date()
       })
     )
@@ -62,12 +65,12 @@ export class RoleNavigationPermissionService {
   }
 
 
-  async bulkRemove(ids: string[]) {
+  async bulkRemove(ids: string[], userId: string) {
     const recordsToDelete: Array<UpdateRoleNavigationPermissionDto> = [];
     ids.forEach(id => 
       recordsToDelete.push({
         id: id,
-        deletedBy: '00000000-0000-0000-0000-000000000000',
+        deletedBy: userId,
         deletedDate: new Date()
       })
     )

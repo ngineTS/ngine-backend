@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Param, Delete, UseInterceptors, UploadedFile, Request } from '@nestjs/common';
 import { FileManagementService } from './file-management.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { UserId } from 'src/core/decorators/user.decorator';
 
 @Controller('file-management')
 export class FileManagementController {
@@ -8,8 +9,11 @@ export class FileManagementController {
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    return await this.fileManagementService.uploadFile(file);
+  async uploadFile(
+    @UploadedFile() file: Express.Multer.File,
+    @UserId() userId: string
+  ) {
+    return await this.fileManagementService.uploadFile(file, userId);
   }
  
   @Get(':fileName')
@@ -18,7 +22,10 @@ export class FileManagementController {
   }
 
   @Delete(':fileName')
-  deleteFile(@Param('fileName') fileName: string) {
-    return this.fileManagementService.deleteFile(fileName);
+  deleteFile(
+    @Param('fileName') fileName: string,
+    @UserId() userId: string
+  ) {
+    return this.fileManagementService.deleteFile(fileName, userId);
   }
 }

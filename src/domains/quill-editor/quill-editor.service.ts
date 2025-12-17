@@ -24,13 +24,18 @@ export class QuillEditorService {
     })
   }
 
-  async update(id: string, updateQuillEditorDto: UpdateQuillEditorDto) {
+  async update(
+    id: string,
+    updateQuillEditorDto: UpdateQuillEditorDto,
+    userId: string
+  ) {
     const updatedResult = await this.quillEditorRepository.update(id, updateQuillEditorDto);
     if(updatedResult.affected === 1) {
-      return this.navigationService.updateNavigation(updateQuillEditorDto["navigationId"], {
-        updatedBy: '00000000-0000-0000-0000-000000000000',
-        updatedDate: new Date()
-      })
+      return this.navigationService.updateNavigation(
+        updateQuillEditorDto["navigationId"],
+        { updatedBy: userId, updatedDate: new Date() },
+        userId
+      )
     }
     else {
       throw new NotFoundException()

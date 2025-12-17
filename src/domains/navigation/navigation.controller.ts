@@ -2,14 +2,18 @@ import { Controller, Get, Post, Body, Patch, Param, Request } from '@nestjs/comm
 import { NavigationService } from './navigation.service';
 import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
+import { UserId } from 'src/core/decorators/user.decorator';
 
 @Controller('navigation')
 export class NavigationController {
   constructor(private readonly navigationService: NavigationService) {}
 
   @Post()
-  saveNavigation(@Body() createNavigationDto: CreateNavigationDto) {
-    return this.navigationService.saveNavigation(createNavigationDto);
+  saveNavigation(
+    @Body() createNavigationDto: CreateNavigationDto,
+    @UserId() userId: string
+  ) {
+    return this.navigationService.saveNavigation(createNavigationDto, userId);
   }
 
   @Get()
@@ -23,18 +27,28 @@ export class NavigationController {
   }
 
   @Patch(':id')
-  updateNavigation(@Param('id') id: string, @Body() updateNavigationDto: UpdateNavigationDto) {
-    return this.navigationService.updateNavigation(id, updateNavigationDto);
+  updateNavigation(
+    @Param('id') id: string,
+    @Body() updateNavigationDto: UpdateNavigationDto,
+    @UserId() userId: string
+  ) {
+    return this.navigationService.updateNavigation(id, updateNavigationDto, userId);
   }
 
   @Post('bulk-update')
-  updateNavigations(@Body() updateNavigationDtoArray: UpdateNavigationDto[]) {
-    return this.navigationService.updateNavigations(updateNavigationDtoArray);
+  updateNavigations(
+    @Body() updateNavigationDtoArray: UpdateNavigationDto[],
+    @UserId() userId: string
+  ) {
+    return this.navigationService.updateNavigations(updateNavigationDtoArray, userId);
   }
 
   @Post('bulk-delete')
-  removeNavigations(@Body() ids: string[]) {
-    return this.navigationService.removeNavigations(ids);
+  removeNavigations(
+    @Body() ids: string[],
+    @UserId() userId: string
+  ) {
+    return this.navigationService.removeNavigations(ids, userId);
   }
 
 }

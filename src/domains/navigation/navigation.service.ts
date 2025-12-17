@@ -254,13 +254,16 @@ export class NavigationService {
    * 
    * If sister navigation with same name exists then throw error.
    * 
-   * If navigation is header and doesn't have sister (i.e first header) 
+   * If navigation is header and doesn't have sister (i.e first header)
    * then create header bar record associated to parent navigation (inherit config from parent header bar).
    * 
    * @param createNavigationDto The navigation to save.
    * @returns The navigation saved.
    */
-  async saveNavigation(createNavigationDto: CreateNavigationDto): Promise<Navigation> {
+  async saveNavigation(
+    createNavigationDto: CreateNavigationDto,
+    userId: string
+  ): Promise<Navigation> {
     createNavigationDto["name"] = createNavigationDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
 
     const sisterNavigations = await this._navigationRepository.find({
@@ -273,18 +276,19 @@ export class NavigationService {
       throw new BadRequestException('This name already exists');
     }
 
-    if (!sisterNavigations || sisterNavigations.length === 0) {
+    //if parentId null no need to create header bar because main header bar already created.
+    if (createNavigationDto["parentId"] && (!sisterNavigations || sisterNavigations.length === 0)) {
       const headerNavigationType = await this._navigationTypeRepository.findOne({
         where: { name: 'header'}
       });
       if (createNavigationDto["navigationTypeId"] === headerNavigationType?.id) {
-        await this.inheritParentHeaderBarConfig(createNavigationDto["parentId"]);
+        await this.inheritParentHeaderBarConfig(createNavigationDto["parentId"], userId);
       }
     }
 
-    createNavigationDto["createdBy"] = '00000000-0000-0000-0000-000000000000';
+    createNavigationDto["createdBy"] = userId;
     createNavigationDto["createdDate"] = new Date();
-    createNavigationDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+    createNavigationDto["updatedBy"] = userId;
     createNavigationDto["updatedDate"] = new Date();
     return await this._navigationRepository.save(createNavigationDto);
   }
@@ -300,8 +304,12 @@ export class NavigationService {
    * @param updateNavigationDto The navigation properties to update.
    * @returns An UpdateResponse type object.
    */
-  async updateNavigation(id: string, updateNavigationDto: UpdateNavigationDto) {
-    updateNavigationDto["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+  async updateNavigation(
+    id: string,
+    updateNavigationDto: UpdateNavigationDto,
+    userId: string
+  ) {
+    updateNavigationDto["updatedBy"] = userId;
     updateNavigationDto["updatedDate"] = new Date();
     
     if (updateNavigationDto["parentId"]) {
@@ -314,7 +322,7 @@ export class NavigationService {
           where: { parentId: updateNavigationDto["parentId"] }
         });
         if (!navigationSisters ||navigationSisters.length === 0) {
-          await this.inheritParentHeaderBarConfig(updateNavigationDto["parentId"]);
+          await this.inheritParentHeaderBarConfig(updateNavigationDto["parentId"], userId);
         }
       }
     }
@@ -327,9 +335,9 @@ export class NavigationService {
    * @param updateNavigationDtoArray The array of navigations.
    * @returns The array of navigations saved.
    */
-  async updateNavigations(updateNavigationDtoArray: UpdateNavigationDto[]) {
+  async updateNavigations(updateNavigationDtoArray: UpdateNavigationDto[], userId: string) {
     updateNavigationDtoArray.forEach(element => {
-      element["updatedBy"] = '00000000-0000-0000-0000-000000000000';
+      element["updatedBy"] = userId;
       element["updatedDate"] = new Date();
     });
     return await this._navigationRepository.save(updateNavigationDtoArray);
@@ -340,12 +348,12 @@ export class NavigationService {
    * @param ids The navigation ids array to soft delete.
    * @returns The Array of navigation that have been soft deleted.
    */
-  async removeNavigations(ids: string[]) {
+  async removeNavigations(ids: string[], userId: string) {
     const recordsToDelete: Array<UpdateNavigationDto> = [];
     ids.forEach(id => 
       recordsToDelete.push({
         id: id,
-        deletedBy: '00000000-0000-0000-0000-000000000000',
+        deletedBy: userId,
         deletedDate: new Date()
       })
     )
@@ -356,7 +364,7 @@ export class NavigationService {
    * Get the parent header bar configuration and create header bar for given navigation.
    * @param navigationId The navigationId which we want to create a header bar.
    */
-  async inheritParentHeaderBarConfig(navigationId: string) {
+  async inheritParentHeaderBarConfig(navigationId: string, userId: string) {
     const navigation = await this._navigationRepository.findOne({
       where: {id: navigationId}
     });
@@ -367,6 +375,10 @@ export class NavigationService {
 
     const { id, imageName, ...headerBarPayload } = parentHeaderBar!;
     headerBarPayload.navigationId = navigationId;
+    headerBarPayload.createdBy = userId;
+    headerBarPayload.createdDate = new Date();
+    headerBarPayload.updatedBy = userId;
+    headerBarPayload.updatedDate = new Date();
 
     await this._headerBarRepository.save(headerBarPayload);
   }

@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Param, Delete, Query } from '@nestjs/common';
 import { MediaService } from './media.service';
 import { CreateMediaDto } from './dto/create-media.dto';
+import { UserId } from 'src/core/decorators/user.decorator';
 
 @Controller('media')
 export class MediaController {
@@ -20,7 +21,10 @@ export class MediaController {
   }
 
   @Delete(':fileName')
-  remove(@Param('fileName') fileName: string) {
-    return this.mediaService.softDelete(fileName);
+  remove(
+    @Param('fileName') fileName: string,
+    @UserId() userId: string
+  ) {
+    return this.mediaService.softDelete(fileName, userId);
   }
 }

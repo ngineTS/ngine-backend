@@ -2,14 +2,18 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Request } from '@nes
 import { HeaderBarService } from './header-bar.service';
 import { CreateHeaderBarDto } from './dto/create-header-bar.dto';
 import { UpdateHeaderBarDto } from './dto/update-header-bar.dto';
+import { UserId } from 'src/core/decorators/user.decorator';
 
 @Controller('header-bar')
 export class HeaderBarController {
   constructor(private readonly headerBarService: HeaderBarService) {}
 
   @Post()
-  create(@Body() createHeaderBarDto: CreateHeaderBarDto) {
-    return this.headerBarService.create(createHeaderBarDto);
+  create(
+    @Body() createHeaderBarDto: CreateHeaderBarDto,
+    @UserId() userId: string
+  ) {
+    return this.headerBarService.create(createHeaderBarDto, userId);
   }
 
   @Get('main')
@@ -23,7 +27,10 @@ export class HeaderBarController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.headerBarService.softDelete(id);
+  remove(
+    @Param('id') id: string,
+    @UserId() userId: string
+  ) {
+    return this.headerBarService.softDelete(id, userId);
   }
 }
