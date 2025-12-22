@@ -377,7 +377,10 @@ export class NavigationService {
     });
 
     const parentHeaderBar = await this._headerBarRepository.findOne({
-      where: { navigationId: navigation?.parentId ?? IsNull() }
+      where: { 
+        navigationId: navigation?.parentId ?? IsNull(),
+        deletedDate: IsNull()
+      }
     });
 
     const { id, imageName, ...headerBarPayload } = parentHeaderBar!;
