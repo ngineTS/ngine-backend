@@ -3,6 +3,7 @@ import { NavigationService } from './navigation.service';
 import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { UserId } from 'src/core/decorators/user.decorator';
+import { Navigation } from './entities/navigation.entity';
 
 @Controller('navigation')
 export class NavigationController {
@@ -43,12 +44,12 @@ export class NavigationController {
     return this.navigationService.updateNavigations(updateNavigationDtoArray, userId);
   }
 
-  @Post('bulk-delete')
-  removeNavigations(
-    @Body() ids: string[],
+  @Post('delete')
+  removeNavigation(
+    @Body() navigation: Navigation,
     @UserId() userId: string
   ) {
-    return this.navigationService.removeNavigations(ids, userId);
+    return this.navigationService.removeNavigation(navigation, userId);
   }
 
 }

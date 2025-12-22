@@ -1,14 +1,15 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Navigation } from './entities/navigation.entity';
-import { FindOptionsOrder, FindOptionsWhere, IsNull, Repository } from 'typeorm';
+import { FindOptionsOrder, FindOptionsWhere, IsNull, Repository, UpdateResult } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 import { Permission } from '../permission/entities/permission.entity';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 import { HeaderBar } from '../header-bar/entities/header-bar.entity';
+import { UpdateHeaderBarDto } from '../header-bar/dto/update-header-bar.dto';
 
 @Injectable()
 export class NavigationService {
@@ -22,6 +23,7 @@ export class NavigationService {
               @InjectRepository(User)
               private _userRepository: Repository<User>) {}
 
+              
   /**
    * Find all flat navigations not deleted and their first level of children.
    * @returns The array of navigations.
@@ -40,6 +42,7 @@ export class NavigationService {
     navigations = this.filterOutDeletedNavigations(navigations);
     return navigations;
   }
+
 
   /**
    * Load Nested navigations filtered by user permissions.
@@ -69,6 +72,7 @@ export class NavigationService {
     return navigations;
   }
 
+
   /**
    * Generate navigation relations until given depth.
    * @param depth The number of nested levels.
@@ -91,6 +95,7 @@ export class NavigationService {
       this.generateRelationsAndOrder(depth - 1, relations, order.children, base);
     }
   }
+
 
   /**
    * Filter out soft deleted navigations in the given navigation array.
@@ -117,6 +122,7 @@ export class NavigationService {
       }
     });
   }
+
 
   /**
    * Format user roleNavigationPermissions.
@@ -180,6 +186,7 @@ export class NavigationService {
     }
     return userRoleNavigationPermissionsFormatted;
   }
+
 
   /**
    * Set up user navigation permission based on below rules then repeat process for children.
@@ -249,6 +256,7 @@ export class NavigationService {
     } 
   }
 
+
   /**
    * Save navigation.
    * 
@@ -297,12 +305,14 @@ export class NavigationService {
     return await this._navigationRepository.save(createNavigationDto);
   }
 
+
   /**
    * Update navigation properties.
    * 
    * If parentId has changed:
-   * if navigation is header and doesn't have sister (i.e first header) 
+   * * If navigation is header and doesn't have sister (i.e first header) 
    * then create header bar record associated to parent navigation (inherit config from parent header bar).
+   * 
    * 
    * @param id The navigation id.
    * @param updateNavigationDto The navigation properties to update.
@@ -313,29 +323,63 @@ export class NavigationService {
     updateNavigationDto: UpdateNavigationDto,
     userId: string
   ) {
+    let updateResult;
     updateNavigationDto["updatedBy"] = userId;
     updateNavigationDto["updatedDate"] = new Date();
-    
-    if (updateNavigationDto["parentId"]) {
-      const navigation = await this._navigationRepository.findOne({
-        where: {id: id},
-        relations: ['navigationType']
-      });
+
+    const navigation = await this._navigationRepository.findOne({
+      where: { id: id },
+      relations: ['navigationType']
+    });
+
+    if (!navigation) {
+      throw new NotFoundException();
+    }
+
+    const newParentNavigation = await this._navigationRepository.findOne({
+      relations: ['children'],
+      where: { 
+        id: updateNavigationDto['parentId'],
+        deletedDate: IsNull(),
+      },
+    });
+
+    updateResult =  await this._navigationRepository.update(id, updateNavigationDto);
+
+    const oldParentNavigation = await this._navigationRepository.findOne({
+      relations: ['children', 'headerBar'],
+      where: { 
+        id: navigation.parentId,
+        deletedDate: IsNull(),
+      },
+    });
+
+    if (updateNavigationDto['parentId']) {
       if (navigation?.navigationType.name === 'header') {
-        const sisterNavigations = await this._navigationRepository.find({
-          where: { 
-            parentId: updateNavigationDto["parentId"],
-            deletedDate: IsNull()
-          }  
-        });
-        if (!sisterNavigations || sisterNavigations.length === 0) {
+        /* inherit header bar if needed */
+        if (
+          newParentNavigation 
+          && newParentNavigation.children?.filter(obj => !obj.deletedDate).length === 0
+        ) {
+          console.log('cc', newParentNavigation);
           await this.inheritParentHeaderBarConfig(updateNavigationDto["parentId"], userId);
+        }
+
+        /* delete header bar if needed */
+        if (updateNavigationDto['parentId'] !== navigation.parentId) {
+          if (
+            oldParentNavigation 
+            && oldParentNavigation.children?.filter(obj => !obj.deletedDate).length === 0
+          ) {
+            await this._headerBarRepository.delete(oldParentNavigation.headerBar!.id);
+          }
         }
       }
     }
-
-    return await this._navigationRepository.update(id, updateNavigationDto);
+    
+    return updateResult;
   }
+
 
   /**
    * Update Array of navigations.
@@ -350,22 +394,66 @@ export class NavigationService {
     return await this._navigationRepository.save(updateNavigationDtoArray);
   }
 
+
   /**
-   * Soft delete array of navigations.
-   * @param ids The navigation ids array to soft delete.
+   * Soft delete navigation and children and delete associated header bars.
+   * If navigation was last of the sisters then delete parent header bar.
+   * @param navigation The navigation to soft delete.
    * @returns The Array of navigation that have been soft deleted.
    */
-  async removeNavigations(ids: string[], userId: string) {
-    const recordsToDelete: Array<UpdateNavigationDto> = [];
-    ids.forEach(id => 
-      recordsToDelete.push({
-        id: id,
+  async removeNavigation(navigation: Navigation, userId: string) {
+    const navigationRecordsToDelete: Array<UpdateNavigationDto> = [];
+    const headerBarIdsToDelete: Array<string> = [];
+
+    /* Declare method to retrieve navigations and header bars to delete */
+    const getDeepNavigationIds = async (navigation: Navigation) => {
+      navigationRecordsToDelete.push({
+        id: navigation.id,
         deletedBy: userId,
         deletedDate: new Date()
       })
-    )
-    return await this._navigationRepository.save(recordsToDelete);
+      const headerBar = await this._headerBarRepository.findOne({
+        where: { navigationId: navigation.id }
+      })
+      if (headerBar) {
+        headerBarIdsToDelete.push(headerBar.id);
+      }
+      if (navigation.children) {
+        for (const nav of navigation.children) {
+            await getDeepNavigationIds(nav);
+        }
+      }
+    } 
+
+    /* call method */
+    await getDeepNavigationIds(navigation);
+
+    /* delete navigations */
+    const navigationsSoftDeleted = await this._navigationRepository.save(navigationRecordsToDelete);
+
+    /* check if parent remains without children and delete associated header bar if yes.*/
+    const parentNavigation = await this._navigationRepository.findOne({
+      where: { 
+        id: navigation.parentId,
+        deletedDate: IsNull(),
+      },
+      relations: ['children', 'headerBar']
+    });
+    if (
+      parentNavigation 
+      && parentNavigation.children?.filter(obj => !obj.deletedDate).length === 0
+    ) {
+      headerBarIdsToDelete.push(parentNavigation.headerBar!.id);
+    }
+    
+    /* delete header bars */
+    for (const id of headerBarIdsToDelete) {
+      await this._headerBarRepository.delete(id);
+    }
+
+    return { affected: navigationsSoftDeleted.length }
   }
+
 
   /**
    * Get the parent header bar configuration and create header bar for given navigation.
@@ -373,7 +461,7 @@ export class NavigationService {
    */
   async inheritParentHeaderBarConfig(navigationId: string, userId: string) {
     const navigation = await this._navigationRepository.findOne({
-      where: {id: navigationId}
+      where: { id: navigationId }
     });
 
     const parentHeaderBar = await this._headerBarRepository.findOne({
@@ -392,4 +480,5 @@ export class NavigationService {
 
     await this._headerBarRepository.save(headerBarPayload);
   }
+  
 }

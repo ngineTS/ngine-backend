@@ -17,20 +17,24 @@ export class HeaderBarController {
   }
 
   @Get('main')
-  findMainHeaderBar(@Request() req) {
-    return this.headerBarService.findMainHeaderBar(req.user.sub);
+  findMainHeaderBar(@UserId() userId: string) {
+    return this.headerBarService.findMainHeaderBar(userId);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateHeaderBarDto: UpdateHeaderBarDto) {
-    return this.headerBarService.update(id, updateHeaderBarDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateHeaderBarDto: UpdateHeaderBarDto,
+    @UserId() userId: string
+  ) {
+    return this.headerBarService.update(id, updateHeaderBarDto, userId);
   }
 
-  @Delete(':id')
+  /*@Delete(':id')
   remove(
     @Param('id') id: string,
     @UserId() userId: string
   ) {
     return this.headerBarService.softDelete(id, userId);
-  }
+  }*/
 }
