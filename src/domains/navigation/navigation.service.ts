@@ -433,7 +433,7 @@ export class NavigationService {
     /* check if parent remains without children and delete associated header bar if yes.*/
     const parentNavigation = await this._navigationRepository.findOne({
       where: { 
-        id: navigation.parentId,
+        id: navigation.parentId ?? IsNull(),
         deletedDate: IsNull(),
       },
       relations: ['children', 'headerBar']
