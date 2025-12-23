@@ -23,7 +23,7 @@ export class NavigationService {
               @InjectRepository(User)
               private _userRepository: Repository<User>) {}
 
-              
+
   /**
    * Find all flat navigations not deleted and their first level of children.
    * @returns The array of navigations.
@@ -361,7 +361,6 @@ export class NavigationService {
           newParentNavigation 
           && newParentNavigation.children?.filter(obj => !obj.deletedDate).length === 0
         ) {
-          console.log('cc', newParentNavigation);
           await this.inheritParentHeaderBarConfig(updateNavigationDto["parentId"], userId);
         }
 
