@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTableVizDto } from './dto/create-table-viz.dto';
 import { UpdateTableVizDto } from './dto/update-table-viz.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -28,7 +28,13 @@ export class TableVizService {
   }
 
   async update(id: string, updateTableVizDto: UpdateTableVizDto) {
-    return await this._tableVizRepository.update(id, updateTableVizDto);
+    const updateResult = await this._tableVizRepository.update(id, updateTableVizDto);
+
+    if (updateResult.affected === 0) {
+      throw new NotFoundException(`Id ${id} not found.`)
+    }
+
+    return updateResult;
   }
 
   async findTableNames(schema: string = 'my_app') {

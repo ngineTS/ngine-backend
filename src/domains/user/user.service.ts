@@ -71,7 +71,13 @@ export class UserService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    return await this.userRepository.update(id, updateUserDto);
+    const updateResult = await this.userRepository.update(id, updateUserDto);
+
+    if (updateResult.affected === 0) {
+      throw new NotFoundException(`User id ${id} not found.`)
+    }
+
+    return updateResult;
   }
 
   async remove(id: string, userId: string) {
@@ -80,6 +86,11 @@ export class UserService {
       deletedDate: new Date(),
       deletedBy: userId
     })
+
+    if (softDeleteUserResponse.affected === 0) {
+      throw new NotFoundException(`User id ${id} not found.`)
+    }
+
     const userRolesToSoftDelete = await this.userRoleRepository.find({
       where: {userId: id}
     });

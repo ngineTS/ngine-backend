@@ -98,7 +98,13 @@ export class RoleService {
     updateRoleDto["updatedDate"] = new Date();
     updateRoleDto["updatedBy"] = userId;
 
-    return await this._roleRepository.update(id, updateRoleDto);
+    const updateResult = await this._roleRepository.update(id, updateRoleDto);
+
+    if (updateResult.affected === 0) {
+      throw new NotFoundException(`Role id ${id} not found.`)
+    }
+
+    return updateResult;
   }
 
   /**
@@ -112,7 +118,7 @@ export class RoleService {
       deletedBy: userId
     });
     
-    if (updateRoleResponse && updateRoleResponse.affected === 0) {
+    if (updateRoleResponse.affected === 0) {
       throw new NotFoundException();
     }
 
