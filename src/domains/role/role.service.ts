@@ -48,8 +48,8 @@ export class RoleService {
    */
   async findAllRoles() {
     return await this._roleRepository.find({
-      where: {deletedDate: IsNull()},
-      order: {displayLabel: 'ASC'}
+      where: { deletedDate: IsNull() },
+      order: { displayLabel: 'ASC' }
     })
   }
 

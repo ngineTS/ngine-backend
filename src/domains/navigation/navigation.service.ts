@@ -9,7 +9,6 @@ import { RoleNavigationPermission } from '../role-navigation-permission/entities
 import { Permission } from '../permission/entities/permission.entity';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 import { HeaderBar } from '../header-bar/entities/header-bar.entity';
-import { UpdateHeaderBarDto } from '../header-bar/dto/update-header-bar.dto';
 
 @Injectable()
 export class NavigationService {
@@ -68,7 +67,6 @@ export class NavigationService {
       userRoleNavigationPermissionsFormatted
     ));
     navigations = this.filterOutDeletedNavigations(navigations, true);
-
     return navigations;
   }
 
@@ -439,10 +437,11 @@ export class NavigationService {
       relations: ['children', 'headerBar']
     });
     if (
-      parentNavigation 
+      parentNavigation
       && parentNavigation.children?.filter(obj => !obj.deletedDate).length === 0
+      && parentNavigation.headerBar
     ) {
-      headerBarIdsToDelete.push(parentNavigation.headerBar!.id);
+      headerBarIdsToDelete.push(parentNavigation.headerBar.id);
     }
     
     /* delete header bars */

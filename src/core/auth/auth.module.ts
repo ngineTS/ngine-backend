@@ -8,6 +8,10 @@ import { User } from 'src/domains/user/entities/user.entity';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth.guard';
+import { NavigationService } from 'src/domains/navigation/navigation.service';
+import { Navigation } from 'src/domains/navigation/entities/navigation.entity';
+import { NavigationType } from 'src/domains/navigation-type/entities/navigation-type.entity';
+import { HeaderBar } from 'src/domains/header-bar/entities/header-bar.entity';
 
 @Module({
   imports:[
@@ -19,11 +23,18 @@ import { AuthGuard } from './auth.guard';
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '15m' },
     }),
-    TypeOrmModule.forFeature([User, PasswordRecovery])
+    TypeOrmModule.forFeature([
+      User,
+      PasswordRecovery,
+      Navigation,
+      NavigationType,
+      HeaderBar
+    ])
   ],
   controllers: [AuthController],
   providers: [
     AuthService, 
+    NavigationService,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
