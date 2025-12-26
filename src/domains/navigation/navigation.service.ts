@@ -3,7 +3,7 @@ import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Navigation } from './entities/navigation.entity';
-import { FindOptionsOrder, FindOptionsWhere, IsNull, Repository, UpdateResult } from 'typeorm';
+import { FindOptionsOrder, FindOptionsWhere, IsNull, Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 import { Permission } from '../permission/entities/permission.entity';
