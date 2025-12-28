@@ -165,9 +165,7 @@ export class RoleService {
         roleId: In(roleIds)
       }
     })
-  
-    console.log('todo', userRoleNavigationPermissions);
-    
+      
     return userRoleNavigationPermissions.sort((a, b) => a.permission.priority - b.permission.priority)[0];
   }
   

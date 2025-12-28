@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -268,6 +268,8 @@ export class NavigationService {
   /**
    * Save navigation.
    * 
+   * If user doesn't have 'add' permission on parent then throw Forbidden error.
+   * 
    * If sister navigation with same name exists then throw BadRequest error.
    * 
    * If navigation is header and doesn't have sister (i.e first header)
@@ -278,22 +280,36 @@ export class NavigationService {
    */
   async saveNavigation(
     createNavigationDto: CreateNavigationDto,
-    userId: string
+    userId: string,
+    userNavigationPermissions: Array<{
+      navigationId: string;
+      permissionName: string;
+    }>
   ): Promise<Navigation> {
-    createNavigationDto["name"] = createNavigationDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
+    /* valid permission */
+    const parentId = createNavigationDto['parentId'] ?? '00000000-0000-0000-0000-000000000000';
+    if (
+      !userNavigationPermissions.find(obj => 
+        obj.navigationId === parentId &&
+        obj.permissionName.includes('add')
+      )
+    ) {
+      throw new ForbiddenException();
+    }
 
+    /* valid technical name */
+    createNavigationDto["name"] = createNavigationDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
     const sisterNavigations = await this._navigationRepository.find({
       where: { 
         parentId: createNavigationDto["parentId"],
         deletedDate: IsNull()
       }
     });
-  
     if (sisterNavigations?.find(navigation => navigation.name ===  createNavigationDto["name"])) {
       throw new BadRequestException('This name already exists');
     }
 
-    //if parentId null no need to create header bar because main header bar already created.
+    /* create header bar if needed (if parentId null no need to create header bar because main header bar already created). */
     if (
       createNavigationDto["parentId"]
       && (!sisterNavigations || sisterNavigations.length === 0)
@@ -306,6 +322,7 @@ export class NavigationService {
       }
     }
 
+    /* add metadata and save */
     createNavigationDto["createdBy"] = userId;
     createNavigationDto["createdDate"] = new Date();
     createNavigationDto["updatedBy"] = userId;
@@ -316,6 +333,9 @@ export class NavigationService {
 
   /**
    * Update navigation properties.
+   * 
+   * * If user doesn't have 'edit' permission on navigation then throw Forbidden error.
+   * * If navigation is not found then throw NotFound error.
    * 
    * If parentId has changed:
    * If navigation is header and doesn't have sister (i.e first header) 
@@ -329,20 +349,34 @@ export class NavigationService {
   async updateNavigation(
     id: string,
     updateNavigationDto: UpdateNavigationDto,
-    userId: string
+    userId: string,
+    userNavigationPermissions: Array<{
+      navigationId: string;
+      permissionName: string;
+    }> 
   ) {
-    let updateResult;
-    updateNavigationDto["updatedBy"] = userId;
-    updateNavigationDto["updatedDate"] = new Date();
-
+    /* valid permission */
+    if (
+      !userNavigationPermissions.find(obj => 
+        obj.navigationId === id &&
+        obj.permissionName.includes('edit')
+      )
+    ) {
+      throw new ForbiddenException();
+    }
+    
+    /* check if navigation exists and throw NotFound error if not */
     const navigation = await this._navigationRepository.findOne({
       where: { id: id },
       relations: ['navigationType']
     });
-
     if (!navigation) {
       throw new NotFoundException();
     }
+
+    let updateResult;
+    updateNavigationDto["updatedBy"] = userId;
+    updateNavigationDto["updatedDate"] = new Date();
 
     const newParentNavigation = await this._navigationRepository.findOne({
       relations: ['children'],
@@ -390,25 +424,67 @@ export class NavigationService {
 
   /**
    * Update Array of navigations.
+   * 
+   * If user doesn't have 'edit' permission on one of the items then throw Forbidden error.
+   * 
    * @param updateNavigationDtoArray The array of navigations.
    * @returns The array of navigations saved.
    */
-  async updateNavigations(updateNavigationDtoArray: UpdateNavigationDto[], userId: string) {
-    updateNavigationDtoArray.forEach(element => {
-      element["updatedBy"] = userId;
-      element["updatedDate"] = new Date();
+  async updateNavigations(
+    updateNavigationDtoArray: UpdateNavigationDto[],
+    userId: string,
+    userNavigationPermissions: Array<{
+      navigationId: string;
+      permissionName: string;
+    }> 
+  ) {
+    /* valid permission and setup metadata */
+    updateNavigationDtoArray.forEach(navigation => {
+      if (
+        !userNavigationPermissions.find(obj =>
+          obj.navigationId === navigation['id'] &&
+          obj.permissionName.includes('edit')
+        )
+      ) {
+        throw new ForbiddenException();
+      }
+      else {
+        navigation["updatedBy"] = userId;
+        navigation["updatedDate"] = new Date();
+      }
     });
+
     return await this._navigationRepository.save(updateNavigationDtoArray);
   }
 
 
   /**
-   * Soft delete navigation and children and dependencies (header bars and navigation permissions)
+   * Soft delete navigation and children and dependencies (header bars and navigation permissions).
+   * 
+   * If user doesn't have 'delete' permission on navigation then throw Forbidden error. 
+   * 
    * If navigation was last of the sisters then delete parent header bar.
    * @param navigation The navigation to soft delete.
    * @returns The Array of navigation that have been soft deleted.
    */
-  async removeNavigation(navigation: Navigation, userId: string) {
+  async removeNavigation(
+    navigation: Navigation,
+    userId: string,
+    userNavigationPermissions: Array<{
+      navigationId: string;
+      permissionName: string;
+    }>
+  ) {
+    /* valid permission */
+    if (
+      !userNavigationPermissions.find(obj => 
+        obj.navigationId === navigation.id &&
+        obj.permissionName.includes('delete')
+      )
+    ) {
+      throw new ForbiddenException();
+    }
+
     const navigationsIds: Array<string> = [];
     const navigationRecordsToDelete: Array<UpdateNavigationDto> = [];
     const headerBarIdsToDelete: Array<string> = [];

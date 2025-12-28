@@ -12,9 +12,10 @@ export class NavigationController {
   @Post()
   saveNavigation(
     @Body() createNavigationDto: CreateNavigationDto,
-    @UserId() userId: string
+    @UserId() userId: string,
+    @Request() req
   ) {
-    return this.navigationService.saveNavigation(createNavigationDto, userId);
+    return this.navigationService.saveNavigation(createNavigationDto, userId, req.user.userNavigationPermissions);
   }
 
   @Get()
@@ -31,25 +32,37 @@ export class NavigationController {
   updateNavigation(
     @Param('id') id: string,
     @Body() updateNavigationDto: UpdateNavigationDto,
-    @UserId() userId: string
+    @UserId() userId: string,
+    @Request() req
   ) {
-    return this.navigationService.updateNavigation(id, updateNavigationDto, userId);
+    return this.navigationService.updateNavigation(
+      id,
+      updateNavigationDto,
+      userId,
+      req.user.userNavigationPermissions
+    );
   }
 
   @Post('bulk-update')
   updateNavigations(
     @Body() updateNavigationDtoArray: UpdateNavigationDto[],
-    @UserId() userId: string
+    @UserId() userId: string,
+    @Request() req
   ) {
-    return this.navigationService.updateNavigations(updateNavigationDtoArray, userId);
+    return this.navigationService.updateNavigations(
+      updateNavigationDtoArray,
+      userId,
+      req.user.userNavigationPermissions
+    );
   }
 
   @Post('delete')
   removeNavigation(
     @Body() navigation: Navigation,
-    @UserId() userId: string
+    @UserId() userId: string,
+    @Request() req
   ) {
-    return this.navigationService.removeNavigation(navigation, userId);
+    return this.navigationService.removeNavigation(navigation, userId, req.user.userNavigationPermissions);
   }
 
 }

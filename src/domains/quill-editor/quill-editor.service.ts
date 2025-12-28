@@ -31,11 +31,12 @@ export class QuillEditorService {
   ) {
     const updatedResult = await this.quillEditorRepository.update(id, updateQuillEditorDto);
     if(updatedResult.affected === 1) {
-      return this.navigationService.updateNavigation(
+      return updatedResult;
+      /*return this.navigationService.updateNavigation(
         updateQuillEditorDto["navigationId"],
         { updatedBy: userId, updatedDate: new Date() },
         userId
-      )
+      )*/
     }
     else {
       throw new NotFoundException()
