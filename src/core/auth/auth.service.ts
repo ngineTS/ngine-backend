@@ -44,10 +44,12 @@ export class AuthService {
     this.recursivelyRetrieveNavigationPermissionCouple(navigations, userNavigationPermissions);
 
     const allNavigationPermissionsAccess = await this._roleService.getUserRoleNavigationPermissionAllNavigationsOnly(user.id);
-    userNavigationPermissions.push({
-      navigationId: allNavigationPermissionsAccess.navigationId,
-      permissionName: allNavigationPermissionsAccess.permission.name
-    })
+    if (allNavigationPermissionsAccess) {
+      userNavigationPermissions.push({
+        navigationId: allNavigationPermissionsAccess.navigationId,
+        permissionName: allNavigationPermissionsAccess.permission.name
+      })
+    }
 
     const payload = { 
       sub: user.id,
