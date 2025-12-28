@@ -3,7 +3,7 @@ import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Navigation } from './entities/navigation.entity';
-import { FindOptionsOrder, FindOptionsWhere, IsNull, Repository } from 'typeorm';
+import { FindOptionsOrder, FindOptionsWhere, In, IsNull, Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 import { Permission } from '../permission/entities/permission.entity';
@@ -20,7 +20,9 @@ export class NavigationService {
               @InjectRepository(HeaderBar)
               private _headerBarRepository: Repository<HeaderBar>,
               @InjectRepository(User)
-              private _userRepository: Repository<User>) {}
+              private _userRepository: Repository<User>,
+              @InjectRepository(RoleNavigationPermission)
+              private _roleNavigationPermissionRepository: Repository<RoleNavigationPermission>) {}
 
 
   /**
@@ -393,17 +395,19 @@ export class NavigationService {
 
 
   /**
-   * Soft delete navigation and children and delete associated header bars.
+   * Soft delete navigation and children and dependencies (header bars and navigation permissions)
    * If navigation was last of the sisters then delete parent header bar.
    * @param navigation The navigation to soft delete.
    * @returns The Array of navigation that have been soft deleted.
    */
   async removeNavigation(navigation: Navigation, userId: string) {
+    const navigationsIds: Array<string> = [];
     const navigationRecordsToDelete: Array<UpdateNavigationDto> = [];
     const headerBarIdsToDelete: Array<string> = [];
 
     /* Declare method to retrieve navigations and header bars to delete */
     const getDeepNavigationIds = async (navigation: Navigation) => {
+      navigationsIds.push(navigation.id);
       navigationRecordsToDelete.push({
         id: navigation.id,
         deletedBy: userId,
@@ -448,6 +452,16 @@ export class NavigationService {
     for (const id of headerBarIdsToDelete) {
       await this._headerBarRepository.delete(id);
     }
+
+    /* delete related role navigation permissions entities */
+    const roleNavigationsPermissions = await this._roleNavigationPermissionRepository.find({
+      where: { navigationId: In(navigationsIds) }
+    })
+    for (let roleNavigationsPermission of roleNavigationsPermissions) {
+      roleNavigationsPermission.deletedBy = userId;
+      roleNavigationsPermission.deletedDate = new Date();
+    }
+    await this._roleNavigationPermissionRepository.save(roleNavigationsPermissions);
 
     return { affected: navigationsSoftDeleted.length }
   }

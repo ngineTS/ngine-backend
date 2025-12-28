@@ -6,13 +6,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 import { User } from '../user/entities/user.entity';
 import { HeaderBar } from '../header-bar/entities/header-bar.entity';
+import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 
 @Module({
   imports:[TypeOrmModule.forFeature([
     Navigation,
     NavigationType,
     HeaderBar,
-    User
+    User,
+    RoleNavigationPermission
   ])],
   controllers: [NavigationController],
   providers: [NavigationService],

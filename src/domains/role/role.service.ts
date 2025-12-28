@@ -58,22 +58,21 @@ export class RoleService {
    * @returns The roles.
    */
   async findAllRolesWithNavigationPermissions() {
-    return await this._roleRepository.find({
+    const roles = await this._roleRepository.find({
       relations: [
         'roleNavigationPermissions',
         'roleNavigationPermissions.navigation',
         'roleNavigationPermissions.permission'
       ],
-      where: { 
-        deletedDate: IsNull(),
-        roleNavigationPermissions: {
-          deletedDate: IsNull(),
-        }
-      },
-      order: {
-        updatedDate: 'DESC'
-      }
+      where: { deletedDate: IsNull() },
+      order: { updatedDate: 'DESC' }
     });
+    
+    roles.forEach(role => {
+      role.roleNavigationPermissions = role.roleNavigationPermissions.filter(obj => !obj.deletedDate);
+    })
+
+    return roles;
   }
 
   /**

@@ -11,6 +11,7 @@ import { Navigation } from '../navigation/entities/navigation.entity';
 import { HeaderBar } from '../header-bar/entities/header-bar.entity';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 import { NavigationService } from '../navigation/navigation.service';
+import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 
 @Module({
   imports:[
@@ -21,7 +22,8 @@ import { NavigationService } from '../navigation/navigation.service';
       PasswordRecovery,
       Navigation,
       NavigationType,
-      HeaderBar
+      HeaderBar,
+      RoleNavigationPermission
     ])
   ],
   controllers: [UserController],

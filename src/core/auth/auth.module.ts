@@ -12,6 +12,7 @@ import { NavigationService } from 'src/domains/navigation/navigation.service';
 import { Navigation } from 'src/domains/navigation/entities/navigation.entity';
 import { NavigationType } from 'src/domains/navigation-type/entities/navigation-type.entity';
 import { HeaderBar } from 'src/domains/header-bar/entities/header-bar.entity';
+import { RoleNavigationPermission } from 'src/domains/role-navigation-permission/entities/role-navigation-permission.entity';
 
 @Module({
   imports:[
@@ -28,7 +29,8 @@ import { HeaderBar } from 'src/domains/header-bar/entities/header-bar.entity';
       PasswordRecovery,
       Navigation,
       NavigationType,
-      HeaderBar
+      HeaderBar,
+      RoleNavigationPermission
     ])
   ],
   controllers: [AuthController],
