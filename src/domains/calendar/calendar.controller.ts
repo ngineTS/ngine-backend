@@ -3,13 +3,16 @@ import { CalendarService } from './calendar.service';
 import { CreateCalendarDto } from './dto/create-calendar.dto';
 import { UpdateCalendarDto } from './dto/update-calendar.dto';
 import { RolesGuard } from 'src/core/guards/role.guard';
-import { Permission } from 'src/core/decorators/role.decorator';
+import { Feature, Permission } from 'src/core/decorators/role.decorator';
 
+@Feature('calendar')
 @Controller('calendar')
 export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}
 
   @Post()
+  @Permission('add')
+  @UseGuards(RolesGuard)
   create(@Body() createCalendarDto: CreateCalendarDto) {
     return this.calendarService.create(createCalendarDto);
   }
@@ -22,11 +25,15 @@ export class CalendarController {
   }
 
   @Patch(':id')
+  @Permission('edit')
+  @UseGuards(RolesGuard)
   update(@Param('id') id: string, @Body() updateCalendarDto: UpdateCalendarDto) {
     return this.calendarService.update(id, updateCalendarDto);
   }
 
   @Delete(':id')
+  @Permission('delete')
+  @UseGuards(RolesGuard)
   remove(@Param('id') id: string) {
     return this.calendarService.remove(id);
   }

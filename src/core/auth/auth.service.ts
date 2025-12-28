@@ -26,6 +26,7 @@ export class AuthService {
     if(!user){
       throw new NotFoundException("This email address doesn't exist.");
     }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       throw new BadRequestException("Your password is incorrect.");
@@ -43,7 +44,7 @@ export class AuthService {
     const payload = { 
       sub: user.id,
       userEmail: user.emailAddress,
-      navigationPermissions: userNavigationPermissions  
+      userNavigationPermissions: userNavigationPermissions  
     };
 
     /* Setup refresh token.*/
@@ -76,9 +77,11 @@ export class AuthService {
     if (!payload) {
       throw new UnauthorizedException();
     }
+    
     const accessToken = await this.getAccessToken({
       sub: payload['sub'], 
-      userEmail: payload['userEmail']
+      userEmail: payload['userEmail'],
+      userNavigationPermissions: payload['userNavigationPermissions']
     });
 
     return { access_token: accessToken };
@@ -92,7 +95,11 @@ export class AuthService {
   async getRefreshToken(
     payload: {
       sub: string, 
-      userEmail: string
+      userEmail: string,
+      userNavigationPermissions: Array<{
+        navigationId: string;
+        permissionName: string;
+      }>
     }
   ): Promise<string> {
     return this.jwtService.signAsync(payload, {
@@ -109,6 +116,10 @@ export class AuthService {
     payload: {
       sub: string, 
       userEmail: string
+      userNavigationPermissions: Array<{
+        navigationId: string;
+        permissionName: string;
+      }>
     }
   ): Promise<string> {
     return this.jwtService.signAsync(payload);
@@ -117,12 +128,10 @@ export class AuthService {
 
   recursivelyRetrieveNavigationPermissionCouple(
     navigations: Array<Navigation>,
-    userNavigationPermissionsArray: Array<
-      { 
-        navigationId: string; 
-        permissionName: string;
-      }
-    >
+    userNavigationPermissionsArray: Array<{
+      navigationId: string;
+      permissionName: string;
+    }>
   ) {
     for (const navigation of navigations) {
       userNavigationPermissionsArray.push({
