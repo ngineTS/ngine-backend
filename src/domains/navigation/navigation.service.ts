@@ -34,7 +34,7 @@ export class NavigationService {
     navigationId: string;
     permissionName: string;
   }>) {
-    let navigations = await this._navigationRepository.find({
+    let navigations: any = await this._navigationRepository.find({
       relations: [
         'children',
         'navigationType',
@@ -44,11 +44,26 @@ export class NavigationService {
         displayLabel: 'ASC'
       }
     });
+    /* filter out deleted navigations */
     navigations = this.filterOutDeletedNavigations(navigations);
     /* exclude navigations user doesn't have access */
     navigations = navigations.filter(navigation => 
       userNavigationPermissions.find(obj => obj.navigationId === navigation.id)
     );
+    /* add null navigation if user has at least 'add all' navigation access */
+    if (
+      userNavigationPermissions.find(obj =>
+        obj.navigationId === '00000000-0000-0000-0000-000000000000' &&
+        obj.permissionName.includes('add')
+      )
+    ) {
+      navigations.push({
+        id: null,
+        name: 'none',
+        displayLabel: 'None',
+        navigationType: { name: 'header' }
+      })
+    }
     return navigations;
   }
 
@@ -364,7 +379,7 @@ export class NavigationService {
     ) {
       throw new ForbiddenException();
     }
-    
+
     /* check if navigation exists and throw NotFound error if not */
     const navigation = await this._navigationRepository.findOne({
       where: { id: id },
