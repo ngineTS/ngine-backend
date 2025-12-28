@@ -13,6 +13,9 @@ import { Navigation } from 'src/domains/navigation/entities/navigation.entity';
 import { NavigationType } from 'src/domains/navigation-type/entities/navigation-type.entity';
 import { HeaderBar } from 'src/domains/header-bar/entities/header-bar.entity';
 import { RoleNavigationPermission } from 'src/domains/role-navigation-permission/entities/role-navigation-permission.entity';
+import { UserRole } from 'src/domains/user-role/entities/user-role.entity';
+import { Role } from 'src/domains/role/entities/role.entity';
+import { RoleService } from 'src/domains/role/role.service';
 
 @Module({
   imports:[
@@ -26,10 +29,12 @@ import { RoleNavigationPermission } from 'src/domains/role-navigation-permission
     }),
     TypeOrmModule.forFeature([
       User,
+      UserRole,
       PasswordRecovery,
       Navigation,
       NavigationType,
       HeaderBar,
+      Role,
       RoleNavigationPermission
     ])
   ],
@@ -37,6 +42,7 @@ import { RoleNavigationPermission } from 'src/domains/role-navigation-permission
   providers: [
     AuthService, 
     NavigationService,
+    RoleService,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,

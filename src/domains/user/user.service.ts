@@ -3,7 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { IsNull, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { PasswordRecovery } from 'src/core/password-recovery/entities/password-recovery.entity';
 import { AuthService } from 'src/core/auth/auth.service';
@@ -151,4 +151,5 @@ export class UserService {
       throw new NotFoundException("This link has expired.");
     }
   }
+
 }

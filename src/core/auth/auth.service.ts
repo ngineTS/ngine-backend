@@ -7,19 +7,21 @@ import { Repository } from 'typeorm';
 import { Request, Response } from 'express';
 import { NavigationService } from 'src/domains/navigation/navigation.service';
 import { Navigation } from 'src/domains/navigation/entities/navigation.entity';
+import { RoleService } from 'src/domains/role/role.service';
 
 
 @Injectable()
 export class AuthService {
 
-  constructor(private jwtService: JwtService,
+  constructor(private _jwtService: JwtService,
               @InjectRepository(User)
-              private userRepository: Repository<User>,
+              private _userRepository: Repository<User>,
+              private _roleService: RoleService,
               private _navigationService: NavigationService) {}
 
 
   async signIn(emailAddress: string, password: string, res: Response): Promise<any> {
-    const user = await this.userRepository.findOne({
+    const user = await this._userRepository.findOne({
         where: { emailAddress: emailAddress }
     });
     
@@ -40,7 +42,13 @@ export class AuthService {
 
     const navigations = await this._navigationService.findNestedNavigations(user.id);
     this.recursivelyRetrieveNavigationPermissionCouple(navigations, userNavigationPermissions);
-    
+
+    const allNavigationPermissionsAccess = await this._roleService.getUserRoleNavigationPermissionAllNavigationsOnly(user.id);
+    userNavigationPermissions.push({
+      navigationId: allNavigationPermissionsAccess.navigationId,
+      permissionName: allNavigationPermissionsAccess.permission.name
+    })
+
     const payload = { 
       sub: user.id,
       userEmail: user.emailAddress,
@@ -71,7 +79,7 @@ export class AuthService {
    */
   async refresh(req: Request) {
     const refreshToken = req.cookies['refresh_token'];
-    const payload = await this.jwtService.verifyAsync(refreshToken, { 
+    const payload = await this._jwtService.verifyAsync(refreshToken, { 
       secret: process.env.JWT_REFRESH_SECRET 
     });
     if (!payload) {
@@ -102,7 +110,7 @@ export class AuthService {
       }>
     }
   ): Promise<string> {
-    return this.jwtService.signAsync(payload, {
+    return this._jwtService.signAsync(payload, {
       secret: process.env.JWT_REFRESH_SECRET, expiresIn: '1d' 
     });
   }
@@ -122,7 +130,7 @@ export class AuthService {
       }>
     }
   ): Promise<string> {
-    return this.jwtService.signAsync(payload);
+    return this._jwtService.signAsync(payload);
   } 
 
 
@@ -143,6 +151,5 @@ export class AuthService {
       }
     }
   }
-
 
 }

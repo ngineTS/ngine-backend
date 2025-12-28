@@ -26,10 +26,14 @@ export class NavigationService {
 
 
   /**
-   * Find all flat navigations not deleted and their first level of children.
+   * Find all flat navigations not deleted and their first level of children
+   * filtered by user permission.
    * @returns The array of navigations.
    */
-  async findAllNavigations() {
+  async findAllNavigations(userNavigationPermissions: Array<{
+    navigationId: string;
+    permissionName: string;
+  }>) {
     let navigations = await this._navigationRepository.find({
       relations: [
         'children',
@@ -41,6 +45,10 @@ export class NavigationService {
       }
     });
     navigations = this.filterOutDeletedNavigations(navigations);
+    /* exclude navigations user doesn't have access */
+    navigations = navigations.filter(navigation => 
+      userNavigationPermissions.find(obj => obj.navigationId === navigation.id)
+    );
     return navigations;
   }
 
@@ -310,7 +318,7 @@ export class NavigationService {
    * Update navigation properties.
    * 
    * If parentId has changed:
-   * * If navigation is header and doesn't have sister (i.e first header) 
+   * If navigation is header and doesn't have sister (i.e first header) 
    * then create header bar record associated to parent navigation (inherit config from parent header bar).
    * 
    * 

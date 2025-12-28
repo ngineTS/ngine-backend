@@ -12,6 +12,7 @@ import { HeaderBar } from '../header-bar/entities/header-bar.entity';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 import { NavigationService } from '../navigation/navigation.service';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
+import { RoleService } from '../role/role.service';
 
 @Module({
   imports:[
@@ -27,6 +28,6 @@ import { RoleNavigationPermission } from '../role-navigation-permission/entities
     ])
   ],
   controllers: [UserController],
-  providers: [UserService, AuthService, NavigationService]
+  providers: [UserService, AuthService, NavigationService, RoleService]
 })
 export class UserModule {}

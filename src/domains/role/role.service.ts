@@ -3,7 +3,7 @@ import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from './entities/role.entity';
-import { IsNull, Repository } from 'typeorm';
+import { In, IsNull, Repository } from 'typeorm';
 import { UserRole } from '../user-role/entities/user-role.entity';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 
@@ -143,4 +143,33 @@ export class RoleService {
 
     return removedTotal + updateRoleResponse.affected!;
   }
+
+  /**
+   * Get user roleNavigationPermission for "All navigations".
+   * @param userId The user id to look for.
+   * @returns The user roleNavigationPermission with highest priviledge.
+   */
+  async getUserRoleNavigationPermissionAllNavigationsOnly(userId: string): Promise<RoleNavigationPermission> {
+    const roleIds: Array<string> = [];
+
+    const userRoles = await this._userRoleRepository.find({
+      where: { userId: userId }
+    });
+
+    userRoles.forEach(userRole => roleIds.push(userRole.roleId));
+
+    const userRoleNavigationPermissions = await this._roleNavigationPermissionRepository.find({
+      relations: ['permission'],
+      where: { 
+        navigationId: '00000000-0000-0000-0000-000000000000',
+        roleId: In(roleIds)
+      }
+    })
+  
+    console.log('todo', userRoleNavigationPermissions);
+    
+    return userRoleNavigationPermissions.sort((a, b) => a.permission.priority - b.permission.priority)[0];
+  }
+  
+
 }

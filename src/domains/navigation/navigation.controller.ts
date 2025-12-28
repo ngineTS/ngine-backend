@@ -23,8 +23,8 @@ export class NavigationController {
   }
 
   @Get('flat')
-  findAllNavigations() {
-    return this.navigationService.findAllNavigations();
+  findAllNavigations(@Request() req) {
+    return this.navigationService.findAllNavigations(req.user.userNavigationPermissions);
   }
 
   @Patch(':id')
