@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param } from '@nestjs/common';
 import { QuillEditorService } from './quill-editor.service';
 import { CreateQuillEditorDto } from './dto/create-quill-editor.dto';
 import { UpdateQuillEditorDto } from './dto/update-quill-editor.dto';

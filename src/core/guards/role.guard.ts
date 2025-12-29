@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Feature, Permission } from '../decorators/role.decorator';
 import { DataSource } from 'typeorm';
@@ -25,19 +25,21 @@ export class RolesGuard implements CanActivate {
     switch (permission) {
 
       case "view":
-        //if we look for a specific navigation id
+        /* if we look for a specific navigation id */
         if (params.navigationId) {
           if (user.userNavigationPermissions?.find(obj => obj.navigationId === params.navigationId)) {
             return true;
           }
         }
-        //if we look for a specific id then find navigation id associated
+        /* if we look for a specific id then find navigation id associated */
         if (params.id) {
-          const data = await this._datasource.createQueryBuilder()
-            .select('*')
-            .from(`my_app.${feature}`, 't')
-            .where("id = :id", { id: params.id })
-            .execute();
+          let data;
+          try {
+            data = await this.findDataInTableById(feature, params.id);
+          }
+          catch (error) {
+            throw new BadRequestException(error);
+          }
           if (!data || data.length === 0) {
             throw new NotFoundException(`Id ${params.id} not found.`);
           }
@@ -49,12 +51,15 @@ export class RolesGuard implements CanActivate {
         }
 
       case 'edit':
+        /* if we look for a specific id then find navigation id associated. */
         if (params.id) {
-          const data = await this._datasource.createQueryBuilder()
-            .select('*')
-            .from(`my_app.${feature}`, 't')
-            .where("id = :id", { id: params.id })
-            .execute();
+          let data;
+          try {
+            data = await this.findDataInTableById(feature, params.id);
+          }
+          catch (error) {
+            throw new BadRequestException(error);
+          }
           if (!data || data.length === 0) {
             throw new NotFoundException(`Id ${params.id} not found.`);
           }
@@ -70,6 +75,7 @@ export class RolesGuard implements CanActivate {
         }
 
       case 'add':
+        /* if we pass a body then look for navigation id inside body props. */
         if (body?.navigationId) {
           if (
             user.userNavigationPermissions
@@ -81,12 +87,15 @@ export class RolesGuard implements CanActivate {
         }
 
       case 'delete':
+        /* if we look for a specific id then find navigation id associated. */
         if (params.id) {
-          const data = await this._datasource.createQueryBuilder()
-            .select('*')
-            .from(`my_app.${feature}`, 't')
-            .where("id = :id", { id: params.id })
-            .execute();
+          let data;
+          try {
+            data = await this.findDataInTableById(feature, params.id);
+          }
+          catch (error) {
+            throw new BadRequestException(error);
+          }
           if (!data || data.length === 0) {
             throw new NotFoundException(`Id ${params.id} not found.`);
           }
@@ -100,6 +109,7 @@ export class RolesGuard implements CanActivate {
             }
           }
         }
+        /* if we pass a body then look for navigation id inside body props. */
         else if (body?.navigationId) {
           if (
             user.userNavigationPermissions
@@ -113,6 +123,14 @@ export class RolesGuard implements CanActivate {
     }
 
     throw new ForbiddenException();
+  }
+
+  findDataInTableById(tableName: string, id: string) {
+    return this._datasource.createQueryBuilder()
+      .select('*')
+      .from(`my_app.${tableName}`, 't')
+      .where("id = :id", { id: id })
+      .execute();
   }
 
 }
