@@ -355,8 +355,7 @@ export class NavigationService {
     const parentId = createNavigationDto['parentId'] ?? '00000000-0000-0000-0000-000000000000';
     if (
       !userNavigationPermissions.find(obj => 
-        obj.navigationId === parentId &&
-        obj.permissionName.includes('add')
+        obj.navigationId === parentId && obj.permissionName.includes('add')
       )
     ) {
       throw new ForbiddenException();
@@ -423,9 +422,17 @@ export class NavigationService {
     /* valid permission */
     if (
       !userNavigationPermissions.find(obj => 
-        obj.navigationId === id &&
-        obj.permissionName.includes('edit')
+        obj.navigationId === id && obj.permissionName.includes('edit')
       )
+    ) {
+      throw new ForbiddenException();
+    }
+    if (
+      'parentId' in updateNavigationDto &&
+      !userNavigationPermissions.find(obj => {
+        const parentId = updateNavigationDto.parentId ?? '00000000-0000-0000-0000-000000000000';
+        return obj.navigationId === parentId && obj.permissionName.includes('add');
+      })
     ) {
       throw new ForbiddenException();
     }
@@ -450,6 +457,16 @@ export class NavigationService {
         deletedDate: IsNull(),
       },
     });
+
+    /* check if new parent has already a child with this name */
+    /*if (
+      updateNavigationDto['displayLabel'] &&
+      newParentNavigation?.children.find(child => 
+        child.name === updateNavigationDto['displayLabel'].toLowerCase()?.replace(/ /g, "-")
+      )
+    ) {
+      throw new BadRequestException('This name already exists.');
+    }*/
 
     updateResult =  await this._navigationRepository.update(id, updateNavigationDto);
 
@@ -507,8 +524,7 @@ export class NavigationService {
     updateNavigationDtoArray.forEach(navigation => {
       if (
         !userNavigationPermissions.find(obj =>
-          obj.navigationId === navigation['id'] &&
-          obj.permissionName.includes('edit')
+          obj.navigationId === navigation['id'] && obj.permissionName.includes('edit')
         )
       ) {
         throw new ForbiddenException();
@@ -543,8 +559,7 @@ export class NavigationService {
     /* valid permission */
     if (
       !userNavigationPermissions.find(obj => 
-        obj.navigationId === navigation.id &&
-        obj.permissionName.includes('delete')
+        obj.navigationId === navigation.id && obj.permissionName.includes('delete')
       )
     ) {
       throw new ForbiddenException();
