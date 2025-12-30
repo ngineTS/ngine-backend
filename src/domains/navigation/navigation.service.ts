@@ -26,45 +26,35 @@ export class NavigationService {
 
 
   /**
-   * Find all flat navigations not deleted and their first level of children
-   * filtered by user permission.
+   * Find all flat navigations filtered by user permission.
    * @returns The array of navigations.
    */
-  async findAllNavigations(userNavigationPermissions: Array<{
+  async findAllNavigations(userId: string, userNavigationPermissions: Array<{
     navigationId: string;
     permissionName: string;
   }>) {
-    let navigations: any = await this._navigationRepository.find({
-      relations: [
-        'children',
-        'navigationType',
-        'children.navigationType',
-      ],
-      order: {
-        displayLabel: 'ASC'
-      }
-    });
-    /* filter out deleted navigations */
-    navigations = this.filterOutDeletedNavigations(navigations);
-    /* exclude navigations user doesn't have access */
-    navigations = navigations.filter(navigation => 
-      userNavigationPermissions.find(obj => obj.navigationId === navigation.id)
-    );
-    /* add null navigation if user has at least 'add all' navigation access */
+    /* get nested navigations filtered by user permission */
+    const navigations = await this.findNestedNavigations(userId);
+    /* flatten navigations */
+    const flatNavigations: any[] = [];
+    for (let navigation of navigations) {
+      this.flattenNavigations(navigation, flatNavigations);
+    }
+    /* check if user has 'add all navigations' access, if yes push 'none' navigation to array */
     if (
       userNavigationPermissions.find(obj =>
         obj.navigationId === '00000000-0000-0000-0000-000000000000' &&
         obj.permissionName.includes('add')
       )
     ) {
-      navigations.push({
+      flatNavigations.push({
         id: null,
         name: 'none',
         displayLabel: 'None',
         navigationType: { name: 'header' }
       })
     }
-    return navigations;
+    return flatNavigations;
   }
 
 
@@ -122,9 +112,11 @@ export class NavigationService {
 
   /**
    * Filter out soft deleted navigations in the given navigation array.
-   * If 'filterOutNavigationWithoutPermission' is true - filter out also navigation without permissions.
+   * 
+   * If 'filterOutNavigationWithoutPermission' is true: filter out also navigation without permissions.
+   * 
    * @param navigations The navigations to filter.
-   * @param filterOutNavigationWithoutPermission A boolean specifying if we want also to exclude the navigation without permission.
+   * @param filterOutNavigationWithoutPermission A boolean specifying if we want to exclude the navigations without permission.
    * @returns The array of navigations filtered.
    */
   filterOutDeletedNavigations(navigations: Navigation[], filterOutNavigationWithoutPermission = false) {
@@ -590,6 +582,21 @@ export class NavigationService {
     headerBarPayload.updatedDate = new Date();
 
     await this._headerBarRepository.save(headerBarPayload);
+  }
+
+
+  /**
+   * Flatten nested navigations.
+   * @param navigation navigation to flatten.
+   * @param flatNavigations array to store flat navigations.
+   */
+  flattenNavigations(navigation: Navigation, flatNavigations: Array<Navigation>) {
+    flatNavigations.push(navigation);
+    if (navigation.children && navigation.children.length > 0) {
+      for (const child of navigation.children) {
+        this.flattenNavigations(child, flatNavigations);
+      }
+    }
   }
   
 }

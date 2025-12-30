@@ -36,7 +36,7 @@ export class AuthService {
 
     const userNavigationPermissions: Array<
       { 
-        navigationId: string; 
+        navigationId: string;
         permissionName: string;
       }> = [];
 
