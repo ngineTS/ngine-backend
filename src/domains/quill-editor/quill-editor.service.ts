@@ -4,14 +4,13 @@ import { UpdateQuillEditorDto } from './dto/update-quill-editor.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { QuillEditor } from './entities/quill-editor.entity';
-import { NavigationService } from 'src/domains/navigation/navigation.service';
 
 @Injectable()
 export class QuillEditorService {
 
   constructor(@InjectRepository(QuillEditor)
-              private quillEditorRepository: Repository<QuillEditor>,
-              private navigationService: NavigationService) {}
+              private quillEditorRepository: Repository<QuillEditor>
+             ) {}
 
 
   create(createQuillEditorDto: CreateQuillEditorDto) {

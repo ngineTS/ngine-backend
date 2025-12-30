@@ -9,6 +9,10 @@ import { RoleNavigationPermission } from '../role-navigation-permission/entities
 import { Permission } from '../permission/entities/permission.entity';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 import { HeaderBar } from '../header-bar/entities/header-bar.entity';
+import { RoleService } from '../role/role.service';
+import { AuthService } from 'src/core/auth/auth.service';
+import { Response } from 'express';
+
 
 @Injectable()
 export class NavigationService {
@@ -22,19 +26,27 @@ export class NavigationService {
               @InjectRepository(User)
               private _userRepository: Repository<User>,
               @InjectRepository(RoleNavigationPermission)
-              private _roleNavigationPermissionRepository: Repository<RoleNavigationPermission>) {}
+              private _roleNavigationPermissionRepository: Repository<RoleNavigationPermission>,
+              private _roleService: RoleService,
+              private _authService: AuthService) {}
 
 
   /**
    * Find all flat navigations filtered by user permission.
    * @returns The array of navigations.
    */
-  async findAllNavigations(userId: string, userNavigationPermissions: Array<{
-    navigationId: string;
-    permissionName: string;
-  }>) {
+  async findAllNavigations(
+    userRequest: {
+      sub: string;
+      emailAddress: string;
+      userNavigationPermissions: Array<{
+        navigationId: string;
+        permissionName: string;
+      }>
+    }
+  ) {
     /* get nested navigations filtered by user permission */
-    const navigations = await this.findNestedNavigations(userId);
+    const navigations = await this.findNestedNavigations(userRequest) as Array<Navigation>;
     /* flatten navigations */
     const flatNavigations: any[] = [];
     for (let navigation of navigations) {
@@ -42,7 +54,7 @@ export class NavigationService {
     }
     /* check if user has 'add all navigations' access, if yes push 'none' navigation to array */
     if (
-      userNavigationPermissions.find(obj =>
+      userRequest.userNavigationPermissions.find(obj =>
         obj.navigationId === '00000000-0000-0000-0000-000000000000' &&
         obj.permissionName.includes('add')
       )
@@ -63,8 +75,18 @@ export class NavigationService {
    * @param userId The user id from the request.
    * @returns A nested navigations object.
    */
-  async findNestedNavigations(userId: string) {
-    const userRoleNavigationPermissionsFormatted = await this.getUserRoleNavigationPermissionsFormatted(userId);
+  async findNestedNavigations(
+    userRequest: {
+      sub: string;
+      emailAddress: string;
+      userNavigationPermissions: Array<{
+        navigationId: string;
+        permissionName: string;
+      }>
+    },
+    res?: Response,
+  ) {
+    const userRoleNavigationPermissionsFormatted = await this.getUserRoleNavigationPermissionsFormatted(userRequest.sub);
     const relations = new Set<string>();
     const order: FindOptionsOrder<Navigation> = { order: 'ASC' };
     const where: FindOptionsWhere<Navigation> = { 
@@ -82,6 +104,42 @@ export class NavigationService {
       userRoleNavigationPermissionsFormatted
     ));
     navigations = this.filterOutDeletedNavigations(navigations, true);
+
+    /* setup new request user navigation permissions */
+    if (res) {
+      const userNavigationPermissions: Array<{ navigationId: string; permissionName: string; }> = [];
+      this.flattenNavigationPermissions(navigations, userNavigationPermissions);
+
+      const allNavigationPermissionsAccess = await this._roleService.getUserRoleNavigationPermissionAllNavigationsOnly(userRequest.sub);
+      if (allNavigationPermissionsAccess) {
+        userNavigationPermissions.push({
+          navigationId: allNavigationPermissionsAccess.navigationId,
+          permissionName: allNavigationPermissionsAccess.permission.name
+        })
+      }
+
+      const payload = { 
+        sub: userRequest.sub,
+        userEmail: userRequest.emailAddress,
+        userNavigationPermissions: userNavigationPermissions  
+      };
+
+      /* Setup refresh token.*/
+      const refreshToken = await this._authService.getRefreshToken(payload);
+      res!.cookie('refresh_token', refreshToken, {
+        httpOnly: true,
+        secure: false, //TO CHANGE IN PROD
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 24 * 60 * 60 * 1000
+      });
+
+      /* Return access token. */
+      const accessToken = await this._authService.getAccessToken(payload);
+
+      return { navigations: navigations, access_token: accessToken };
+    }
+
     return navigations;
   }
 
@@ -101,7 +159,7 @@ export class NavigationService {
   ) {
     relations.add(base + 'navigationType');
     relations.add(base + 'headerBar');
-    if(depth > 0) {
+    if (depth > 0) {
       relations.add(base + 'children');
       base = base + 'children.';
       order.children = { order: 'ASC' };
@@ -595,6 +653,29 @@ export class NavigationService {
     if (navigation.children && navigation.children.length > 0) {
       for (const child of navigation.children) {
         this.flattenNavigations(child, flatNavigations);
+      }
+    }
+  }
+
+  /**
+   * Store navigation permissions from nested navigations.
+   * @param navigations The navigations with permission name.
+   * @param userNavigationPermissionsArray The array of navigation-permission couples.
+   */
+  flattenNavigationPermissions(
+    navigations: Array<Navigation>,
+    userNavigationPermissionsArray: Array<{
+      navigationId: string;
+      permissionName: string;
+    }>
+  ) {
+    for (const navigation of navigations) {
+      userNavigationPermissionsArray.push({
+        navigationId: navigation.id,
+        permissionName: navigation['permissionName']
+      });
+      if (navigation.children && navigation.children.length > 0) {
+        this.flattenNavigationPermissions(navigation.children, userNavigationPermissionsArray);
       }
     }
   }

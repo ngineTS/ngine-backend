@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Request, Res } from '@nestjs/common';
 import { NavigationService } from './navigation.service';
 import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { UserId } from 'src/core/decorators/user.decorator';
 import { Navigation } from './entities/navigation.entity';
+import { Response } from 'express';
 
 @Controller('navigation')
 export class NavigationController {
@@ -19,16 +20,16 @@ export class NavigationController {
   }
 
   @Get()
-  findNestedNavigations(@Request() req) {
-    return this.navigationService.findNestedNavigations(req.user.sub);
+  findNestedNavigations(
+    @Request() req,
+    @Res({ passthrough: true }) res: Response
+  ) {
+    return this.navigationService.findNestedNavigations(req.user, res);
   }
 
   @Get('flat')
-  findAllNavigations(
-    @UserId() userId,
-    @Request() req
-  ) {
-    return this.navigationService.findAllNavigations(userId, req.user.userNavigationPermissions);
+  findAllNavigations(@Request() req) {
+    return this.navigationService.findAllNavigations(req.user);
   }
 
   @Patch(':id')

@@ -7,6 +7,10 @@ import { NavigationType } from '../navigation-type/entities/navigation-type.enti
 import { User } from '../user/entities/user.entity';
 import { HeaderBar } from '../header-bar/entities/header-bar.entity';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
+import { UserRole } from '../user-role/entities/user-role.entity';
+import { RoleService } from '../role/role.service';
+import { AuthService } from 'src/core/auth/auth.service';
+import { Role } from '../role/entities/role.entity';
 
 @Module({
   imports:[TypeOrmModule.forFeature([
@@ -14,10 +18,11 @@ import { RoleNavigationPermission } from '../role-navigation-permission/entities
     NavigationType,
     HeaderBar,
     User,
+    UserRole,
+    Role,
     RoleNavigationPermission
   ])],
   controllers: [NavigationController],
-  providers: [NavigationService],
-  exports: [TypeOrmModule.forFeature([Navigation, NavigationType, User]), NavigationService]
+  providers: [NavigationService, RoleService, AuthService]
 })
 export class NavigationModule {}

@@ -3,10 +3,9 @@ import { CalendarService } from './calendar.service';
 import { CalendarController } from './calendar.controller';
 import { Calendar } from './entities/calendar.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { NavigationModule } from '../navigation/navigation.module';
 
 @Module({
-  imports:[TypeOrmModule.forFeature([Calendar]), NavigationModule],
+  imports:[TypeOrmModule.forFeature([Calendar])],
   controllers: [CalendarController],
   providers: [CalendarService],
 })

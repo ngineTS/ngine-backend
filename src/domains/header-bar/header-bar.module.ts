@@ -3,10 +3,10 @@ import { HeaderBarService } from './header-bar.service';
 import { HeaderBarController } from './header-bar.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HeaderBar } from './entities/header-bar.entity';
-import { NavigationModule } from '../navigation/navigation.module';
+import { User } from '../user/entities/user.entity';
 
 @Module({
-  imports:[TypeOrmModule.forFeature([HeaderBar]), NavigationModule],
+  imports:[TypeOrmModule.forFeature([HeaderBar, User])],
   controllers: [HeaderBarController],
   providers: [HeaderBarService],
 })

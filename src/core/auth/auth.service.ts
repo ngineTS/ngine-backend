@@ -5,9 +5,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/domains/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import { Request, Response } from 'express';
-import { NavigationService } from 'src/domains/navigation/navigation.service';
-import { Navigation } from 'src/domains/navigation/entities/navigation.entity';
-import { RoleService } from 'src/domains/role/role.service';
 
 
 @Injectable()
@@ -15,9 +12,7 @@ export class AuthService {
 
   constructor(private _jwtService: JwtService,
               @InjectRepository(User)
-              private _userRepository: Repository<User>,
-              private _roleService: RoleService,
-              private _navigationService: NavigationService) {}
+              private _userRepository: Repository<User>) {}
 
 
   async signIn(emailAddress: string, password: string, res: Response): Promise<any> {
@@ -34,27 +29,10 @@ export class AuthService {
       throw new BadRequestException("Your password is incorrect.");
     }
 
-    const userNavigationPermissions: Array<
-      { 
-        navigationId: string;
-        permissionName: string;
-      }> = [];
-
-    const navigations = await this._navigationService.findNestedNavigations(user.id);
-    this.recursivelyRetrieveNavigationPermissionCouple(navigations, userNavigationPermissions);
-
-    const allNavigationPermissionsAccess = await this._roleService.getUserRoleNavigationPermissionAllNavigationsOnly(user.id);
-    if (allNavigationPermissionsAccess) {
-      userNavigationPermissions.push({
-        navigationId: allNavigationPermissionsAccess.navigationId,
-        permissionName: allNavigationPermissionsAccess.permission.name
-      })
-    }
-
     const payload = { 
       sub: user.id,
       userEmail: user.emailAddress,
-      userNavigationPermissions: userNavigationPermissions  
+      userNavigationPermissions: []  
     };
 
     /* Setup refresh token.*/
@@ -133,25 +111,6 @@ export class AuthService {
     }
   ): Promise<string> {
     return this._jwtService.signAsync(payload);
-  } 
-
-
-  recursivelyRetrieveNavigationPermissionCouple(
-    navigations: Array<Navigation>,
-    userNavigationPermissionsArray: Array<{
-      navigationId: string;
-      permissionName: string;
-    }>
-  ) {
-    for (const navigation of navigations) {
-      userNavigationPermissionsArray.push({
-        navigationId: navigation.id,
-        permissionName: navigation['permissionName']
-      });
-      if (navigation.children && navigation.children.length > 0) {
-        this.recursivelyRetrieveNavigationPermissionCouple(navigation.children, userNavigationPermissionsArray);
-      }
-    }
   }
 
 }
