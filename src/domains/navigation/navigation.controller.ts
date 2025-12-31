@@ -20,11 +20,8 @@ export class NavigationController {
   }
 
   @Get()
-  findNestedNavigations(
-    @Request() req,
-    @Res({ passthrough: true }) res: Response
-  ) {
-    return this.navigationService.findNestedNavigations(req.user, res);
+  findNestedNavigations(@Request() req) {
+    return this.navigationService.findNestedNavigations(req.user, true);
   }
 
   @Get('flat')

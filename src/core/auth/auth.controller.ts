@@ -11,10 +11,8 @@ export class AuthController {
 
   @Public()
   @Post('sign-in')
-  signIn(
-    @Body() signInDto: Record<string, string>,
-    @Res({ passthrough: true }) res: Response) {
-    return this.authService.signIn(signInDto.emailAddress, signInDto.password, res);
+  signIn(@Body() signInDto: Record<string, string>) {
+    return this.authService.signIn(signInDto.emailAddress, signInDto.password);
   }
 
   @Post('refresh')

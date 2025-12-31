@@ -17,10 +17,8 @@ export class UserController {
 
   @Public()
   @Post('sign-up')
-  create(
-    @Body() createUserDto: CreateUserDto,
-    @Res( {passthrough: true }) res: Response) {
-    return this.userService.createUser(createUserDto, res);
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.userService.createUser(createUserDto);
   }
 
   @Public()

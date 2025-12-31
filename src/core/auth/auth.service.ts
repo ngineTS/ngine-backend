@@ -15,7 +15,7 @@ export class AuthService {
               private _userRepository: Repository<User>) {}
 
 
-  async signIn(emailAddress: string, password: string, res: Response): Promise<any> {
+  async signIn(emailAddress: string, password: string): Promise<any> {
     const user = await this._userRepository.findOne({
         where: { emailAddress: emailAddress }
     });
@@ -35,32 +35,26 @@ export class AuthService {
       userNavigationPermissions: []  
     };
 
-    /* Setup refresh token.*/
-    const refreshToken = await this.getRefreshToken(payload);
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: false, //TO CHANGE IN PROD
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 24 * 60 * 60 * 1000
-    });
-
     /* Return access token. */
     const accessToken = await this.getAccessToken(payload);
     return { access_token: accessToken };
   }
 
   /**
-   * Get and verify refresh token from request.
+   * Get and verify token from request.
    * If it is valid then generate new access token
    * else throw UnauthorizedException.
    * @param req The request object of type Request from Express.
    * @returns The new access token.
    */
   async refresh(req: Request) {
-    const refreshToken = req.cookies['refresh_token'];
-    const payload = await this._jwtService.verifyAsync(refreshToken, { 
-      secret: process.env.JWT_REFRESH_SECRET 
+    const token = this.extractTokenFromHeader(req);
+    if (!token) {
+      throw new UnauthorizedException();
+    }
+
+    const payload = await this._jwtService.verifyAsync(token, { 
+      secret: process.env.JWT_SECRET 
     });
     if (!payload) {
       throw new UnauthorizedException();
@@ -73,26 +67,6 @@ export class AuthService {
     });
 
     return { access_token: accessToken };
-  }
-
-  /**
-   * Get new refresh token from Jwt.
-   * @param payload Payload to pass to jwt sign in.
-   * @returns A promise of the refresh token.
-   */
-  async getRefreshToken(
-    payload: {
-      sub: string, 
-      userEmail: string,
-      userNavigationPermissions: Array<{
-        navigationId: string;
-        permissionName: string;
-      }>
-    }
-  ): Promise<string> {
-    return this._jwtService.signAsync(payload, {
-      secret: process.env.JWT_REFRESH_SECRET, expiresIn: '1d' 
-    });
   }
 
   /**
@@ -113,4 +87,13 @@ export class AuthService {
     return this._jwtService.signAsync(payload);
   }
 
+  /**
+   * Extract Bearer token from request.
+   * @param request The request.
+   * @returns The token.
+   */
+  private extractTokenFromHeader(request: Request): string | undefined {
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    return type === 'Bearer' ? token : undefined;
+  }
 }

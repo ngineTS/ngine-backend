@@ -26,7 +26,7 @@ export class UserService {
               private authService: AuthService) { }
 
 
-  async createUser(createUserDto: CreateUserDto, res: Response) {
+  async createUser(createUserDto: CreateUserDto) {
     const pass = createUserDto.password;
     
     //create encrypted user password
@@ -52,7 +52,7 @@ export class UserService {
         roleId: superAdminRole?.id,
       })
     }
-    return await this.authService.signIn(createUserDto.emailAddress, pass, res);
+    return await this.authService.signIn(createUserDto.emailAddress, pass);
   }
 
 

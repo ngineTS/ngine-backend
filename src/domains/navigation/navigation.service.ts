@@ -38,7 +38,7 @@ export class NavigationService {
   async findAllNavigations(
     userRequest: {
       sub: string;
-      emailAddress: string;
+      userEmail: string;
       userNavigationPermissions: Array<{
         navigationId: string;
         permissionName: string;
@@ -78,13 +78,13 @@ export class NavigationService {
   async findNestedNavigations(
     userRequest: {
       sub: string;
-      emailAddress: string;
+      userEmail: string;
       userNavigationPermissions: Array<{
         navigationId: string;
         permissionName: string;
       }>
     },
-    res?: Response,
+    hasToGenerateNewToken = false,
   ) {
     const userRoleNavigationPermissionsFormatted = await this.getUserRoleNavigationPermissionsFormatted(userRequest.sub);
     const relations = new Set<string>();
@@ -106,10 +106,9 @@ export class NavigationService {
     navigations = this.filterOutDeletedNavigations(navigations, true);
 
     /* setup new request user navigation permissions */
-    if (res) {
+    if (hasToGenerateNewToken) {
       const userNavigationPermissions: Array<{ navigationId: string; permissionName: string; }> = [];
       this.flattenNavigationPermissions(navigations, userNavigationPermissions);
-
       const allNavigationPermissionsAccess = await this._roleService.getUserRoleNavigationPermissionAllNavigationsOnly(userRequest.sub);
       if (allNavigationPermissionsAccess) {
         userNavigationPermissions.push({
@@ -120,23 +119,12 @@ export class NavigationService {
 
       const payload = { 
         sub: userRequest.sub,
-        userEmail: userRequest.emailAddress,
+        userEmail: userRequest.userEmail,
         userNavigationPermissions: userNavigationPermissions  
       };
-
-      /* Setup refresh token.*/
-      const refreshToken = await this._authService.getRefreshToken(payload);
-      res!.cookie('refresh_token', refreshToken, {
-        httpOnly: true,
-        secure: false, //TO CHANGE IN PROD
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 24 * 60 * 60 * 1000
-      });
-
-      /* Return access token. */
+      
+      /* return navigations and access token */
       const accessToken = await this._authService.getAccessToken(payload);
-
       return { navigations: navigations, access_token: accessToken };
     }
 
