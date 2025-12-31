@@ -393,7 +393,6 @@ export class NavigationService {
    * If navigation is header and doesn't have sister (i.e first header) 
    * then create header bar record associated to parent navigation (inherit config from parent header bar).
    * 
-   * 
    * @param id The navigation id.
    * @param updateNavigationDto The navigation properties to update.
    * @returns An UpdateResponse type object.
