@@ -3,7 +3,7 @@ import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Navigation } from './entities/navigation.entity';
-import { FindOptionsOrder, FindOptionsWhere, In, IsNull, Repository } from 'typeorm';
+import { FindOptionsOrder, FindOptionsWhere, In, IsNull, Not, Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 import { Permission } from '../permission/entities/permission.entity';
@@ -407,7 +407,7 @@ export class NavigationService {
       permissionName: string;
     }> 
   ) {
-    /* valid permission */
+    /* Valid permission. */
     if (
       !userNavigationPermissions.find(obj => 
         obj.navigationId === id && obj.permissionName.includes('edit')
@@ -425,7 +425,7 @@ export class NavigationService {
       throw new ForbiddenException();
     }
 
-    /* check if navigation exists and throw NotFound error if not */
+    /* Get navigation and throw NotFound error if not found. */
     const navigation = await this._navigationRepository.findOne({
       where: { id: id },
       relations: ['navigationType']
@@ -434,61 +434,67 @@ export class NavigationService {
       throw new NotFoundException();
     }
 
-    let updateResult;
+    /* Setup metadata. */
     updateNavigationDto["updatedBy"] = userId;
     updateNavigationDto["updatedDate"] = new Date();
 
-    const newParentNavigation = await this._navigationRepository.findOne({
-      relations: ['children'],
-      where: { 
-        id: updateNavigationDto['parentId'],
-        deletedDate: IsNull(),
-      },
-    });
+    /* If displayLabel has changed then assign name property. */
+    if (updateNavigationDto['displayLabel']) {
+       updateNavigationDto['name'] = updateNavigationDto['displayLabel'].toLowerCase()?.replace(/ /g, "-");
+    }
 
-    /* check if new parent has already a child with this name */
-    /*if (
-      updateNavigationDto['displayLabel'] &&
-      newParentNavigation?.children.find(child => 
-        child.name === updateNavigationDto['displayLabel'].toLowerCase()?.replace(/ /g, "-")
-      )
-    ) {
-      throw new BadRequestException('This name already exists.');
-    }*/
+    /* If parent has changed: */
+    if ('parentId' in updateNavigationDto && updateNavigationDto.parentId !== navigation.parentId) {
 
-    updateResult =  await this._navigationRepository.update(id, updateNavigationDto);
+      /* Get new parent navigation and children. */
+      const bodyParentId = updateNavigationDto.parentId as string;
+      const newSisterNavigations = await this._navigationRepository.find({
+        where: {
+          parentId: bodyParentId ?? IsNull(),
+          deletedDate: IsNull(),
+        },
+      });
 
-    const oldParentNavigation = await this._navigationRepository.findOne({
-      relations: ['children', 'headerBar'],
-      where: { 
-        id: navigation.parentId,
-        deletedDate: IsNull(),
-      },
-    });
+      /* Get old parent navigation and children. */
+      const oldParentNavigation = await this._navigationRepository.findOne({
+        relations: ['children', 'headerBar'],
+        where: { 
+          id: navigation.parentId,
+          deletedDate: IsNull(),
+        },
+      });
 
-    if (updateNavigationDto['parentId']) {
-      if (navigation?.navigationType.name === 'header') {
-        /* inherit header bar if needed */
-        if (
-          newParentNavigation 
-          && newParentNavigation.children?.filter(obj => !obj.deletedDate).length === 0
-        ) {
-          await this.inheritParentHeaderBarConfig(updateNavigationDto["parentId"], userId);
-        }
+      /* If new parent has already a child with this name then throw error. */
+      if (updateNavigationDto['name'] && newSisterNavigations.find(nav => nav.name === updateNavigationDto['name'])) {
+        throw new BadRequestException('This name already exists.');
+      }
 
-        /* delete header bar if needed */
-        if (updateNavigationDto['parentId'] !== navigation.parentId) {
-          if (
-            oldParentNavigation 
-            && oldParentNavigation.children?.filter(obj => !obj.deletedDate).length === 0
-          ) {
-            await this._headerBarRepository.delete(oldParentNavigation.headerBar!.id);
-          }
-        }
+      /* Inherit header bar if needed (i.e. new parent has no children). */
+      if (newSisterNavigations.length === 0) {
+        await this.inheritParentHeaderBarConfig(updateNavigationDto.parentId as string, userId);
+      }
+
+      /* Delete header bar if needed (i.e. old parent has only 1 child before update). */
+      if (oldParentNavigation && oldParentNavigation.children?.filter(obj => !obj.deletedDate).length === 1) {
+        await this._headerBarRepository.delete(oldParentNavigation.headerBar!.id);
+      }
+      
+    }
+    else {
+      /* If name has changed and current parent has already a child with this name then throw error */
+      const sisterNavigations = await this._navigationRepository.find({
+        where: { 
+          parentId: navigation.parentId ?? IsNull(),
+          deletedDate: IsNull(),
+          id: Not(navigation.id)
+        },
+      });
+      if (updateNavigationDto['name'] && sisterNavigations.find(nav => nav.name === updateNavigationDto['name'])) {
+        throw new BadRequestException('This name already exists.');
       }
     }
-    
-    return updateResult;
+
+    return await this._navigationRepository.update(id, updateNavigationDto);
   }
 
 
