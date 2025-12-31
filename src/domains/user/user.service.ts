@@ -7,7 +7,6 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { PasswordRecovery } from 'src/core/password-recovery/entities/password-recovery.entity';
 import { AuthService } from 'src/core/auth/auth.service';
-import { Response } from 'express';
 import { UserRole } from '../user-role/entities/user-role.entity';
 import { Role } from '../role/entities/role.entity';
 

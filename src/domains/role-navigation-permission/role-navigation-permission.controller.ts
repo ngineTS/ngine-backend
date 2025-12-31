@@ -1,7 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { RoleNavigationPermissionService } from './role-navigation-permission.service';
 import { CreateRoleNavigationPermissionDto } from './dto/create-role-navigation-permission.dto';
-import { UpdateRoleNavigationPermissionDto } from './dto/update-role-navigation-permission.dto';
 import { UserId } from 'src/core/decorators/user.decorator';
 
 @Controller('role-navigation-permission')

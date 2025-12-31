@@ -11,7 +11,6 @@ import { NavigationType } from '../navigation-type/entities/navigation-type.enti
 import { HeaderBar } from '../header-bar/entities/header-bar.entity';
 import { RoleService } from '../role/role.service';
 import { AuthService } from 'src/core/auth/auth.service';
-import { Response } from 'express';
 
 
 @Injectable()

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -24,7 +24,28 @@ export class RoleService {
    * @param createRoleDto The role payload.
    * @returns The role saved.
    */
-  async create(createRoleDto: CreateRoleDto, userId: string) {
+  async create(
+    createRoleDto: CreateRoleDto,
+    userId: string,
+    userRequest: {
+      sub: string;
+      userEmail: string;
+      userNavigationPermissions: Array<{
+        navigationId: string;
+        permissionName: string;
+      }>
+    }
+  ) {
+
+    /* Valid permission (today requires all navigation add access). */
+    if (
+      !userRequest.userNavigationPermissions.find(obj => 
+        obj.navigationId === '00000000-0000-0000-0000-000000000000' &&
+        obj.permissionName.includes('add')
+      )
+    ) {
+      throw new ForbiddenException();
+    }
     createRoleDto["name"] = createRoleDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
 
     const roles = await this._roleRepository.find({
@@ -44,9 +65,26 @@ export class RoleService {
   }
 
   /**
-   * Find all roles without retlations, ordered alphabeatically.
+   * Find all roles without relations, ordered alphabeatically.
    */
-  async findAllRoles() {
+  async findAllRoles(
+    userRequest: {
+      sub: string;
+      userEmail: string;
+      userNavigationPermissions: Array<{
+        navigationId: string;
+        permissionName: string;
+      }>
+    }
+  ) {
+    if (
+      !userRequest.userNavigationPermissions.find(obj => 
+        obj.navigationId === '00000000-0000-0000-0000-000000000000' 
+      )
+    ) {
+      throw new ForbiddenException();
+    }
+    
     return await this._roleRepository.find({
       where: { deletedDate: IsNull() },
       order: { displayLabel: 'ASC' }
@@ -57,7 +95,24 @@ export class RoleService {
    * Get all roles with roleNavigationPermissions relations ordered by updated date.
    * @returns The roles.
    */
-  async findAllRolesWithNavigationPermissions() {
+  async findAllRolesWithNavigationPermissions(
+    userRequest: {
+      sub: string;
+      userEmail: string;
+      userNavigationPermissions: Array<{
+        navigationId: string;
+        permissionName: string;
+      }>
+    }
+  ) {
+    if (
+      !userRequest.userNavigationPermissions.find(obj => 
+        obj.navigationId === '00000000-0000-0000-0000-000000000000' 
+      )
+    ) {
+      throw new ForbiddenException();
+    }
+
     const roles = await this._roleRepository.find({
       relations: [
         'roleNavigationPermissions',
@@ -81,7 +136,28 @@ export class RoleService {
    * @param updateRoleDto The role payload.
    * @returns The update response object.
    */
-  async update(id: string, updateRoleDto: UpdateRoleDto, userId: string) {
+  async update(
+    id: string,
+    updateRoleDto: UpdateRoleDto,
+    userId: string,
+    userRequest: {
+      sub: string;
+      userEmail: string;
+      userNavigationPermissions: Array<{
+        navigationId: string;
+        permissionName: string;
+      }>
+    }
+  ) {
+    if (
+      !userRequest.userNavigationPermissions.find(obj => 
+        obj.navigationId === '00000000-0000-0000-0000-000000000000' &&
+        obj.permissionName.includes('edit')
+      )
+    ) {
+      throw new ForbiddenException();
+    }
+
     if (updateRoleDto['displayLabel']) {
       updateRoleDto["name"] = updateRoleDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
 
@@ -110,7 +186,27 @@ export class RoleService {
    * Remove role and his relations.
    * @param id The role id to remove.
    */
-  async remove(id: string, userId: string) {
+  async remove(
+    id: string,
+    userId: string,
+    userRequest: {
+      sub: string;
+      userEmail: string;
+      userNavigationPermissions: Array<{
+        navigationId: string;
+        permissionName: string;
+      }>
+    }
+  ) {
+    if (
+      !userRequest.userNavigationPermissions.find(obj => 
+        obj.navigationId === '00000000-0000-0000-0000-000000000000' &&
+        obj.permissionName.includes('delete')
+      )
+    ) {
+      throw new ForbiddenException();
+    }
+
     let removedTotal = 0;
     const updateRoleResponse = await this._roleRepository.update(id, {
       deletedDate: new Date(),
