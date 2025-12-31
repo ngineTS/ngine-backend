@@ -5,9 +5,9 @@ import { DataSource } from 'typeorm';
 
 /**
  * This role requires:
- * * The feature information (ex: calendar. It has to match with table name).
- * * The permission information (view, add, edit, delete).
- * * The navigation or navigation id to validate the userNavigationPermissions against. 
+ * * the feature information (ex: calendar. It has to match with table name)
+ * * the permission information (view, add, edit, delete)
+ * * the navigation or navigation id to validate the userNavigationPermissions against
  */
 @Injectable()
 export class RolesGuard implements CanActivate {
