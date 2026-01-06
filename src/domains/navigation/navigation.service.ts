@@ -448,7 +448,8 @@ export class NavigationService {
       }
 
       /* Delete header bar if needed (i.e. old parent has only 1 header child before update). */
-      if (oldParentNavigation 
+      if (
+        oldParentNavigation 
         && oldParentNavigation.headerBar
         && oldParentNavigation.children?.filter(obj => !obj.deletedDate).length === 1
       ) {
