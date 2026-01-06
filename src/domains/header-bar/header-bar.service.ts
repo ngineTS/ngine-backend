@@ -29,58 +29,6 @@ export class HeaderBarService {
   }
 
   /**
-   * Get main header bar.
-   * If user has 'All navigation' permission then assign permission name to header bar.
-   * @param userId The request user id.
-   * @returns The main header bar.
-   */
-  async findMainHeaderBar(userId: string) {
-    /* get main header */
-    const mainHeaderBar = await this.headerBarRepository.findOne({
-      where: { 
-        navigationId: IsNull(),
-        deletedBy: IsNull(),
-      }
-    });
-    if (!mainHeaderBar) {
-      throw new NotFoundException('No main header bar found.')
-    }
-
-    /* get user role - 'All navigation' permission only */
-    const userAllNavigationsPermission = await this._userRepository.findOne({
-      relations: [
-        'userRoles',
-        'userRoles.role',
-        'userRoles.role.roleNavigationPermissions',
-        'userRoles.role.roleNavigationPermissions.navigation',
-        'userRoles.role.roleNavigationPermissions.permission',
-      ],
-      where: {
-        id: userId,
-        deletedDate: IsNull(),
-        userRoles: {
-          deletedDate: IsNull(),
-          role: {
-            deletedDate: IsNull(),
-            roleNavigationPermissions: {
-              navigationId: '00000000-0000-0000-0000-000000000000',
-              deletedDate: IsNull(),
-            }
-          }
-        }
-      }
-    });
-
-    /* assign permissionName property to mainHeader */
-    if (userAllNavigationsPermission) {
-      mainHeaderBar["permissionName"] =
-        userAllNavigationsPermission.userRoles[0].role.roleNavigationPermissions[0].permission.name;
-    }
-    
-    return mainHeaderBar;
-  }
-
-  /**
    * Update header bar.
    * @param id The id of the header bar to update.
    * @param updateHeaderBarDto The header bar properties to update.

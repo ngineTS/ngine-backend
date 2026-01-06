@@ -16,11 +16,6 @@ export class HeaderBarController {
     return this.headerBarService.create(createHeaderBarDto, userId);
   }
 
-  @Get('main')
-  findMainHeaderBar(@UserId() userId: string) {
-    return this.headerBarService.findMainHeaderBar(userId);
-  }
-
   @Patch(':id')
   update(
     @Param('id') id: string,

@@ -240,30 +240,4 @@ export class RoleService {
     return removedTotal + updateRoleResponse.affected!;
   }
 
-  /**
-   * Get user roleNavigationPermission for "All navigations".
-   * @param userId The user id to look for.
-   * @returns The user roleNavigationPermission with highest priviledge.
-   */
-  async getUserRoleNavigationPermissionAllNavigationsOnly(userId: string): Promise<RoleNavigationPermission> {
-    const roleIds: Array<string> = [];
-
-    const userRoles = await this._userRoleRepository.find({
-      where: { userId: userId }
-    });
-
-    userRoles.forEach(userRole => roleIds.push(userRole.roleId));
-
-    const userRoleNavigationPermissions = await this._roleNavigationPermissionRepository.find({
-      relations: ['permission'],
-      where: { 
-        navigationId: '00000000-0000-0000-0000-000000000000',
-        roleId: In(roleIds)
-      }
-    })
-      
-    return userRoleNavigationPermissions.sort((a, b) => a.permission.priority - b.permission.priority)[0];
-  }
-  
-
 }

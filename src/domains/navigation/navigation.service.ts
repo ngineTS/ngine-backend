@@ -45,26 +45,12 @@ export class NavigationService {
     }
   ) {
     /* get nested navigations filtered by user permission */
-    const navigations = await this.findNestedNavigations(userRequest) as Array<Navigation>;
+    const navigation = await this.findNestedNavigations(userRequest) as Navigation;
+
     /* flatten navigations */
     const flatNavigations: any[] = [];
-    for (let navigation of navigations) {
-      this.flattenNavigations(navigation, flatNavigations);
-    }
-    /* check if user has 'add all navigations' access, if yes push 'none' navigation to array */
-    if (
-      userRequest.userNavigationPermissions.find(obj =>
-        obj.navigationId === '00000000-0000-0000-0000-000000000000' &&
-        obj.permissionName.includes('add')
-      )
-    ) {
-      flatNavigations.push({
-        id: null,
-        name: 'none',
-        displayLabel: 'None',
-        navigationType: { name: 'header' }
-      })
-    }
+    this.flattenNavigations(navigation, flatNavigations);
+    
     return flatNavigations;
   }
 
@@ -90,31 +76,25 @@ export class NavigationService {
     const order: FindOptionsOrder<Navigation> = { order: 'ASC' };
     const where: FindOptionsWhere<Navigation> = { 
       deletedDate: IsNull(),
-      parentId: IsNull() 
+      id: '00000000-0000-0000-0000-000000000000' 
     };
+    
     this.generateRelationsAndOrder(4, relations, order); //TO DO: Replace 4 by the exact depth wished
-    let navigations = await this._navigationRepository.find({
+    
+    let navigation = await this._navigationRepository.findOne({
       relations: [...relations],
       where: where,
       order: order
     });
-    navigations.forEach(navigation => this.setUpUserNavigationPermission(
-      navigation,
-      userRoleNavigationPermissionsFormatted
-    ));
-    navigations = this.filterOutDeletedNavigations(navigations, true);
+
+    this.setUpUserNavigationPermission(navigation!, userRoleNavigationPermissionsFormatted);
+    navigation!.children = this.filterOutDeletedNavigations(navigation!.children, true);
+  
 
     /* setup new request user navigation permissions */
     if (hasToGenerateNewToken) {
       const userNavigationPermissions: Array<{ navigationId: string; permissionName: string; }> = [];
-      this.flattenNavigationPermissions(navigations, userNavigationPermissions);
-      const allNavigationPermissionsAccess = await this._roleService.getUserRoleNavigationPermissionAllNavigationsOnly(userRequest.sub);
-      if (allNavigationPermissionsAccess) {
-        userNavigationPermissions.push({
-          navigationId: allNavigationPermissionsAccess.navigationId,
-          permissionName: allNavigationPermissionsAccess.permission.name
-        })
-      }
+      this.flattenNavigationPermissions(navigation!, userNavigationPermissions);
 
       const payload = { 
         sub: userRequest.sub,
@@ -124,10 +104,10 @@ export class NavigationService {
       
       /* return navigations and access token */
       const accessToken = await this._authService.getAccessToken(payload);
-      return { navigations: navigations, access_token: accessToken };
+      return { navigation: navigation, access_token: accessToken };
     }
 
-    return navigations;
+    return navigation;
   }
 
 
@@ -146,6 +126,7 @@ export class NavigationService {
   ) {
     relations.add(base + 'navigationType');
     relations.add(base + 'headerBar');
+    relations.add(base + 'children');
     if (depth > 0) {
       relations.add(base + 'children');
       base = base + 'children.';
@@ -269,14 +250,7 @@ export class NavigationService {
   ) {
     /* get current navigation permission */
     let navigationPermission = userRoleNavigationPermissions.find(obj => obj.navigationId === navigation.id)?.permission;
-    /* check if 'All navigations' permission exists and assign it to navigation if it is higher than navigation permission */
-    let allNavigationsPermission = userRoleNavigationPermissions.find(obj => obj.navigationId === '00000000-0000-0000-0000-000000000000')?.permission;
-    if (allNavigationsPermission) {
-      if (!navigationPermission || allNavigationsPermission.priority < navigationPermission.priority) {
-        navigationPermission = allNavigationsPermission;
-      }
-    }
-
+    
     if (navigationPermission) {
       if (parentNavigationPermission) {
         /* Case 1 */
@@ -339,10 +313,9 @@ export class NavigationService {
     }>
   ): Promise<Navigation> {
     /* valid permission */
-    const parentId = createNavigationDto['parentId'] ?? '00000000-0000-0000-0000-000000000000';
     if (
       !userNavigationPermissions.find(obj => 
-        obj.navigationId === parentId && obj.permissionName.includes('add')
+        obj.navigationId === createNavigationDto['parentId'] && obj.permissionName.includes('add')
       )
     ) {
       throw new ForbiddenException();
@@ -360,9 +333,9 @@ export class NavigationService {
       throw new BadRequestException('This name already exists');
     }
 
-    /* create header bar if needed (if parentId null no need to create header bar because main header bar already created). */
+    /* create header bar if needed (if parentId is global no need to create header bar because main header bar already created). */
     if (
-      createNavigationDto["parentId"]
+      createNavigationDto["parentId"] !== '00000000-0000-0000-0000-000000000000'
       && (!sisterNavigations || sisterNavigations.length === 0)
     ) {
       const headerNavigationType = await this._navigationTypeRepository.findOne({
@@ -416,8 +389,7 @@ export class NavigationService {
     if (
       'parentId' in updateNavigationDto &&
       !userNavigationPermissions.find(obj => {
-        const parentId = updateNavigationDto.parentId ?? '00000000-0000-0000-0000-000000000000';
-        return obj.navigationId === parentId && obj.permissionName.includes('add');
+        return obj.navigationId === updateNavigationDto.parentId && obj.permissionName.includes('add');
       })
     ) {
       throw new ForbiddenException();
@@ -448,7 +420,7 @@ export class NavigationService {
       const bodyParentId = updateNavigationDto.parentId as string;
       const newSisterNavigations = await this._navigationRepository.find({
         where: {
-          parentId: bodyParentId ?? IsNull(),
+          parentId: bodyParentId,
           deletedDate: IsNull(),
         },
       });
@@ -467,14 +439,20 @@ export class NavigationService {
         throw new BadRequestException('This name already exists.');
       }
 
-      /* Inherit header bar if needed (i.e. new parent has no children). */
-      if (newSisterNavigations.length === 0) {
+      /* Inherit header bar if needed (i.e. new parent has no children and new children is header). */
+      if (
+        newSisterNavigations.length === 0
+        && navigation.navigationType.name === 'header'
+      ) {
         await this.inheritParentHeaderBarConfig(updateNavigationDto.parentId as string, userId);
       }
 
-      /* Delete header bar if needed (i.e. old parent has only 1 child before update). */
-      if (oldParentNavigation && oldParentNavigation.children?.filter(obj => !obj.deletedDate).length === 1) {
-        await this._headerBarRepository.delete(oldParentNavigation.headerBar!.id);
+      /* Delete header bar if needed (i.e. old parent has only 1 header child before update). */
+      if (oldParentNavigation 
+        && oldParentNavigation.headerBar
+        && oldParentNavigation.children?.filter(obj => !obj.deletedDate).length === 1
+      ) {
+        await this._headerBarRepository.delete(oldParentNavigation.headerBar.id);
       }
       
     }
@@ -482,7 +460,7 @@ export class NavigationService {
       /* If name has changed and current parent has already a child with this name then throw error */
       const sisterNavigations = await this._navigationRepository.find({
         where: { 
-          parentId: navigation.parentId ?? IsNull(),
+          parentId: navigation.parentId,
           deletedDate: IsNull(),
           id: Not(navigation.id)
         },
@@ -591,7 +569,7 @@ export class NavigationService {
     /* check if parent remains without children and delete associated header bar if yes.*/
     const parentNavigation = await this._navigationRepository.findOne({
       where: { 
-        id: navigation.parentId ?? IsNull(),
+        id: navigation.parentId,
         deletedDate: IsNull(),
       },
       relations: ['children', 'headerBar']
@@ -634,7 +612,7 @@ export class NavigationService {
 
     const parentHeaderBar = await this._headerBarRepository.findOne({
       where: { 
-        navigationId: navigation?.parentId ?? IsNull(),
+        navigationId: navigation?.parentId,
         deletedDate: IsNull()
       }
     });
@@ -670,21 +648,22 @@ export class NavigationService {
    * @param userNavigationPermissionsArray The array of navigation-permission couples.
    */
   flattenNavigationPermissions(
-    navigations: Array<Navigation>,
+    navigation: Navigation,
     userNavigationPermissionsArray: Array<{
       navigationId: string;
       permissionName: string;
     }>
   ) {
-    for (const navigation of navigations) {
-      userNavigationPermissionsArray.push({
-        navigationId: navigation.id,
-        permissionName: navigation['permissionName']
-      });
-      if (navigation.children && navigation.children.length > 0) {
-        this.flattenNavigationPermissions(navigation.children, userNavigationPermissionsArray);
+    userNavigationPermissionsArray.push({
+      navigationId: navigation.id,
+      permissionName: navigation['permissionName']
+    });
+    if (navigation.children && navigation.children.length > 0) {
+      for (const child of navigation.children) {
+        this.flattenNavigationPermissions(child, userNavigationPermissionsArray);
       }
     }
+    
   }
   
 }
