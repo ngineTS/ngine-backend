@@ -71,27 +71,25 @@ export class NavigationService {
     },
     hasToGenerateNewToken = false,
   ) {
-    const userRoleNavigationPermissionsFormatted = await this.getUserRoleNavigationPermissionsFormatted(userRequest.sub);
+    /* Define TypeORM find options (relation, order, where). */
     const relations = new Set<string>();
     const order: FindOptionsOrder<Navigation> = { order: 'ASC' };
-    const where: FindOptionsWhere<Navigation> = { 
-      deletedDate: IsNull(),
-      id: '00000000-0000-0000-0000-000000000000' 
-    };
-    
+    const where: FindOptionsWhere<Navigation> = { id: '00000000-0000-0000-0000-000000000000' };
     this.generateRelationsAndOrder(4, relations, order); //TO DO: Replace 4 by the exact depth wished
     
+    /* Get main navigation from db. */
     let navigation = await this._navigationRepository.findOne({
       relations: [...relations],
       where: where,
       order: order
     });
 
+    /* Get user navigation permissions and clean navigations accordingly. */
+    const userRoleNavigationPermissionsFormatted = await this.getUserRoleNavigationPermissionsFormatted(userRequest.sub);
     this.setUpUserNavigationPermission(navigation!, userRoleNavigationPermissionsFormatted);
-    navigation!.children = this.filterOutDeletedNavigations(navigation!.children, true);
-  
+    navigation!.children = this.cleanNavigations(navigation!.children);
 
-    /* setup new request user navigation permissions */
+    /* Add user navigation permissions to authentication token payload. */
     if (hasToGenerateNewToken) {
       const userNavigationPermissions: Array<{ navigationId: string; permissionName: string; }> = [];
       this.flattenNavigationPermissions(navigation!, userNavigationPermissions);
@@ -102,7 +100,7 @@ export class NavigationService {
         userNavigationPermissions: userNavigationPermissions  
       };
       
-      /* return navigations and access token */
+      /* Return navigations and access token. */
       const accessToken = await this._authService.getAccessToken(payload);
       return { navigation: navigation, access_token: accessToken };
     }
@@ -133,35 +131,6 @@ export class NavigationService {
       order.children = { order: 'ASC' };
       this.generateRelationsAndOrder(depth - 1, relations, order.children, base);
     }
-  }
-
-
-  /**
-   * Filter out soft deleted navigations in the given navigation array.
-   * 
-   * If 'filterOutNavigationWithoutPermission' is true: filter out also navigation without permissions.
-   * 
-   * @param navigations The navigations to filter.
-   * @param filterOutNavigationWithoutPermission A boolean specifying if we want to exclude the navigations without permission.
-   * @returns The array of navigations filtered.
-   */
-  filterOutDeletedNavigations(navigations: Navigation[], filterOutNavigationWithoutPermission = false) {
-    for (let navigation of navigations) {
-      if (navigation.headerBar?.deletedBy) {
-        navigation.headerBar = null;
-      }
-      if (navigation.children?.length > 0) {
-        navigation.children = this.filterOutDeletedNavigations(navigation.children, filterOutNavigationWithoutPermission);
-      }
-    }
-    return navigations.filter(navigation => {
-      if (filterOutNavigationWithoutPermission) {
-        return !navigation.deletedDate && navigation['permissionName']
-      }
-      else {
-        return !navigation.deletedDate
-      }
-    });
   }
 
 
@@ -232,20 +201,18 @@ export class NavigationService {
   /**
    * Set up user navigation permission based on below rules then repeat process for children.
    * 
-   * - Case 1: Navigation permission found but parent permission is higher - navigation inherits parent navigation permission.
-   * - Case 2: Navigation permission found and it is higher than parent one - keep navigation permission.
-   * - Case 3: Navigation permission found and parent has no permission - assign 'Can view' to parent navigation.
-   * - Case 4: No Navigation permission found but parent navigation permission found - navigation inherits parent navigation permission.
+   * - Case 1: Navigation permission found and it is higher than parent one - keep navigation permission.
+   * - Case 2: Navigation permission found but parent permission is higher - navigation inherits parent navigation permission.
+   * - Case 3: Navigation permission found and parent has no permission - keep navigation permission.
+   * - Case 4: No navigation permission found but parent navigation permission found - navigation inherits parent navigation permission.
    * 
    * @param navigation The navigation to add "permissionName" prop.
    * @param userRoleNavigationPermissions The array of user roleNavigationPermissions.
-   * @param parentNavigation The parent navigation.
    * @param parentNavigationPermission The parent navigation permission.
    */
   setUpUserNavigationPermission(
     navigation: Navigation,
     userRoleNavigationPermissions: RoleNavigationPermission[],
-    parentNavigation?: Navigation,
     parentNavigationPermission?: Permission
   ) {
     /* get current navigation permission */
@@ -266,9 +233,6 @@ export class NavigationService {
       /* Case 3 */
       else {
         navigation['permissionName'] = navigationPermission.name;
-        if (parentNavigation) {
-          parentNavigation['permissionName'] = 'Can view';
-        }
       }
     }
     /* Case 4 */
@@ -284,7 +248,6 @@ export class NavigationService {
       this.setUpUserNavigationPermission(
         child,
         userRoleNavigationPermissions,
-        navigation,
         navigationPermission
       );
     } 
@@ -664,7 +627,47 @@ export class NavigationService {
         this.flattenNavigationPermissions(child, userNavigationPermissionsArray);
       }
     }
-    
   }
   
+  /**
+   * Check if navigation has a permission.
+   * If yes return true else check check for his children recursively.
+   * If no permission found after recursion then return false.
+   * @param navigation 
+   * @returns 
+   */
+  doesPermissionExistOnNavigationOrHisChildren(navigation: Navigation): boolean {
+    if (navigation['permissionName']) {
+      return true;
+    }
+
+    else if (navigation.children && navigation.children.length > 0 ){
+      for (const child of navigation.children) {
+        return this.doesPermissionExistOnNavigationOrHisChildren(child);
+      }
+    }
+
+    return false;
+  }
+
+
+  /**
+   * Clean navigations based on the following rules:
+   * * remove deleted navigations (deletedDate not null)
+   * * remove navigations with no permission or if his children or grand children have no permission
+   * @param navigations The array of navigations to clean.
+   * @returns The array of navigations
+   */
+  cleanNavigations(navigations: Array<Navigation>): Array<Navigation> {
+    for (let navigation of navigations) {
+      if (navigation.children) {
+        navigation.children = this.cleanNavigations(navigation.children);
+      }
+    }
+
+    return navigations.filter(
+      navigation => this.doesPermissionExistOnNavigationOrHisChildren(navigation) && !navigation.deletedDate
+    );
+  }
+
 }
