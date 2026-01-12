@@ -74,7 +74,6 @@ export class NavigationService {
     const order: FindOptionsOrder<Navigation> = { order: 'ASC' };
     const where: FindOptionsWhere<Navigation> = { id: '00000000-0000-0000-0000-000000000000' };
     this.generateRelationsAndOrder(4, relations, order); //TO DO: Replace 4 by the exact depth wished
-    console.log('relations', relations);
     /* Get main navigation from db. */
     let navigation = await this._navigationRepository.findOne({
       relations: [...relations],

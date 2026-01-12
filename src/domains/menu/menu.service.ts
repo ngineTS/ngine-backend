@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -30,9 +30,53 @@ export class MenuService {
     return `This action returns a #${id} menu`;
   }
 
-  update(id: number, updateMenuDto: UpdateMenuDto) {
-    console.log('PAYLOAD', updateMenuDto);
-    return updateMenuDto;
+  /**
+   * Update the style properties of the menu.
+   * @param menuId The menu id to update.
+   * @param updateMenuDto The style properties.
+   * @returns The properties affected number.
+   */
+  async update(menuId: string, updateMenuDto: UpdateMenuDto) {
+    const affectedRelations: { [prop: string]: number | undefined } = {
+      affectedContainerLayout: 0,
+      affectedContainerStyle: 0,
+      affectedTypographyStyle: 0
+    }
+
+    if (updateMenuDto['containerLayout']) {
+      const updateContainerLayoutResponse = await this._containerLayoutRepository.update(
+        { refId: menuId }, 
+        updateMenuDto['containerLayout']
+      );
+      if (updateContainerLayoutResponse.affected === 0) {
+        throw new NotFoundException('No container layout associated tho this menu id has been found.')
+      }
+      affectedRelations.affectedContainerLayout = updateContainerLayoutResponse.affected;
+    }
+
+    if (updateMenuDto['containerStyle']) {
+      const updateContainerStyleResponse = await this._containerStyleRepository.update(
+        { refId: menuId }, 
+        updateMenuDto['containerStyle']
+      );
+      if (updateContainerStyleResponse.affected === 0) {
+        throw new NotFoundException('No container style associated tho this menu id has been found.')
+      }
+      affectedRelations.affectedContainerStyle = updateContainerStyleResponse.affected;
+    }
+
+    if (updateMenuDto['typographyStyle']) {
+      const updateTypographyStyleResponse = await this._typographyStyleRepository.update(
+        { refId: menuId }, 
+        updateMenuDto['typographyStyle']
+      );
+      if (updateTypographyStyleResponse.affected === 0) {
+        throw new NotFoundException('No typography style associated tho this menu id has been found.')
+      }
+      affectedRelations.affectedTypographyStyle = updateTypographyStyleResponse.affected;
+    }
+
+    return affectedRelations;
   }
 
   remove(id: number) {
