@@ -74,7 +74,7 @@ export class NavigationService {
     const order: FindOptionsOrder<Navigation> = { order: 'ASC' };
     const where: FindOptionsWhere<Navigation> = { id: '00000000-0000-0000-0000-000000000000' };
     this.generateRelationsAndOrder(4, relations, order); //TO DO: Replace 4 by the exact depth wished
-    
+    console.log('relations', relations);
     /* Get main navigation from db. */
     let navigation = await this._navigationRepository.findOne({
       relations: [...relations],
@@ -121,8 +121,11 @@ export class NavigationService {
     base: string = ''
   ) {
     relations.add(base + 'navigationType');
-    relations.add(base + 'headerBar');
     relations.add(base + 'children');
+    relations.add(base + 'menu');
+    relations.add(base + 'menu.containerLayout');
+    relations.add(base + 'menu.containerStyle');
+    relations.add(base + 'menu.typographyStyle');
     if (depth > 0) {
       relations.add(base + 'children');
       base = base + 'children.';
