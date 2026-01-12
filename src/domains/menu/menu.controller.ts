@@ -12,11 +12,6 @@ export class MenuController {
     return this.menuService.create(createMenuDto);
   }
 
-  @Get()
-  findAll() {
-    return this.menuService.findAll();
-  }
-
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.menuService.findOne(+id);

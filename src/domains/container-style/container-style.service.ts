@@ -1,11 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { CreateContainerStyleDto } from './dto/create-container-style.dto';
 import { UpdateContainerStyleDto } from './dto/update-container-style.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ContainerStyle } from './entities/container-style.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class ContainerStyleService {
-  create(createContainerStyleDto: CreateContainerStyleDto) {
-    return 'This action adds a new containerStyle';
+  
+  constructor(
+    @InjectRepository(ContainerStyle)
+    private _containerStyleRepository: Repository<ContainerStyle>
+  ) {}
+
+  async create(createContainerStyleDto: CreateContainerStyleDto) {
+    return await this._containerStyleRepository.save(createContainerStyleDto);
   }
 
   findAll() {

@@ -78,7 +78,7 @@ export class Navigation {
 
     @OneToOne(() => Menu, menu => menu)
     @JoinColumn({ name: 'id', referencedColumnName: 'navigationId' })
-    menu: HeaderBar | null;
+    menu: Menu | null;
 
     @OneToOne(() => ContainerLayout, containerLayout => containerLayout)
     @JoinColumn({ name: 'id', referencedColumnName: 'refId' })
