@@ -9,7 +9,6 @@ import { RoleNavigationPermission } from '../role-navigation-permission/entities
 import { Permission } from '../permission/entities/permission.entity';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 import { HeaderBar } from '../header-bar/entities/header-bar.entity';
-import { RoleService } from '../role/role.service';
 import { AuthService } from 'src/core/auth/auth.service';
 
 
@@ -26,7 +25,6 @@ export class NavigationService {
               private _userRepository: Repository<User>,
               @InjectRepository(RoleNavigationPermission)
               private _roleNavigationPermissionRepository: Repository<RoleNavigationPermission>,
-              private _roleService: RoleService,
               private _authService: AuthService) {}
 
 

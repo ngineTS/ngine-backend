@@ -3,7 +3,7 @@ import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from './entities/role.entity';
-import { In, IsNull, Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { UserRole } from '../user-role/entities/user-role.entity';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 
