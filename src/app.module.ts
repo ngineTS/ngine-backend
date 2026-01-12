@@ -38,6 +38,14 @@ import { RoleNavigationPermissionModule } from './domains/role-navigation-permis
 import { PermissionModule } from './domains/permission/permission.module';
 import { UserEventModule } from './domains/user-event/user-event.module';
 import { UserEvent } from './domains/user-event/entities/user-event.entity';
+import { Menu } from './domains/menu/entities/menu.entity';
+import { ContainerLayout } from './domains/container-layout/entities/container-layout.entity';
+import { ContainerStyle } from './domains/container-style/entities/container-style.entity';
+import { TypographyStyle } from './domains/typography-style/entities/typography-style.entity';
+import { ContainerLayoutModule } from './domains/container-layout/container-layout.module';
+import { MenuModule } from './domains/menu/menu.module';
+import { ContainerStyleModule } from './domains/container-style/container-style.module';
+import { TypographyStyleModule } from './domains/typography-style/typography-style.module';
 
 
 @Module({
@@ -78,7 +86,11 @@ import { UserEvent } from './domains/user-event/entities/user-event.entity';
         UserRole,
         RoleNavigationPermission,
         Permission,
-        UserEvent
+        UserEvent,
+        Menu,
+        ContainerLayout,
+        ContainerStyle,
+        TypographyStyle
       ]
     }),
     NavigationModule,
@@ -98,7 +110,11 @@ import { UserEvent } from './domains/user-event/entities/user-event.entity';
     UserRoleModule,
     RoleNavigationPermissionModule,
     PermissionModule,
-    UserEventModule
+    UserEventModule,
+    MenuModule,
+    ContainerLayoutModule,
+    ContainerStyleModule,
+    TypographyStyleModule
   ],
   controllers: [AppController],
   providers: [AppService],
