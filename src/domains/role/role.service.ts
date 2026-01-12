@@ -36,7 +36,6 @@ export class RoleService {
       }>
     }
   ) {
-
     /* Valid permission (today requires all navigation add access). */
     if (
       !userRequest.userNavigationPermissions.find(obj => 
@@ -46,16 +45,17 @@ export class RoleService {
     ) {
       throw new ForbiddenException();
     }
+    
+    /* Create role name and throw error if already exists. */
     createRoleDto["name"] = createRoleDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
-
     const roles = await this._roleRepository.find({
       where: { deletedDate: IsNull() }
     });
-    
     if (roles?.find(role => role.name === createRoleDto['name'])) {
       throw new BadRequestException('This name already exists');
     }
-
+    
+    /* Add metadata. */
     createRoleDto["createdDate"] = new Date();
     createRoleDto["createdBy"] = userId;
     createRoleDto["updatedDate"] = new Date();
