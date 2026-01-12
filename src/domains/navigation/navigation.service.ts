@@ -656,7 +656,7 @@ export class NavigationService {
    * * remove deleted navigations (deletedDate not null)
    * * remove navigations with no permission or if his children or grand children have no permission
    * @param navigations The array of navigations to clean.
-   * @returns The array of navigations
+   * @returns The array of navigations cleaned.
    */
   cleanNavigations(navigations: Array<Navigation>): Array<Navigation> {
     for (let navigation of navigations) {
