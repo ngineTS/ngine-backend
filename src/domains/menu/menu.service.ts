@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -28,28 +28,6 @@ export class MenuService {
     @InjectRepository(NavigationType)
     private _navigationTypeRepository: Repository<NavigationType>
   ) {}
-
-  /**
-   * Create Menu and style properties.
-   * @param createMenuDto The menu style properties to save
-   * @returns 
-   */
-  async create(createMenuDto: CreateMenuDto) {
-    console.log('ohhhh', createMenuDto);
-      /*if (createMenuDto['containerLayout']) {
-        await this._containerLayoutRepository.save(createMenuDto['containerLayout']);
-      }
-
-      if (createMenuDto['containerStyle']) {
-        await this._containerStyleRepository.save(createMenuDto['containerStyle']);
-      }
-
-      if (createMenuDto['typographyStyle']) {
-        await this._typographyStyleRepository.save(createMenuDto['typographyStyle']);
-      }*/
-
-    return JSON.stringify('Menu saved successfully');
-  }
 
   /**
    * Create header bar for given navigation Id and add first redirect-button to it.
@@ -86,17 +64,19 @@ export class MenuService {
     return JSON.stringify('Navigation bar successfully created.');
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} menu`;
+  async findOneByNavigationId(navigationId: string) {
+    return await this._menuRepository.findOne({
+      where: { navigationId: navigationId }
+    });
   }
 
   /**
-   * Update the style properties of the menu.
-   * @param menuId The menu id to update.
+   * Update the style properties of an object.
+   * @param refId The object reference id to update.
    * @param updateMenuDto The style properties.
    * @returns The properties affected number.
    */
-  async update(menuId: string, updateMenuDto: UpdateMenuDto) {
+  async update(refId: string, updateMenuDto: UpdateMenuDto) {
     const affectedRelations: { [prop: string]: number | undefined } = {
       affectedContainerLayout: 0,
       affectedContainerStyle: 0,
@@ -106,7 +86,7 @@ export class MenuService {
     /* Container layout */
     if (updateMenuDto['containerLayout']) {
       const updateContainerLayoutResponse = await this._containerLayoutRepository.update(
-        { refId: menuId }, 
+        { refId: refId }, 
         updateMenuDto['containerLayout']
       );
       if (updateContainerLayoutResponse.affected === 0) {
@@ -118,7 +98,7 @@ export class MenuService {
     /* Container style */
     if (updateMenuDto['containerStyle']) {
       const updateContainerStyleResponse = await this._containerStyleRepository.update(
-        { refId: menuId }, 
+        { refId: refId }, 
         updateMenuDto['containerStyle']
       );
       if (updateContainerStyleResponse.affected === 0) {
@@ -130,7 +110,7 @@ export class MenuService {
     /* Typography style */
     if (updateMenuDto['typographyStyle']) {
       const updateTypographyStyleResponse = await this._typographyStyleRepository.update(
-        { refId: menuId }, 
+        { refId: refId }, 
         updateMenuDto['typographyStyle']
       );
       if (updateTypographyStyleResponse.affected === 0) {
@@ -142,8 +122,8 @@ export class MenuService {
     return affectedRelations;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} menu`;
+  async remove(id: string) {
+    return await this._menuRepository.delete(id);
   }
 
   /**

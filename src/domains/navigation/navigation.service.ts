@@ -7,26 +7,32 @@ import { FindOptionsOrder, FindOptionsWhere, In, IsNull, Not, Repository } from 
 import { User } from '../user/entities/user.entity';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 import { Permission } from '../permission/entities/permission.entity';
-import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
-import { HeaderBar } from '../header-bar/entities/header-bar.entity';
 import { AuthService } from 'src/core/auth/auth.service';
+import { MenuService } from '../menu/menu.service';
+import { ContainerLayout } from '../container-layout/entities/container-layout.entity';
+import { ContainerStyle } from '../container-style/entities/container-style.entity';
+import { TypographyStyle } from '../typography-style/entities/typography-style.entity';
 
 
 @Injectable()
 export class NavigationService {
 
-  constructor(@InjectRepository(Navigation)
-              private _navigationRepository: Repository<Navigation>,
-              @InjectRepository(NavigationType)
-              private _navigationTypeRepository: Repository<NavigationType>,
-              @InjectRepository(HeaderBar)
-              private _headerBarRepository: Repository<HeaderBar>,
-              @InjectRepository(User)
-              private _userRepository: Repository<User>,
-              @InjectRepository(RoleNavigationPermission)
-              private _roleNavigationPermissionRepository: Repository<RoleNavigationPermission>,
-              private _authService: AuthService) {}
-
+  constructor(
+    @InjectRepository(Navigation)
+    private _navigationRepository: Repository<Navigation>,
+    @InjectRepository(User)
+    private _userRepository: Repository<User>,
+    @InjectRepository(RoleNavigationPermission)
+    private _roleNavigationPermissionRepository: Repository<RoleNavigationPermission>,
+    private _authService: AuthService,
+    private _menuService: MenuService,
+    @InjectRepository(ContainerLayout)
+    private _containerLayoutRepository: Repository<ContainerLayout>,
+    @InjectRepository(ContainerStyle)
+    private _containerStyleRepository: Repository<ContainerStyle>,
+    @InjectRepository(TypographyStyle)
+    private _typographyStyleRepository: Repository<TypographyStyle>,
+  ) {}
 
   /**
    * Find all flat navigations filtered by user permission.
@@ -51,7 +57,6 @@ export class NavigationService {
     
     return flatNavigations;
   }
-
 
   /**
    * Load Nested navigations filtered by user permissions.
@@ -105,7 +110,6 @@ export class NavigationService {
     return navigation;
   }
 
-
   /**
    * Generate navigation relations until given depth.
    * @param depth The number of nested levels.
@@ -132,7 +136,6 @@ export class NavigationService {
       this.generateRelationsAndOrder(depth - 1, relations, order.children, base);
     }
   }
-
 
   /**
    * Format user roleNavigationPermissions.
@@ -197,7 +200,6 @@ export class NavigationService {
     return userRoleNavigationPermissionsFormatted;
   }
 
-
   /**
    * Set up user navigation permission based on below rules then repeat process for children.
    * 
@@ -253,7 +255,6 @@ export class NavigationService {
     } 
   }
 
-
   /**
    * Save navigation.
    * 
@@ -296,27 +297,17 @@ export class NavigationService {
       throw new BadRequestException('This name already exists');
     }
 
-    /* create header bar if needed (if parentId is global no need to create header bar because main header bar already created). */
-    if (
-      createNavigationDto["parentId"] !== '00000000-0000-0000-0000-000000000000'
-      && (!sisterNavigations || sisterNavigations.length === 0)
-    ) {
-      const headerNavigationType = await this._navigationTypeRepository.findOne({
-        where: { name: 'header'}
-      });
-      if (createNavigationDto["navigationTypeId"] === headerNavigationType?.id) {
-        await this.inheritParentHeaderBarConfig(createNavigationDto["parentId"], userId);
-      }
-    }
-
     /* add metadata and save */
     createNavigationDto["createdBy"] = userId;
     createNavigationDto["createdDate"] = new Date();
     createNavigationDto["updatedBy"] = userId;
     createNavigationDto["updatedDate"] = new Date();
-    return await this._navigationRepository.save(createNavigationDto);
+    const navigationSaved = await this._navigationRepository.save(createNavigationDto);
+    await this._menuService.createDefaultContainerLayout(navigationSaved.id);
+    await this._menuService.createDefaultContainerStyle(navigationSaved.id);
+    await this._menuService.createDefaultTypographyStyle(navigationSaved.id);
+    return navigationSaved;
   }
-
 
   /**
    * Update navigation properties.
@@ -378,7 +369,6 @@ export class NavigationService {
 
     /* If parent has changed: */
     if ('parentId' in updateNavigationDto && updateNavigationDto.parentId !== navigation.parentId) {
-
       /* Get new parent navigation and children. */
       const bodyParentId = updateNavigationDto.parentId as string;
       const newSisterNavigations = await this._navigationRepository.find({
@@ -388,37 +378,10 @@ export class NavigationService {
         },
       });
 
-      /* Get old parent navigation and children. */
-      const oldParentNavigation = await this._navigationRepository.findOne({
-        relations: ['children', 'headerBar'],
-        where: { 
-          id: navigation.parentId,
-          deletedDate: IsNull(),
-        },
-      });
-
       /* If new parent has already a child with this name then throw error. */
       if (updateNavigationDto['name'] && newSisterNavigations.find(nav => nav.name === updateNavigationDto['name'])) {
         throw new BadRequestException('This name already exists.');
       }
-
-      /* Inherit header bar if needed (i.e. new parent has no children and new children is header). */
-      if (
-        newSisterNavigations.length === 0
-        && navigation.navigationType.name === 'header'
-      ) {
-        await this.inheritParentHeaderBarConfig(updateNavigationDto.parentId as string, userId);
-      }
-
-      /* Delete header bar if needed (i.e. old parent has only 1 header child before update). */
-      if (
-        oldParentNavigation 
-        && oldParentNavigation.headerBar
-        && oldParentNavigation.children?.filter(obj => !obj.deletedDate).length === 1
-      ) {
-        await this._headerBarRepository.delete(oldParentNavigation.headerBar.id);
-      }
-      
     }
     else {
       /* If name has changed and current parent has already a child with this name then throw error */
@@ -436,7 +399,6 @@ export class NavigationService {
 
     return await this._navigationRepository.update(id, updateNavigationDto);
   }
-
 
   /**
    * Update Array of navigations.
@@ -472,7 +434,6 @@ export class NavigationService {
     return await this._navigationRepository.save(updateNavigationDtoArray);
   }
 
-
   /**
    * Soft delete navigation and children and dependencies (header bars and navigation permissions).
    * 
@@ -501,7 +462,7 @@ export class NavigationService {
 
     const navigationsIds: Array<string> = [];
     const navigationRecordsToDelete: Array<UpdateNavigationDto> = [];
-    const headerBarIdsToDelete: Array<string> = [];
+    const menuIdsToDelete: Array<string> = [];
 
     /* Declare method to retrieve navigations and header bars to delete */
     const getDeepNavigationIds = async (navigation: Navigation) => {
@@ -511,11 +472,9 @@ export class NavigationService {
         deletedBy: userId,
         deletedDate: new Date()
       })
-      const headerBar = await this._headerBarRepository.findOne({
-        where: { navigationId: navigation.id }
-      })
-      if (headerBar) {
-        headerBarIdsToDelete.push(headerBar.id);
+      const menu = await this._menuService.findOneByNavigationId(navigation.id);
+      if (menu) {
+        menuIdsToDelete.push(menu.id);
       }
       if (navigation.children) {
         for (const nav of navigation.children) {
@@ -530,27 +489,37 @@ export class NavigationService {
     /* delete navigations */
     const navigationsSoftDeleted = await this._navigationRepository.save(navigationRecordsToDelete);
 
-    /* check if parent remains without children and delete associated header bar if yes.*/
+    /* delete navigation style properties */
+    for (const navigation of navigationRecordsToDelete) {
+      await this._containerLayoutRepository.delete({ refId: navigation['id'] });
+      await this._containerStyleRepository.delete({ refId: navigation['id']});
+      await this._typographyStyleRepository.delete({ refId: navigation['id'] });
+    }
+
+    /* check if parent remains without children and delete associated menu if yes.*/
     const parentNavigation = await this._navigationRepository.findOne({
       where: { 
         id: navigation.parentId,
         deletedDate: IsNull(),
       },
-      relations: ['children', 'headerBar']
+      relations: ['children', 'menu']
     });
     if (
       parentNavigation
       && parentNavigation.children?.filter(obj => !obj.deletedDate).length === 0
-      && parentNavigation.headerBar
+      && parentNavigation.menu
     ) {
-      headerBarIdsToDelete.push(parentNavigation.headerBar.id);
+      menuIdsToDelete.push(parentNavigation.menu.id);
     }
     
-    /* delete header bars */
-    for (const id of headerBarIdsToDelete) {
-      await this._headerBarRepository.delete(id);
-    }
+    /* delete menus */
+    for (const id of menuIdsToDelete) {
+      await this._menuService.remove(id);
+      await this._containerLayoutRepository.delete({ refId: id });
+      await this._containerStyleRepository.delete({ refId: id });
+      await this._typographyStyleRepository.delete({ refId: id });
 
+    }
     /* delete related role navigation permissions entities */
     const roleNavigationsPermissions = await this._roleNavigationPermissionRepository.find({
       where: { navigationId: In(navigationsIds) }
@@ -563,34 +532,6 @@ export class NavigationService {
 
     return { affected: navigationsSoftDeleted.length }
   }
-
-
-  /**
-   * Get the parent header bar configuration and create header bar for given navigation.
-   * @param navigationId The navigationId which we want to create a header bar.
-   */
-  async inheritParentHeaderBarConfig(navigationId: string, userId: string) {
-    const navigation = await this._navigationRepository.findOne({
-      where: { id: navigationId }
-    });
-
-    const parentHeaderBar = await this._headerBarRepository.findOne({
-      where: { 
-        navigationId: navigation?.parentId,
-        deletedDate: IsNull()
-      }
-    });
-
-    const { id, imageName, ...headerBarPayload } = parentHeaderBar!;
-    headerBarPayload.navigationId = navigationId;
-    headerBarPayload.createdBy = userId;
-    headerBarPayload.createdDate = new Date();
-    headerBarPayload.updatedBy = userId;
-    headerBarPayload.updatedDate = new Date();
-
-    await this._headerBarRepository.save(headerBarPayload);
-  }
-
 
   /**
    * Flatten nested navigations.

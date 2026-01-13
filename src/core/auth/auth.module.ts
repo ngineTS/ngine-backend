@@ -3,19 +3,10 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PasswordRecovery } from 'src/core/password-recovery/entities/password-recovery.entity';
 import { User } from 'src/domains/user/entities/user.entity';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth.guard';
-import { NavigationService } from 'src/domains/navigation/navigation.service';
-import { Navigation } from 'src/domains/navigation/entities/navigation.entity';
-import { NavigationType } from 'src/domains/navigation-type/entities/navigation-type.entity';
-import { HeaderBar } from 'src/domains/header-bar/entities/header-bar.entity';
-import { RoleNavigationPermission } from 'src/domains/role-navigation-permission/entities/role-navigation-permission.entity';
-import { UserRole } from 'src/domains/user-role/entities/user-role.entity';
-import { Role } from 'src/domains/role/entities/role.entity';
-import { RoleService } from 'src/domains/role/role.service';
 
 @Module({
   imports:[
@@ -27,22 +18,11 @@ import { RoleService } from 'src/domains/role/role.service';
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '15m' },
     }),
-    TypeOrmModule.forFeature([
-      User,
-      UserRole,
-      PasswordRecovery,
-      Navigation,
-      NavigationType,
-      HeaderBar,
-      Role,
-      RoleNavigationPermission
-    ])
+    TypeOrmModule.forFeature([User])
   ],
   controllers: [AuthController],
   providers: [
     AuthService, 
-    NavigationService,
-    RoleService,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,

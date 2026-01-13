@@ -8,16 +8,6 @@ import { UserId } from 'src/core/decorators/user.decorator';
 export class MenuController {
   constructor(private readonly menuService: MenuService) {}
 
-  @Post()
-  create(@Body() createMenuDto: CreateMenuDto) {
-    return this.menuService.create(createMenuDto);
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.menuService.findOne(+id);
-  }
-
   @Get('create-navigation-bar/:navigationId')
   createNavigationBar(
     @Param('navigationId') navigationId: string,
@@ -33,6 +23,6 @@ export class MenuController {
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.menuService.remove(+id);
+    return this.menuService.remove(id);
   }
 }

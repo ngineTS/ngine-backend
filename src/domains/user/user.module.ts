@@ -7,12 +7,6 @@ import { PasswordRecovery } from 'src/core/password-recovery/entities/password-r
 import { AuthService } from 'src/core/auth/auth.service';
 import { UserRole } from '../user-role/entities/user-role.entity';
 import { Role } from '../role/entities/role.entity';
-import { Navigation } from '../navigation/entities/navigation.entity';
-import { HeaderBar } from '../header-bar/entities/header-bar.entity';
-import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
-import { NavigationService } from '../navigation/navigation.service';
-import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
-import { RoleService } from '../role/role.service';
 
 @Module({
   imports:[
@@ -20,14 +14,10 @@ import { RoleService } from '../role/role.service';
       User,
       Role,
       UserRole,
-      PasswordRecovery,
-      Navigation,
-      NavigationType,
-      HeaderBar,
-      RoleNavigationPermission
+      PasswordRecovery
     ])
   ],
   controllers: [UserController],
-  providers: [UserService, AuthService, NavigationService, RoleService]
+  providers: [UserService, AuthService]
 })
 export class UserModule {}

@@ -3,26 +3,35 @@ import { NavigationService } from './navigation.service';
 import { NavigationController } from './navigation.controller';
 import { Navigation } from './entities/navigation.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 import { User } from '../user/entities/user.entity';
-import { HeaderBar } from '../header-bar/entities/header-bar.entity';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 import { UserRole } from '../user-role/entities/user-role.entity';
 import { RoleService } from '../role/role.service';
 import { AuthService } from 'src/core/auth/auth.service';
 import { Role } from '../role/entities/role.entity';
+import { MenuService } from '../menu/menu.service';
+import { Menu } from '../menu/entities/menu.entity';
+import { ContainerLayout } from '../container-layout/entities/container-layout.entity';
+import { ContainerStyle } from '../container-style/entities/container-style.entity';
+import { TypographyStyle } from '../typography-style/entities/typography-style.entity';
+import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 
 @Module({
-  imports:[TypeOrmModule.forFeature([
-    Navigation,
-    NavigationType,
-    HeaderBar,
-    User,
-    UserRole,
-    Role,
-    RoleNavigationPermission
-  ])],
+  imports:[
+    TypeOrmModule.forFeature([
+      Navigation,
+      NavigationType,
+      User,
+      UserRole,
+      Role,
+      RoleNavigationPermission,
+      Menu,
+      ContainerLayout,
+      ContainerStyle,
+      TypographyStyle
+    ])
+  ],
   controllers: [NavigationController],
-  providers: [NavigationService, RoleService, AuthService]
+  providers: [NavigationService, RoleService, AuthService, MenuService]
 })
 export class NavigationModule {}
