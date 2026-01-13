@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { MenuService } from './menu.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
+import { UserId } from 'src/core/decorators/user.decorator';
 
 @Controller('menu')
 export class MenuController {
@@ -15,6 +16,14 @@ export class MenuController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.menuService.findOne(+id);
+  }
+
+  @Get('create-navigation-bar/:navigationId')
+  createNavigationBar(
+    @Param('navigationId') navigationId: string,
+    @UserId() userId: string
+  ) {
+    return this.menuService.createNavigationBar(navigationId, userId);
   }
 
   @Patch(':id')
