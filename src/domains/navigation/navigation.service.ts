@@ -124,6 +124,9 @@ export class NavigationService {
     base: string = ''
   ) {
     relations.add(base + 'navigationType');
+    relations.add(base + 'containerLayout');
+    relations.add(base + 'containerStyle');
+    relations.add(base + 'typographyStyle');
     relations.add(base + 'children');
     relations.add(base + 'menu');
     relations.add(base + 'menu.containerLayout');

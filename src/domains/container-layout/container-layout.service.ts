@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateContainerLayoutDto } from './dto/create-container-layout.dto';
 import { UpdateContainerLayoutDto } from './dto/update-container-layout.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -25,8 +25,12 @@ export class ContainerLayoutService {
     return `This action returns a #${id} containerLayout`;
   }
 
-  update(id: number, updateContainerLayoutDto: UpdateContainerLayoutDto) {
-    return `This action updates a #${id} containerLayout`;
+  async update(id: string, updateContainerLayoutDto: UpdateContainerLayoutDto) {
+    const updateResponse = await this._containerLayoutRepository.update(id, updateContainerLayoutDto);
+
+    if(updateResponse.affected === 0) {
+      throw new NotFoundException(`Container layout with id: ${id} has not been found.`);
+    }
   }
 
   remove(id: number) {

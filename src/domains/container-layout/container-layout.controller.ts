@@ -24,7 +24,7 @@ export class ContainerLayoutController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateContainerLayoutDto: UpdateContainerLayoutDto) {
-    return this.containerLayoutService.update(+id, updateContainerLayoutDto);
+    return this.containerLayoutService.update(id, updateContainerLayoutDto);
   }
 
   @Delete(':id')
