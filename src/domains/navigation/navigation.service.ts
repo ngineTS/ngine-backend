@@ -349,7 +349,7 @@ export class NavigationService {
       throw new ForbiddenException();
     }
 
-    /* Get navigation and throw NotFound error if not found. */
+    /* Get navigation and throw error if not found. */
     const navigation = await this._navigationRepository.findOne({
       where: { id: id },
       relations: ['navigationType']
@@ -358,45 +358,43 @@ export class NavigationService {
       throw new NotFoundException();
     }
 
-    /* Setup metadata. */
-    updateNavigationDto["updatedBy"] = userId;
-    updateNavigationDto["updatedDate"] = new Date();
-
-    /* If displayLabel has changed then assign name property. */
+    /* If displayLabel has changed then assign name property 
+       and throw error if sister has already same name. */
     if (updateNavigationDto['displayLabel']) {
        updateNavigationDto['name'] = updateNavigationDto['displayLabel'].toLowerCase()?.replace(/ /g, "-");
-    }
-
-    /* If parent has changed: */
-    if ('parentId' in updateNavigationDto && updateNavigationDto.parentId !== navigation.parentId) {
-      /* Get new parent navigation and children. */
-      const bodyParentId = updateNavigationDto.parentId as string;
-      const newSisterNavigations = await this._navigationRepository.find({
+       const sisterNavigations = await this._navigationRepository.find({
         where: {
-          parentId: bodyParentId,
-          deletedDate: IsNull(),
-        },
-      });
-
-      /* If new parent has already a child with this name then throw error. */
-      if (updateNavigationDto['name'] && newSisterNavigations.find(nav => nav.name === updateNavigationDto['name'])) {
-        throw new BadRequestException('This name already exists.');
-      }
-    }
-    else {
-      /* If name has changed and current parent has already a child with this name then throw error */
-      const sisterNavigations = await this._navigationRepository.find({
-        where: { 
-          parentId: navigation.parentId,
+          parentId: updateNavigationDto['parentId'] ?? navigation.parentId,
           deletedDate: IsNull(),
           id: Not(navigation.id)
         },
       });
-      if (updateNavigationDto['name'] && sisterNavigations.find(nav => nav.name === updateNavigationDto['name'])) {
+      if (sisterNavigations.find(nav => nav.name === updateNavigationDto['name'])) {
         throw new BadRequestException('This name already exists.');
       }
     }
 
+    /* If parent has changed then delete old parent menu if needed
+       (i.e old parent has a menu associated and had one navigation only). */
+    if ('parentId' in updateNavigationDto && updateNavigationDto.parentId !== navigation.parentId) {
+      const oldParentNavigation = await this._navigationRepository.findOne({
+        relations: ['children', 'menu'],
+        where: { 
+          id: navigation.parentId,
+          deletedDate: IsNull(),
+        },
+      });
+      if (oldParentNavigation?.menu && oldParentNavigation?.children?.filter(obj => !obj.deletedDate).length === 1) {
+        await this._menuService.remove(oldParentNavigation.menu.id);
+        await this._containerLayoutRepository.delete({ refId: oldParentNavigation.menu.id });
+        await this._containerStyleRepository.delete({ refId: oldParentNavigation.menu.id });
+        await this._typographyStyleRepository.delete({ refId: oldParentNavigation.menu.id });
+      }
+    }
+
+    /* Setup metadata and udpate entity. */
+    updateNavigationDto["updatedBy"] = userId;
+    updateNavigationDto["updatedDate"] = new Date();
     return await this._navigationRepository.update(id, updateNavigationDto);
   }
 
@@ -464,7 +462,7 @@ export class NavigationService {
     const navigationRecordsToDelete: Array<UpdateNavigationDto> = [];
     const menuIdsToDelete: Array<string> = [];
 
-    /* Declare method to retrieve navigations and header bars to delete */
+    /* Declare method to retrieve navigations and menus to delete */
     const getDeepNavigationIds = async (navigation: Navigation) => {
       navigationsIds.push(navigation.id);
       navigationRecordsToDelete.push({
@@ -520,6 +518,7 @@ export class NavigationService {
       await this._typographyStyleRepository.delete({ refId: id });
 
     }
+
     /* delete related role navigation permissions entities */
     const roleNavigationsPermissions = await this._roleNavigationPermissionRepository.find({
       where: { navigationId: In(navigationsIds) }
@@ -581,7 +580,6 @@ export class NavigationService {
     if (navigation['permissionName']) {
       return true;
     }
-
     else if (navigation.children && navigation.children.length > 0 ){
       for (const child of navigation.children) {
         return this.doesPermissionExistOnNavigationOrHisChildren(child);
