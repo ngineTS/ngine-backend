@@ -30,9 +30,9 @@ export class MenuService {
   ) {}
 
   /**
-   * Create header bar for given navigation Id and add first redirect-button to it.
+   * Create navigation bar for given navigation Id and add first redirect-button to it.
    * @param navigationId The navigationId to attach the menu to.
-   * @param userId The user who created this header bar.
+   * @param userId The user who creates this navigation bar.
    */
   async createNavigationBar(navigationId: string, userId: string) {
     /* Create first redirect-button of navigation bar with default style. */

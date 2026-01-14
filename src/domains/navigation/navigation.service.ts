@@ -259,14 +259,11 @@ export class NavigationService {
   }
 
   /**
-   * Save navigation.
+   * Save navigation with default style.
    * 
    * If user doesn't have 'add' permission on parent then throw Forbidden error.
    * 
    * If sister navigation with same name exists then throw BadRequest error.
-   * 
-   * If navigation is header and doesn't have sister (i.e first header)
-   * then create header bar record associated to parent navigation (inherit config from parent header bar).
    * 
    * @param createNavigationDto The navigation to save.
    * @returns The navigation saved.
@@ -317,10 +314,8 @@ export class NavigationService {
    * 
    * * If user doesn't have 'edit' permission on navigation then throw Forbidden error.
    * * If navigation is not found then throw NotFound error.
-   * 
-   * If parentId has changed:
-   * If navigation is header and doesn't have sister (i.e first header) 
-   * then create header bar record associated to parent navigation (inherit config from parent header bar).
+   * * If navigation sister has already the same name then throw BadRequest error.
+   * * If parent id has changed and new parent has a menu and no more children then delete menu.
    * 
    * @param id The navigation id.
    * @param updateNavigationDto The navigation properties to update.
@@ -436,11 +431,11 @@ export class NavigationService {
   }
 
   /**
-   * Soft delete navigation and children and dependencies (header bars and navigation permissions).
+   * Soft delete navigation and children and dependencies.
    * 
    * If user doesn't have 'delete' permission on navigation then throw Forbidden error. 
    * 
-   * If navigation was last of the sisters then delete parent header bar.
+   * If navigation was last of the sisters then delete parent menu.
    * @param navigation The navigation to soft delete.
    * @returns The Array of navigation that have been soft deleted.
    */
