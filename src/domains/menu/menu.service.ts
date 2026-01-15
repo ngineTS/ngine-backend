@@ -36,8 +36,8 @@ export class MenuService {
    */
   async createNavigationBar(navigationId: string, userId: string) {
     /* Create first redirect-button of navigation bar with default style. */
-    const headerNavigationType = await this._navigationTypeRepository.findOne({
-      where: { name: 'header' }
+    const redirectButtonNavigationType = await this._navigationTypeRepository.findOne({
+      where: { name: 'redirect-button' }
     });
     const navigation: any = {
       parentId: navigationId,
@@ -46,7 +46,7 @@ export class MenuService {
       description: 'First navigation',
       isDisabled: false,
       order: 0,
-      navigationTypeId: headerNavigationType!.id,
+      navigationTypeId: redirectButtonNavigationType!.id,
       createdDate: new Date(),
       createdBy: userId,
       updatedDate: new Date(),
