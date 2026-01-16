@@ -78,7 +78,7 @@ export class NavigationService {
     const relations = new Set<string>();
     const order: FindOptionsOrder<Navigation> = { order: 'ASC' };
     const where: FindOptionsWhere<Navigation> = { id: '00000000-0000-0000-0000-000000000000' };
-    this.generateRelationsAndOrder(4, relations, order); //TO DO: Replace 4 by the exact depth wished
+    this.generateRelationsAndOrder(6, relations, order); //TO DO: Replace 6 by the exact depth wished
     /* Get main navigation from db. */
     let navigation = await this._navigationRepository.findOne({
       relations: [...relations],
@@ -547,7 +547,7 @@ export class NavigationService {
   /**
    * Store navigation permissions from nested navigations.
    * @param navigations The navigations with permission name.
-   * @param userNavigationPermissionsArray The array of navigation-permission couples.
+   * @param userNavigationPermissionsArray The array of navigation permission couple.
    */
   flattenNavigationPermissions(
     navigation: Navigation,
@@ -571,8 +571,8 @@ export class NavigationService {
    * Check if navigation has a permission.
    * If yes return true else check check for his children recursively.
    * If no permission found after recursion then return false.
-   * @param navigation 
-   * @returns 
+   * @param navigation The navigation to check.
+   * @returns true or false.
    */
   doesPermissionExistOnNavigationOrHisChildren(navigation: Navigation): boolean {
     if (navigation['permissionName']) {

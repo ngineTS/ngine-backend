@@ -140,7 +140,7 @@ export class MenuService {
     };
 
     /* Get menu of parent navigation and throw error if not found. */
-    const parentMenu = await this._menuRepository.findOne({
+    let parentMenu = await this._menuRepository.findOne({
       where: { navigationId: navigation.parentId },
       relations: [
         'containerLayout',
@@ -148,25 +148,34 @@ export class MenuService {
         'typographyStyle'
       ]
     });
+    
+    /* If no parent menu found then inherit global navigation menu. */
     if (!parentMenu) {
-      throw new NotFoundException(`No menu associated to navigation ${navigation.parentId} has been found.`);
+      parentMenu = await this._menuRepository.findOne({
+        where: { navigationId: '00000000-0000-0000-0000-000000000000' },
+        relations: [
+          'containerLayout',
+          'containerStyle',
+          'typographyStyle'
+        ]
+      });
     }
 
     /* Save menu. */
     const menuSaved = await this._menuRepository.save({ navigationId: navigationId });
 
     /* Change refId and save containerLayout. */
-    const containerLayoutPayload = omitObjectProperty(parentMenu.containerLayout, 'id');
+    const containerLayoutPayload = omitObjectProperty(parentMenu!.containerLayout, 'id');
     containerLayoutPayload.refId = menuSaved.id;
     await this._containerLayoutRepository.save(containerLayoutPayload);
 
     /* Change refId and save containerStyle. */
-    const containerStylePayload = omitObjectProperty(parentMenu.containerStyle, 'id');
+    const containerStylePayload = omitObjectProperty(parentMenu!.containerStyle, 'id');
     containerStylePayload.refId = menuSaved.id;
     await this._containerStyleRepository.save(containerStylePayload);
 
     /* Change refId and save typographyStyle. */
-    const typographyStylePayload = omitObjectProperty(parentMenu.typographyStyle, 'id');
+    const typographyStylePayload = omitObjectProperty(parentMenu!.typographyStyle, 'id');
     typographyStylePayload.refId = menuSaved.id;
     await this._typographyStyleRepository.save(typographyStylePayload);
   }
