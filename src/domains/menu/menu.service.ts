@@ -148,7 +148,7 @@ export class MenuService {
         'typographyStyle'
       ]
     });
-    
+
     /* If no parent menu found then inherit global navigation menu. */
     if (!parentMenu) {
       parentMenu = await this._menuRepository.findOne({
@@ -212,7 +212,7 @@ export class MenuService {
   async createDefaultContainerStyle(refId: string): Promise<ContainerStyle> {
     const containerStylePayload = {
       refId: refId,
-      backGroundcolor: '#636363',
+      backgroundcolor: '#636363',
       borderColor: '#1E90FF',
       borderStyle: 'solid',
       borderWidth: 4,
