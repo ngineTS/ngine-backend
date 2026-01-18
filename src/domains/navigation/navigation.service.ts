@@ -12,6 +12,7 @@ import { MenuService } from '../menu/menu.service';
 import { ContainerLayout } from '../container-layout/entities/container-layout.entity';
 import { ContainerStyle } from '../container-style/entities/container-style.entity';
 import { TypographyStyle } from '../typography-style/entities/typography-style.entity';
+import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 
 
 @Injectable()
@@ -20,6 +21,8 @@ export class NavigationService {
   constructor(
     @InjectRepository(Navigation)
     private _navigationRepository: Repository<Navigation>,
+    @InjectRepository(NavigationType)
+    private _navigationTypeRepository: Repository<NavigationType>,
     @InjectRepository(User)
     private _userRepository: Repository<User>,
     @InjectRepository(RoleNavigationPermission)
@@ -78,7 +81,7 @@ export class NavigationService {
     const relations = new Set<string>();
     const order: FindOptionsOrder<Navigation> = { order: 'ASC' };
     const where: FindOptionsWhere<Navigation> = { id: '00000000-0000-0000-0000-000000000000' };
-    this.generateRelationsAndOrder(6, relations, order); //TO DO: Replace 6 by the exact depth wished
+    this.generateRelationsAndOrder(8, relations, order); //TO DO: Replace 6 by the exact depth wished
     /* Get main navigation from db. */
     let navigation = await this._navigationRepository.findOne({
       relations: [...relations],
@@ -306,6 +309,18 @@ export class NavigationService {
     await this._menuService.createDefaultContainerLayout(navigationSaved.id);
     await this._menuService.createDefaultContainerStyle(navigationSaved.id);
     await this._menuService.createDefaultTypographyStyle(navigationSaved.id);
+
+    /* Create menu if navigation is menu button. */
+    const menuButtonNavigationType = await this._navigationTypeRepository.findOne({
+      where: { name: 'menu-button' }
+    });
+    if (navigationSaved.navigationTypeId === menuButtonNavigationType!.id) {
+      const menuSaved = await this._menuService.createMenu(navigationSaved.id);
+      await this._menuService.createDefaultContainerLayout(menuSaved.id);
+      await this._menuService.createDefaultContainerStyle(menuSaved.id);
+      await this._menuService.createDefaultTypographyStyle(menuSaved.id);
+    }
+
     return navigationSaved;
   }
 

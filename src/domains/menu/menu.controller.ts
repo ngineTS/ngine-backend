@@ -17,8 +17,8 @@ export class MenuController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMenuDto: UpdateMenuDto) {
-    return this.menuService.update(id, updateMenuDto);
+  updateStyleProperties(@Param('id') id: string, @Body() updateMenuDto: UpdateMenuDto) {
+    return this.menuService.updateStyleProperties(id, updateMenuDto);
   }
 
   @Delete(':id')

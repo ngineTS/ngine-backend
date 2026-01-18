@@ -29,6 +29,11 @@ export class MenuService {
     private _navigationTypeRepository: Repository<NavigationType>
   ) {}
 
+
+  async createMenu(navigationId: string): Promise<Menu> {
+    return await this._menuRepository.save({ navigationId: navigationId })
+  }
+
   /**
    * Create navigation bar for given navigation Id and add first redirect-button to it.
    * @param navigationId The navigationId to attach the menu to.
@@ -76,7 +81,7 @@ export class MenuService {
    * @param updateMenuDto The style properties.
    * @returns The properties affected number.
    */
-  async update(refId: string, updateMenuDto: UpdateMenuDto) {
+  async updateStyleProperties(refId: string, updateMenuDto: UpdateMenuDto) {
     const affectedRelations: { [prop: string]: number | undefined } = {
       affectedContainerLayout: 0,
       affectedContainerStyle: 0,
@@ -212,7 +217,7 @@ export class MenuService {
   async createDefaultContainerStyle(refId: string): Promise<ContainerStyle> {
     const containerStylePayload = {
       refId: refId,
-      backgroundcolor: '#636363',
+      backgroundColor: '#636363',
       borderColor: '#1E90FF',
       borderStyle: 'solid',
       borderWidth: 4,
