@@ -30,6 +30,11 @@ export class MenuService {
   ) {}
 
 
+  /**
+   * Create menu for given navigationId.
+   * @param navigationId The navigation id we want to create a menu to.
+   * @returns The created menu.
+   */
   async createMenu(navigationId: string): Promise<Menu> {
     return await this._menuRepository.save({ navigationId: navigationId })
   }
@@ -40,11 +45,23 @@ export class MenuService {
    * @param userId The user who creates this navigation bar.
    */
   async createNavigationBar(navigationId: string, userId: string) {
-    /* Create first redirect-button of navigation bar with default style. */
+    /* Get navigation from navigationId and throw error if not found. */
+    const navigation = await this._navigationRepository.findOne({
+      where: { id: navigationId }
+    });
+    if (!navigation) {
+      throw new NotFoundException(`No navigation found with id ${navigationId}`)
+    };
+
+    /* Create menu and style for navigation. */
+    const menuSaved = await this._menuRepository.save({ navigationId: navigationId });
+    await this.inheritParentStyle(menuSaved.id, navigationId);
+
+    /* Create first redirect-button child and style. */
     const redirectButtonNavigationType = await this._navigationTypeRepository.findOne({
       where: { name: 'redirect-button' }
     });
-    const navigation: any = {
+    const firstAutoCreatedChild: any = {
       parentId: navigationId,
       name: 'sub-1',
       displayLabel: 'Sub 1',
@@ -57,18 +74,18 @@ export class MenuService {
       updatedDate: new Date(),
       updatedBy: userId
     }
-    await this._navigationRepository.save(navigation);
-    await this.createDefaultContainerLayout(navigation.id);
-    await this.createDefaultContainerStyle(navigation.id);
-    await this.createDefaultTypographyStyle(navigation.id);
-
-    /* Inherit menu style from parent menu and create navigation bar. */
-    this.inheritParentMenuConfig(navigationId);
+    const firstAutoCreatedChildSaved = await this._navigationRepository.save(firstAutoCreatedChild);
+    await this.inheritParentStyle(firstAutoCreatedChildSaved.id, navigationId);
     
     /* Return success message. */
     return JSON.stringify('Navigation bar successfully created.');
   }
 
+  /**
+   * Find menu by navigationId.
+   * @param navigationId The navigationId that belongs to the menu.
+   * @returns The menu or null if no menu found.
+   */
   async findOneByNavigationId(navigationId: string) {
     return await this._menuRepository.findOne({
       where: { navigationId: navigationId }
@@ -132,61 +149,52 @@ export class MenuService {
   }
 
   /**
-   * Retrieve parent menu configuration and copy it to given navigation.
-   * @param navigationId The navigationId which we want to create a menu to.
+   * Copy parent ref style and paste it to wished ref.
+   * @param refId The ref we want to paste the style to.
+   * @param parentRefId The ref we want to inherit the style from.
    */
-  async inheritParentMenuConfig(navigationId: string) {
-    /* Get navigation from navigationId and throw error if not found. */
-    const navigation = await this._navigationRepository.findOne({
-      where: { id: navigationId }
+  async inheritParentStyle(refId: string, parentRefId: string) {
+    /* Get parent containerLayout. */
+    let parentContainerLayout = await this._containerLayoutRepository.findOne({
+      where: { refId: parentRefId }
     });
-    if (!navigation) {
-      throw new NotFoundException(`No navigation found with id ${navigationId}`)
-    };
-
-    /* Get menu of parent navigation and throw error if not found. */
-    let parentMenu = await this._menuRepository.findOne({
-      where: { navigationId: navigation.parentId },
-      relations: [
-        'containerLayout',
-        'containerStyle',
-        'typographyStyle'
-      ]
-    });
-
-    /* If no parent menu found then inherit global navigation menu. */
-    if (!parentMenu) {
-      parentMenu = await this._menuRepository.findOne({
-        where: { navigationId: '00000000-0000-0000-0000-000000000000' },
-        relations: [
-          'containerLayout',
-          'containerStyle',
-          'typographyStyle'
-        ]
-      });
+    if (!parentContainerLayout) {
+      throw new NotFoundException(`No container layout found with refId ${parentRefId}`);
     }
 
-    /* Save menu. */
-    const menuSaved = await this._menuRepository.save({ navigationId: navigationId });
+    /* Get parent containerStyle. */
+    let parentContainerStyle = await this._containerStyleRepository.findOne({
+      where: { refId: parentRefId }
+    });
+    if (!parentContainerStyle) {
+      throw new NotFoundException(`No container style found with refId ${parentRefId}`);
+    }
+    /* Get parent typographyStyle. */
+    let parentTypographyStyle = await this._typographyStyleRepository.findOne({
+      where: { refId: parentRefId }
+    });
+    if (!parentTypographyStyle) {
+      throw new NotFoundException(`No typography style found with refId ${parentRefId}`);
+    }
 
     /* Change refId and save containerLayout. */
-    const containerLayoutPayload = omitObjectProperty(parentMenu!.containerLayout, 'id');
-    containerLayoutPayload.refId = menuSaved.id;
+    const containerLayoutPayload = omitObjectProperty(parentContainerLayout, 'id');
+    containerLayoutPayload.refId = refId;
     await this._containerLayoutRepository.save(containerLayoutPayload);
 
     /* Change refId and save containerStyle. */
-    const containerStylePayload = omitObjectProperty(parentMenu!.containerStyle, 'id');
-    containerStylePayload.refId = menuSaved.id;
+    const containerStylePayload = omitObjectProperty(parentContainerStyle, 'id');
+    containerStylePayload.refId = refId;
     await this._containerStyleRepository.save(containerStylePayload);
 
     /* Change refId and save typographyStyle. */
-    const typographyStylePayload = omitObjectProperty(parentMenu!.typographyStyle, 'id');
-    typographyStylePayload.refId = menuSaved.id;
+    const typographyStylePayload = omitObjectProperty(parentTypographyStyle, 'id');
+    typographyStylePayload.refId = refId;
     await this._typographyStyleRepository.save(typographyStylePayload);
   }
 
   /**
-   * Create default container layout for given refId
+   * Create default container layout for given refId.
    * @param refId the object reference id.
    * @returns The container layout object saved.
    */
@@ -210,7 +218,7 @@ export class MenuService {
   }
 
   /**
-   * Create default container style for given refId
+   * Create default container style for given refId.
    * @param refId the object reference id.
    * @returns The container style object saved.
    */
@@ -235,7 +243,7 @@ export class MenuService {
   }
 
   /**
-   * Create default typography style for given refId
+   * Create default typography style for given refId.
    * @param refId the object reference id.
    * @returns The typography style object saved.
    */

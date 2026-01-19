@@ -300,15 +300,19 @@ export class NavigationService {
       throw new BadRequestException('This name already exists');
     }
 
-    /* add metadata and save */
+    /* add metadata and save navigation */
     createNavigationDto["createdBy"] = userId;
     createNavigationDto["createdDate"] = new Date();
     createNavigationDto["updatedBy"] = userId;
     createNavigationDto["updatedDate"] = new Date();
     const navigationSaved = await this._navigationRepository.save(createNavigationDto);
-    await this._menuService.createDefaultContainerLayout(navigationSaved.id);
-    await this._menuService.createDefaultContainerStyle(navigationSaved.id);
-    await this._menuService.createDefaultTypographyStyle(navigationSaved.id);
+
+    /* inherit parent navigation style */
+    let parentRefId = navigationSaved.parentId;
+    if (parentRefId === '00000000-0000-0000-0000-000000000000') {
+      parentRefId = (await this._menuService.findOneByNavigationId(parentRefId))!.id;
+    }
+    await this._menuService.inheritParentStyle(navigationSaved.id, parentRefId);
 
     /* Create menu if navigation is menu button. */
     const menuButtonNavigationType = await this._navigationTypeRepository.findOne({
@@ -316,9 +320,7 @@ export class NavigationService {
     });
     if (navigationSaved.navigationTypeId === menuButtonNavigationType!.id) {
       const menuSaved = await this._menuService.createMenu(navigationSaved.id);
-      await this._menuService.createDefaultContainerLayout(menuSaved.id);
-      await this._menuService.createDefaultContainerStyle(menuSaved.id);
-      await this._menuService.createDefaultTypographyStyle(menuSaved.id);
+      await this._menuService.inheritParentStyle(menuSaved.id, navigationSaved.id);
     }
 
     return navigationSaved;
