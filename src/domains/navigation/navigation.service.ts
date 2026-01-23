@@ -51,14 +51,14 @@ export class NavigationService {
       }>
     }
   ) {
-    /* get nested navigations filtered by user permission */
-    const navigation = await this.findNestedNavigations(userRequest) as Navigation;
+    const userNavigationIds = userRequest.userNavigationPermissions.map<string>(
+      userNavigationPermission => userNavigationPermission.navigationId
+    )
 
-    /* flatten navigations */
-    const flatNavigations: any[] = [];
-    this.flattenNavigations(navigation, flatNavigations);
-    
-    return flatNavigations;
+    return await this._navigationRepository.find({
+      where: { id: In(userNavigationIds) },
+      relations: ['navigationType']
+    });
   }
 
   /**
