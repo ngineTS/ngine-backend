@@ -570,7 +570,6 @@ export class NavigationService {
     return false;
   }
 
-
   /**
    * Clean navigations based on the following rules:
    * * remove deleted navigations (deletedDate not null)
