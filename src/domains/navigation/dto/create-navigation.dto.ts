@@ -20,14 +20,6 @@ export class CreateNavigationDto {
     order: number;
 
     @IsOptional()
-    @IsNumber()
-    width?: number;
-
-    @IsOptional()
-    @IsNumber()
-    height?: number;
-
-    @IsOptional()
     @IsBoolean()
     isDisabled?: boolean;
 
