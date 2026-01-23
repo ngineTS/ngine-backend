@@ -528,20 +528,6 @@ export class NavigationService {
   }
 
   /**
-   * Flatten nested navigations.
-   * @param navigation navigation to flatten.
-   * @param flatNavigations array to store flat navigations.
-   */
-  flattenNavigations(navigation: Navigation, flatNavigations: Array<Navigation>) {
-    flatNavigations.push(navigation);
-    if (navigation.children && navigation.children.length > 0) {
-      for (const child of navigation.children) {
-        this.flattenNavigations(child, flatNavigations);
-      }
-    }
-  }
-
-  /**
    * Store navigation permissions from nested navigations.
    * @param navigations The navigations with permission name.
    * @param userNavigationPermissionsArray The array of navigation permission couple.
