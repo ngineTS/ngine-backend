@@ -608,7 +608,6 @@ export class NavigationService {
   ) {
 
     if(navigationDto.parentId) {
-      
       const parentNavigation = await this._navigationRepository.findOne({
         where: { 
           id: navigationDto.parentId,
@@ -715,7 +714,6 @@ export class NavigationService {
     if (rows.length) {
       throw new BadRequestException('Parent cannot be a descendant');
     }
-  
   }
 
 }
