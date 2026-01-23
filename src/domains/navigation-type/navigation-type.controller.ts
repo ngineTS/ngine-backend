@@ -1,7 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { NavigationTypeService } from './navigation-type.service';
-import { CreateNavigationTypeDto } from './dto/create-navigation-type.dto';
-import { UpdateNavigationTypeDto } from './dto/update-navigation-type.dto';
 
 @Controller('navigation-type')
 export class NavigationTypeController {
@@ -11,5 +9,6 @@ export class NavigationTypeController {
   findAll() {
     return this.navigationTypeService.findAll();
   }
+
 
 }
