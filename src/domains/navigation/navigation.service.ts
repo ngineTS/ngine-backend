@@ -330,7 +330,7 @@ export class NavigationService {
    * @description
    * 1. Valid user permission and navigation business rule.
    * 2. If parent has changed and old parent has no more children then delete his menu.
-   * 3. Add audit data update navigation.
+   * 3. Add audit data and update navigation.
    */
   async updateNavigation(
     id: string,
@@ -360,8 +360,7 @@ export class NavigationService {
 
     /* get navigation and throw error if not found */
     const navigation = await this._navigationRepository.findOne({
-      where: { id: id },
-      relations: ['navigationType']
+      where: { id: id }
     });
     if (!navigation) {
       throw new NotFoundException();
@@ -597,18 +596,24 @@ export class NavigationService {
    * @param navigationId The navigation id to update (optional).
    * @throws {NotFoundException} If `navigationDto.parentId` is not found in the database.
    * @throws {NotFoundException} If `navigationDto.navigationTypeId` is not found in the database.
-   * @throws {BadRequestException} If `navigationDto.parentId` is equal to `navigationId`.
    * @throws {BadRequestException} If `navigationDto` type is a button and parent is not a menu or a redirect-button.
    * @throws {BadRequestException} If `navigationDto` type is a component and parent is not a dialog-button or a redirect-button without nav bar.
    * @throws {BadRequestException} If `navigationDto.name` is already used by sister navigations.
+   * @throws {BadRequestException} If `navigationDto.parentId` is equal to `navigationId`.
+   * @throws {BadRequestException} If `navigationDto` parent is found in the descendants of navigation to update.
    */
   async validNavigationDto(
     navigationDto: UpdateNavigationDto,
     navigationId?: string
   ) {
+
     if(navigationDto.parentId) {
+      
       const parentNavigation = await this._navigationRepository.findOne({
-        where: { id: navigationDto.parentId },
+        where: { 
+          id: navigationDto.parentId,
+          deletedDate: IsNull()
+        },
         relations: [
           'navigationType',
           'menu',
@@ -619,12 +624,6 @@ export class NavigationService {
       if (!parentNavigation) {
         throw new NotFoundException(`Parent ${navigationDto.parentId} doesn't exist.`)
       }
-      
-      if (navigationId) {
-        if (navigationId === navigationDto.parentId) {
-          throw new BadRequestException('Parent cannot be same navigation');
-        }
-      }      
 
       const navigationType = await this._navigationTypeRepository.findOne({
         where: { id: navigationDto.navigationTypeId }
@@ -673,9 +672,50 @@ export class NavigationService {
           throw new BadRequestException('A sister navigation has already this name.');
         }
       }
+
+      if (navigationId) {
+        if (navigationId === navigationDto.parentId) {
+          throw new BadRequestException('Parent cannot be same navigation');
+        }
+
+        await this.checkIfIsADescendant(navigationId, navigationDto.parentId);
+      }      
+      
       //TODO: Valid and external link input based on on nav type
     }
   }
 
+  /**
+   * Check if given navigation is in descendants of other navigation.
+   * 
+   * @param navigationId The navigation with descendants.
+   * @param parentId The navigation to check.
+   */
+  async checkIfIsADescendant(navigationId: string, parentId: string) {
+
+    const rows = await this._navigationRepository.query(
+      `
+      WITH RECURSIVE descendants AS (
+        SELECT id
+        FROM my_app.navigation
+        WHERE "parentId" = $1
+        UNION ALL
+        SELECT n.id
+        FROM my_app.navigation n
+        JOIN descendants d ON n."parentId" = d.id
+      )
+      SELECT 1
+      FROM descendants
+      WHERE id = $2
+      LIMIT 1
+      `,
+      [navigationId, parentId],
+    );
+
+    if (rows.length) {
+      throw new BadRequestException('Parent cannot be a descendant');
+    }
+  
+  }
 
 }
