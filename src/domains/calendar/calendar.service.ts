@@ -14,6 +14,7 @@ export class CalendarService {
 
   /**
    * Save a calendar event.
+   * 
    * @param createCalendarDto The calendar event to save.
    * @returns The calendar event saved.
    */
@@ -23,10 +24,11 @@ export class CalendarService {
 
   /**
    * Update a calendar event.
-   * Throw NotFoundError if no row affected.
+   * 
    * @param id The id of the calendar event to update.
    * @param updateCalendarDto The event properties to update.
    * @returns An UpdateResult type object.
+   * @throws {NotFoundException} If no row affected.
    */
   async update(id: string, updateCalendarDto: UpdateCalendarDto) {
     const updateResult = await this.calendarRepository.update(id, updateCalendarDto);
@@ -40,9 +42,10 @@ export class CalendarService {
 
   /**
    * Delete a calendar event.
-   * Throw NotFoundError if no row affected.
+   * 
    * @param id The id of the calendar event to delete.
    * @returns A DeleteResult type object.
+   * @throws {NotFoundException} If no row affected.
    */
   async remove(id: string) {
     const deleteResult = await this.calendarRepository.delete(id);
@@ -56,6 +59,7 @@ export class CalendarService {
 
   /**
    * Find calendar event for given navigation id.
+   * 
    * @param navigationId The navigation id associated to the calendar.
    * @returns An array of calendar events.
    */

@@ -38,7 +38,8 @@ export class NavigationService {
   ) {}
 
   /**
-   * Find all flat navigations filtered by user permission.
+   * Find all flat navigations with navigationType filtered by user permission.
+   * 
    * @returns The array of navigations.
    */
   async findAllNavigations(
@@ -63,6 +64,7 @@ export class NavigationService {
 
   /**
    * Load Nested navigations filtered by user permissions.
+   * 
    * @param userId The user id from the request.
    * @returns A nested navigations object.
    */
@@ -115,6 +117,7 @@ export class NavigationService {
 
   /**
    * Generate navigation relations until given depth.
+   * 
    * @param depth The number of nested levels.
    * @param relations The existing set of relations.
    * @param order The existing TypeORM order property.
@@ -146,10 +149,11 @@ export class NavigationService {
   /**
    * Format user roleNavigationPermissions.
    * 
-   * If a user is assigned to multiple roles which share the same navigations
-   * then we keep only the navigations with highest priviledge.
    * @param userId the id of the user.
    * @returns The user roleNavigationPermissions formatted.
+   * @description
+   * If a user is assigned to multiple roles which share the same navigations
+   * then we keep only the navigations with highest priviledge.
    * 
    * TODO: Rework to something more fluent and performant.
    */
@@ -209,14 +213,14 @@ export class NavigationService {
   /**
    * Set up user navigation permission based on below rules then repeat process for children.
    * 
-   * - Case 1: Navigation permission found and it is higher than parent one - keep navigation permission.
-   * - Case 2: Navigation permission found but parent permission is higher - navigation inherits parent navigation permission.
-   * - Case 3: Navigation permission found and parent has no permission - keep navigation permission.
-   * - Case 4: No navigation permission found but parent navigation permission found - navigation inherits parent navigation permission.
-   * 
    * @param navigation The navigation to add "permissionName" prop.
    * @param userRoleNavigationPermissions The array of user roleNavigationPermissions.
    * @param parentNavigationPermission The parent navigation permission.
+   * @description
+   * - Case 1. Navigation permission found and it is higher than parent one - keep navigation permission.
+   * - Case 2. Navigation permission found but parent permission is higher - navigation inherits parent navigation permission.
+   * - Case 3. Navigation permission found and parent has no permission - keep navigation permission.
+   * - Case 4. No navigation permission found but parent navigation permission found - navigation inherits parent navigation permission.
    */
   setUpUserNavigationPermission(
     navigation: Navigation,
@@ -271,7 +275,7 @@ export class NavigationService {
    * 1. Valid user permission and navigation business rules.
    * 2. Add audit data and save navigation.
    * 3. Inherit style from parent and save style properties.
-   * 4. Associate menu to navigation up to navigation type. 
+   * 4. Associate menu to navigation up to navigation type.
    */
   async saveNavigation(
     createNavigationDto: CreateNavigationDto,
@@ -325,7 +329,8 @@ export class NavigationService {
    * @param id The navigation id.
    * @param updateNavigationDto The navigation properties to update.
    * @returns An UpdateResponse type object.
-   * @throws {ForbiddenException} If user doesn't have 'edit' permission on navigation or 'add' permission on parent.
+   * @throws {ForbiddenException} If user doesn't have 'edit' permission on navigation.
+   * @throws {ForbiddenException} If parentId is is the request and user doesn't have 'add' permisson on it.
    * @throws {NotFoundException} If navigation id is not found in database.
    * @description
    * 1. Valid user permission and navigation business rule.
@@ -341,10 +346,9 @@ export class NavigationService {
       permissionName: string;
     }> 
   ) {
-    /* valid permission */
+    /* 1. */
     if (
-      !userNavigationPermissions.find(obj => 
-        obj.navigationId === id && obj.permissionName.includes('edit')
+      !userNavigationPermissions.find(obj => obj.navigationId === id && obj.permissionName.includes('edit')
       )
     ) {
       throw new ForbiddenException();
@@ -357,8 +361,9 @@ export class NavigationService {
     ) {
       throw new ForbiddenException();
     }
+    
+    await this.validNavigationDto(updateNavigationDto, id);
 
-    /* get navigation and throw error if not found */
     const navigation = await this._navigationRepository.findOne({
       where: { id: id }
     });
@@ -366,11 +371,7 @@ export class NavigationService {
       throw new NotFoundException();
     }
 
-    /* valid navigation business rules */
-    await this.validNavigationDto(updateNavigationDto, id);
-
-    /* If parent has changed then delete old parent menu if needed
-       (i.e old parent has a menu associated and had one navigation only). */
+    /* 2. */
     if ('parentId' in updateNavigationDto && updateNavigationDto.parentId !== navigation.parentId) {
       const oldParentNavigation = await this._navigationRepository.findOne({
         relations: ['children', 'menu'],
@@ -387,7 +388,7 @@ export class NavigationService {
       }
     }
 
-    /* Setup metadata and udpate entity. */
+    /* 3. */
     updateNavigationDto["updatedBy"] = userId;
     updateNavigationDto["updatedDate"] = new Date();
     return await this._navigationRepository.update(id, updateNavigationDto);
@@ -395,10 +396,10 @@ export class NavigationService {
 
   /**
    * Update Array of navigations.
-   * If user doesn't have 'edit' permission on one of the items then throw Forbidden error.
    * 
    * @param updateNavigationDtoArray The array of navigations.
    * @returns The array of navigations saved.
+   * @throws {ForbiddenException} If user doesn't have edit permission on oone of the navigations.
    */
   async updateNavigations(
     updateNavigationDtoArray: UpdateNavigationDto[],
@@ -408,7 +409,6 @@ export class NavigationService {
       permissionName: string;
     }> 
   ) {
-    /* valid permission and setup metadata */
     updateNavigationDtoArray.forEach(navigation => {
       if (
         !userNavigationPermissions.find(obj =>
@@ -427,13 +427,19 @@ export class NavigationService {
   }
 
   /**
-   * Soft delete navigation and children and dependencies.
+   * Delete navigation, his descendants and related dependencies.
    * 
-   * If user doesn't have 'delete' permission on navigation then throw Forbidden error. 
-   * 
-   * If navigation was last of the sisters then delete parent menu.
-   * @param navigation The navigation to soft delete.
-   * @returns The Array of navigation that have been soft deleted.
+   * @param navigation The navigation to delete.
+   * @returns The Array of navigations that have been soft deleted.
+   * @throws {ForbiddenException} If user doesn't have delete permission on navigation to delete.
+   * @description
+   * 1. Valid user permission.
+   * 2. Retrieve recursively children and related menu to delete.
+   * 3. Soft delete navigation, his descendants and delete related style properties.
+   * 4. Check if parent navigation has a menu and remains without children. If yes retrieve menu to delete.
+   * 5. Delete menus retrieved on step 2 & 4 and style properties.
+   * 6. Delete roleNavigationPermissions associated to navigations deleted.
+   * 7. Return number of navigation soft deleted.
    */
   async removeNavigation(
     navigation: Navigation,
@@ -443,7 +449,7 @@ export class NavigationService {
       permissionName: string;
     }>
   ) {
-    /* valid permission */
+    /* 1. */
     if (
       !userNavigationPermissions.find(obj => 
         obj.navigationId === navigation.id && obj.permissionName.includes('delete')
@@ -452,10 +458,10 @@ export class NavigationService {
       throw new ForbiddenException();
     }
 
+    /* 2. */
     const navigationsIds: Array<string> = [];
     const navigationRecordsToDelete: Array<Partial<Navigation>> = [];
     const menuIdsToDelete: Array<string> = [];
-
     /* Declare method to retrieve navigations and menus to delete */
     const getDeepNavigationIds = async (navigation: Navigation) => {
       navigationsIds.push(navigation.id);
@@ -474,21 +480,18 @@ export class NavigationService {
         }
       }
     } 
-
     /* call method */
     await getDeepNavigationIds(navigation);
 
-    /* delete navigations */
+    /* 3. */
     const navigationsSoftDeleted = await this._navigationRepository.save(navigationRecordsToDelete);
-
-    /* delete navigation style properties */
     for (const navigation of navigationRecordsToDelete) {
       await this._containerLayoutRepository.delete({ refId: navigation['id'] });
       await this._containerStyleRepository.delete({ refId: navigation['id']});
       await this._typographyStyleRepository.delete({ refId: navigation['id'] });
     }
 
-    /* check if parent remains without children and delete associated menu if yes.*/
+    /* 4. */
     const parentNavigation = await this._navigationRepository.findOne({
       where: { 
         id: navigation.parentId,
@@ -503,8 +506,8 @@ export class NavigationService {
     ) {
       menuIdsToDelete.push(parentNavigation.menu.id);
     }
-    
-    /* delete menus */
+
+    /* 5. */
     for (const id of menuIdsToDelete) {
       await this._menuService.remove(id);
       await this._containerLayoutRepository.delete({ refId: id });
@@ -513,7 +516,7 @@ export class NavigationService {
 
     }
 
-    /* delete related role navigation permissions entities */
+    /* 6. */
     const roleNavigationsPermissions = await this._roleNavigationPermissionRepository.find({
       where: { navigationId: In(navigationsIds) }
     })
@@ -522,7 +525,8 @@ export class NavigationService {
       roleNavigationsPermission.deletedDate = new Date();
     }
     await this._roleNavigationPermissionRepository.save(roleNavigationsPermissions);
-
+    
+    /* 7. */ 
     return { affected: navigationsSoftDeleted.length }
   }
 
@@ -553,6 +557,7 @@ export class NavigationService {
    * Check if navigation has a permission.
    * If yes return true else check check for his children recursively.
    * If no permission found after recursion then return false.
+   * 
    * @param navigation The navigation to check.
    * @returns true or false.
    */
