@@ -85,7 +85,7 @@ export class NavigationService {
     const where: FindOptionsWhere<Navigation> = { id: '00000000-0000-0000-0000-000000000000' };
     this.generateRelationsAndOrder(8, relations, order); //TO DO: Replace 6 by the exact depth wished
     /* Get main navigation from db. */
-    let navigation = await this._navigationRepository.findOne({
+    let mainNavigation = await this._navigationRepository.findOne({
       relations: [...relations],
       where: where,
       order: order
@@ -93,13 +93,13 @@ export class NavigationService {
 
     /* Get user navigation permissions and clean navigations accordingly. */
     const userRoleNavigationPermissionsFormatted = await this.getUserRoleNavigationPermissionsFormatted(userRequest.sub);
-    this.setUpUserNavigationPermission(navigation!, userRoleNavigationPermissionsFormatted);
-    navigation!.children = this.cleanNavigations(navigation!.children);
+    this.setUpUserNavigationPermission(mainNavigation!, userRoleNavigationPermissionsFormatted);
+    mainNavigation!.children = this.cleanNavigations(mainNavigation!.children);
 
     /* Add user navigation permissions to authentication token payload. */
     if (hasToGenerateNewToken) {
       const userNavigationPermissions: Array<{ navigationId: string; permissionName: string; }> = [];
-      this.flattenNavigationPermissions(navigation!, userNavigationPermissions);
+      this.flattenNavigationPermissions(mainNavigation!, userNavigationPermissions);
 
       const payload = { 
         sub: userRequest.sub,
@@ -109,10 +109,10 @@ export class NavigationService {
       
       /* Return navigations and access token. */
       const accessToken = await this._authService.getAccessToken(payload);
-      return { navigation: navigation, access_token: accessToken };
+      return { navigation: mainNavigation, access_token: accessToken };
     }
 
-    return navigation;
+    return mainNavigation;
   }
 
   /**
@@ -346,6 +346,13 @@ export class NavigationService {
       permissionName: string;
     }> 
   ) {
+    const dbNavigation = await this._navigationRepository.findOne({
+      where: { id: id }
+    });
+    if (!dbNavigation) {
+      throw new NotFoundException();
+    }
+
     /* 1. */
     if (
       !userNavigationPermissions.find(obj => obj.navigationId === id && obj.permissionName.includes('edit')
@@ -353,30 +360,22 @@ export class NavigationService {
     ) {
       throw new ForbiddenException();
     }
-    if (
-      'parentId' in updateNavigationDto &&
-      !userNavigationPermissions.find(obj => {
-        return obj.navigationId === updateNavigationDto.parentId && obj.permissionName.includes('add');
-      })
-    ) {
-      throw new ForbiddenException();
-    }
     
     await this.validNavigationDto(updateNavigationDto, id);
-
-    const navigation = await this._navigationRepository.findOne({
-      where: { id: id }
-    });
-    if (!navigation) {
-      throw new NotFoundException();
-    }
-
-    /* 2. */
-    if ('parentId' in updateNavigationDto && updateNavigationDto.parentId !== navigation.parentId) {
+    
+    if ('parentId' in updateNavigationDto && updateNavigationDto.parentId !== dbNavigation.parentId) {
+      if(
+        !userNavigationPermissions.find(obj => 
+        obj.navigationId === updateNavigationDto.parentId && obj.permissionName.includes('add')
+      )) {
+        throw new ForbiddenException();
+      }
+      
+      /* 2. */
       const oldParentNavigation = await this._navigationRepository.findOne({
         relations: ['children', 'menu'],
         where: { 
-          id: navigation.parentId,
+          id: dbNavigation.parentId,
           deletedDate: IsNull(),
         },
       });
@@ -532,7 +531,8 @@ export class NavigationService {
 
   /**
    * Store navigation permissions from nested navigations.
-   * @param navigations The navigations with permission name.
+   * 
+   * @param navigation The main navigation with permission name.
    * @param userNavigationPermissionsArray The array of navigation permission couple.
    */
   flattenNavigationPermissions(
@@ -542,10 +542,12 @@ export class NavigationService {
       permissionName: string;
     }>
   ) {
-    userNavigationPermissionsArray.push({
+    if (navigation['permissionName']) {
+      userNavigationPermissionsArray.push({
       navigationId: navigation.id,
       permissionName: navigation['permissionName']
     });
+    }
     if (navigation.children && navigation.children.length > 0) {
       for (const child of navigation.children) {
         this.flattenNavigationPermissions(child, userNavigationPermissionsArray);
@@ -576,8 +578,8 @@ export class NavigationService {
 
   /**
    * Clean navigations based on the following rules:
-   * * remove deleted navigations (deletedDate not null)
-   * * remove navigations with no permission or if his children or grand children have no permission
+   * - remove deleted navigations (deletedDate not null)
+   * - remove navigations with no permission or if his descendants have no permission
    * 
    * @param navigations The array of navigations to clean.
    * @returns The array of navigations cleaned.
