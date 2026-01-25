@@ -27,12 +27,6 @@ export class Navigation {
     order: number;
 
     @Column()
-    width: number;
-
-    @Column()
-    height: number;
-
-    @Column()
     isDisabled: boolean;
 
     @Column()

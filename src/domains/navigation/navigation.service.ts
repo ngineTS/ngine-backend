@@ -38,7 +38,8 @@ export class NavigationService {
   ) {}
 
   /**
-   * Find all flat navigations filtered by user permission.
+   * Find all flat navigations with navigationType filtered by user permission.
+   * 
    * @returns The array of navigations.
    */
   async findAllNavigations(
@@ -51,18 +52,19 @@ export class NavigationService {
       }>
     }
   ) {
-    /* get nested navigations filtered by user permission */
-    const navigation = await this.findNestedNavigations(userRequest) as Navigation;
+    const userNavigationIds = userRequest.userNavigationPermissions.map<string>(
+      userNavigationPermission => userNavigationPermission.navigationId
+    )
 
-    /* flatten navigations */
-    const flatNavigations: any[] = [];
-    this.flattenNavigations(navigation, flatNavigations);
-    
-    return flatNavigations;
+    return await this._navigationRepository.find({
+      where: { id: In(userNavigationIds) },
+      relations: ['navigationType']
+    });
   }
 
   /**
    * Load Nested navigations filtered by user permissions.
+   * 
    * @param userId The user id from the request.
    * @returns A nested navigations object.
    */
@@ -83,7 +85,7 @@ export class NavigationService {
     const where: FindOptionsWhere<Navigation> = { id: '00000000-0000-0000-0000-000000000000' };
     this.generateRelationsAndOrder(8, relations, order); //TO DO: Replace 6 by the exact depth wished
     /* Get main navigation from db. */
-    let navigation = await this._navigationRepository.findOne({
+    let mainNavigation = await this._navigationRepository.findOne({
       relations: [...relations],
       where: where,
       order: order
@@ -91,13 +93,13 @@ export class NavigationService {
 
     /* Get user navigation permissions and clean navigations accordingly. */
     const userRoleNavigationPermissionsFormatted = await this.getUserRoleNavigationPermissionsFormatted(userRequest.sub);
-    this.setUpUserNavigationPermission(navigation!, userRoleNavigationPermissionsFormatted);
-    navigation!.children = this.cleanNavigations(navigation!.children);
+    this.setUpUserNavigationPermission(mainNavigation!, userRoleNavigationPermissionsFormatted);
+    mainNavigation!.children = this.cleanNavigations(mainNavigation!.children);
 
     /* Add user navigation permissions to authentication token payload. */
     if (hasToGenerateNewToken) {
       const userNavigationPermissions: Array<{ navigationId: string; permissionName: string; }> = [];
-      this.flattenNavigationPermissions(navigation!, userNavigationPermissions);
+      this.flattenNavigationPermissions(mainNavigation!, userNavigationPermissions);
 
       const payload = { 
         sub: userRequest.sub,
@@ -107,14 +109,15 @@ export class NavigationService {
       
       /* Return navigations and access token. */
       const accessToken = await this._authService.getAccessToken(payload);
-      return { navigation: navigation, access_token: accessToken };
+      return { navigation: mainNavigation, access_token: accessToken };
     }
 
-    return navigation;
+    return mainNavigation;
   }
 
   /**
    * Generate navigation relations until given depth.
+   * 
    * @param depth The number of nested levels.
    * @param relations The existing set of relations.
    * @param order The existing TypeORM order property.
@@ -146,10 +149,11 @@ export class NavigationService {
   /**
    * Format user roleNavigationPermissions.
    * 
-   * If a user is assigned to multiple roles which share the same navigations
-   * then we keep only the navigations with highest priviledge.
    * @param userId the id of the user.
    * @returns The user roleNavigationPermissions formatted.
+   * @description
+   * If a user is assigned to multiple roles which share the same navigations
+   * then we keep only the navigations with highest priviledge.
    * 
    * TODO: Rework to something more fluent and performant.
    */
@@ -209,14 +213,14 @@ export class NavigationService {
   /**
    * Set up user navigation permission based on below rules then repeat process for children.
    * 
-   * - Case 1: Navigation permission found and it is higher than parent one - keep navigation permission.
-   * - Case 2: Navigation permission found but parent permission is higher - navigation inherits parent navigation permission.
-   * - Case 3: Navigation permission found and parent has no permission - keep navigation permission.
-   * - Case 4: No navigation permission found but parent navigation permission found - navigation inherits parent navigation permission.
-   * 
    * @param navigation The navigation to add "permissionName" prop.
    * @param userRoleNavigationPermissions The array of user roleNavigationPermissions.
    * @param parentNavigationPermission The parent navigation permission.
+   * @description
+   * - Case 1. Navigation permission found and it is higher than parent one - keep navigation permission.
+   * - Case 2. Navigation permission found but parent permission is higher - navigation inherits parent navigation permission.
+   * - Case 3. Navigation permission found and parent has no permission - keep navigation permission.
+   * - Case 4. No navigation permission found but parent navigation permission found - navigation inherits parent navigation permission.
    */
   setUpUserNavigationPermission(
     navigation: Navigation,
@@ -264,12 +268,14 @@ export class NavigationService {
   /**
    * Save navigation with default style.
    * 
-   * If user doesn't have 'add' permission on parent then throw Forbidden error.
-   * 
-   * If sister navigation with same name exists then throw BadRequest error.
-   * 
    * @param createNavigationDto The navigation to save.
    * @returns The navigation saved.
+   * @throws {ForbiddenException} If user doesn't have 'add' permission on parent.
+   * @description
+   * 1. Valid user permission and navigation business rules.
+   * 2. Add audit data and save navigation.
+   * 3. Inherit style from parent and save style properties.
+   * 4. Associate menu to navigation up to navigation type.
    */
   async saveNavigation(
     createNavigationDto: CreateNavigationDto,
@@ -282,29 +288,20 @@ export class NavigationService {
     /* valid permission */
     if (
       !userNavigationPermissions.find(obj => 
-        obj.navigationId === createNavigationDto['parentId'] && obj.permissionName.includes('add')
+        obj.navigationId === createNavigationDto.parentId && obj.permissionName.includes('add')
       )
     ) {
       throw new ForbiddenException();
     }
 
-    /* valid technical name */
-    createNavigationDto["name"] = createNavigationDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
-    const sisterNavigations = await this._navigationRepository.find({
-      where: { 
-        parentId: createNavigationDto["parentId"],
-        deletedDate: IsNull()
-      }
-    });
-    if (sisterNavigations?.find(navigation => navigation.name ===  createNavigationDto["name"])) {
-      throw new BadRequestException('This name already exists');
-    }
+    /* valid navigation business rules */
+    await this.validNavigationDto(createNavigationDto);
 
     /* add metadata and save navigation */
-    createNavigationDto["createdBy"] = userId;
-    createNavigationDto["createdDate"] = new Date();
-    createNavigationDto["updatedBy"] = userId;
-    createNavigationDto["updatedDate"] = new Date();
+    createNavigationDto['createdBy'] = userId;
+    createNavigationDto['createdDate'] = new Date();
+    createNavigationDto['updatedBy'] = userId;
+    createNavigationDto['updatedDate'] = new Date();
     const navigationSaved = await this._navigationRepository.save(createNavigationDto);
 
     /* inherit parent navigation style */
@@ -314,7 +311,7 @@ export class NavigationService {
     }
     await this._menuService.inheritParentStyle(navigationSaved.id, parentRefId);
 
-    /* Create menu if navigation is menu button. */
+    /* create menu if navigation is menu button */
     const menuButtonNavigationType = await this._navigationTypeRepository.findOne({
       where: { name: 'menu-button' }
     });
@@ -329,14 +326,16 @@ export class NavigationService {
   /**
    * Update navigation properties.
    * 
-   * * If user doesn't have 'edit' permission on navigation then throw Forbidden error.
-   * * If navigation is not found then throw NotFound error.
-   * * If navigation sister has already the same name then throw BadRequest error.
-   * * If parent id has changed and new parent has a menu and no more children then delete menu.
-   * 
    * @param id The navigation id.
    * @param updateNavigationDto The navigation properties to update.
    * @returns An UpdateResponse type object.
+   * @throws {ForbiddenException} If user doesn't have 'edit' permission on navigation.
+   * @throws {ForbiddenException} If parentId is is the request and user doesn't have 'add' permisson on it.
+   * @throws {NotFoundException} If navigation id is not found in database.
+   * @description
+   * 1. Valid user permission and navigation business rule.
+   * 2. If parent has changed and old parent has no more children then delete his menu.
+   * 3. Add audit data and update navigation.
    */
   async updateNavigation(
     id: string,
@@ -347,55 +346,36 @@ export class NavigationService {
       permissionName: string;
     }> 
   ) {
-    /* Valid permission. */
+    const dbNavigation = await this._navigationRepository.findOne({
+      where: { id: id }
+    });
+    if (!dbNavigation) {
+      throw new NotFoundException();
+    }
+
+    /* 1. */
     if (
-      !userNavigationPermissions.find(obj => 
-        obj.navigationId === id && obj.permissionName.includes('edit')
+      !userNavigationPermissions.find(obj => obj.navigationId === id && obj.permissionName.includes('edit')
       )
     ) {
       throw new ForbiddenException();
     }
-    if (
-      'parentId' in updateNavigationDto &&
-      !userNavigationPermissions.find(obj => {
-        return obj.navigationId === updateNavigationDto.parentId && obj.permissionName.includes('add');
-      })
-    ) {
-      throw new ForbiddenException();
-    }
-
-    /* Get navigation and throw error if not found. */
-    const navigation = await this._navigationRepository.findOne({
-      where: { id: id },
-      relations: ['navigationType']
-    });
-    if (!navigation) {
-      throw new NotFoundException();
-    }
-
-    /* If displayLabel has changed then assign name property 
-       and throw error if sister has already same name. */
-    if (updateNavigationDto['displayLabel']) {
-       updateNavigationDto['name'] = updateNavigationDto['displayLabel'].toLowerCase()?.replace(/ /g, "-");
-       const sisterNavigations = await this._navigationRepository.find({
-        where: {
-          parentId: updateNavigationDto['parentId'] ?? navigation.parentId,
-          deletedDate: IsNull(),
-          id: Not(navigation.id)
-        },
-      });
-      if (sisterNavigations.find(nav => nav.name === updateNavigationDto['name'])) {
-        throw new BadRequestException('This name already exists.');
+    
+    await this.validNavigationDto(updateNavigationDto, id);
+    
+    if ('parentId' in updateNavigationDto && updateNavigationDto.parentId !== dbNavigation.parentId) {
+      if(
+        !userNavigationPermissions.find(obj => 
+        obj.navigationId === updateNavigationDto.parentId && obj.permissionName.includes('add')
+      )) {
+        throw new ForbiddenException();
       }
-    }
-
-    /* If parent has changed then delete old parent menu if needed
-       (i.e old parent has a menu associated and had one navigation only). */
-    if ('parentId' in updateNavigationDto && updateNavigationDto.parentId !== navigation.parentId) {
+      
+      /* 2. */
       const oldParentNavigation = await this._navigationRepository.findOne({
         relations: ['children', 'menu'],
         where: { 
-          id: navigation.parentId,
+          id: dbNavigation.parentId,
           deletedDate: IsNull(),
         },
       });
@@ -407,7 +387,7 @@ export class NavigationService {
       }
     }
 
-    /* Setup metadata and udpate entity. */
+    /* 3. */
     updateNavigationDto["updatedBy"] = userId;
     updateNavigationDto["updatedDate"] = new Date();
     return await this._navigationRepository.update(id, updateNavigationDto);
@@ -416,10 +396,9 @@ export class NavigationService {
   /**
    * Update Array of navigations.
    * 
-   * If user doesn't have 'edit' permission on one of the items then throw Forbidden error.
-   * 
    * @param updateNavigationDtoArray The array of navigations.
    * @returns The array of navigations saved.
+   * @throws {ForbiddenException} If user doesn't have edit permission on oone of the navigations.
    */
   async updateNavigations(
     updateNavigationDtoArray: UpdateNavigationDto[],
@@ -429,7 +408,6 @@ export class NavigationService {
       permissionName: string;
     }> 
   ) {
-    /* valid permission and setup metadata */
     updateNavigationDtoArray.forEach(navigation => {
       if (
         !userNavigationPermissions.find(obj =>
@@ -448,13 +426,19 @@ export class NavigationService {
   }
 
   /**
-   * Soft delete navigation and children and dependencies.
+   * Delete navigation, his descendants and related dependencies.
    * 
-   * If user doesn't have 'delete' permission on navigation then throw Forbidden error. 
-   * 
-   * If navigation was last of the sisters then delete parent menu.
-   * @param navigation The navigation to soft delete.
-   * @returns The Array of navigation that have been soft deleted.
+   * @param navigation The navigation to delete.
+   * @returns The Array of navigations that have been soft deleted.
+   * @throws {ForbiddenException} If user doesn't have delete permission on navigation to delete.
+   * @description
+   * 1. Valid user permission.
+   * 2. Retrieve recursively children and related menu to delete.
+   * 3. Soft delete navigation, his descendants and delete related style properties.
+   * 4. Check if parent navigation has a menu and remains without children. If yes retrieve menu to delete.
+   * 5. Delete menus retrieved on step 2 & 4 and style properties.
+   * 6. Delete roleNavigationPermissions associated to navigations deleted.
+   * 7. Return number of navigation soft deleted.
    */
   async removeNavigation(
     navigation: Navigation,
@@ -464,7 +448,7 @@ export class NavigationService {
       permissionName: string;
     }>
   ) {
-    /* valid permission */
+    /* 1. */
     if (
       !userNavigationPermissions.find(obj => 
         obj.navigationId === navigation.id && obj.permissionName.includes('delete')
@@ -473,10 +457,10 @@ export class NavigationService {
       throw new ForbiddenException();
     }
 
+    /* 2. */
     const navigationsIds: Array<string> = [];
-    const navigationRecordsToDelete: Array<UpdateNavigationDto> = [];
+    const navigationRecordsToDelete: Array<Partial<Navigation>> = [];
     const menuIdsToDelete: Array<string> = [];
-
     /* Declare method to retrieve navigations and menus to delete */
     const getDeepNavigationIds = async (navigation: Navigation) => {
       navigationsIds.push(navigation.id);
@@ -495,21 +479,18 @@ export class NavigationService {
         }
       }
     } 
-
     /* call method */
     await getDeepNavigationIds(navigation);
 
-    /* delete navigations */
+    /* 3. */
     const navigationsSoftDeleted = await this._navigationRepository.save(navigationRecordsToDelete);
-
-    /* delete navigation style properties */
     for (const navigation of navigationRecordsToDelete) {
       await this._containerLayoutRepository.delete({ refId: navigation['id'] });
       await this._containerStyleRepository.delete({ refId: navigation['id']});
       await this._typographyStyleRepository.delete({ refId: navigation['id'] });
     }
 
-    /* check if parent remains without children and delete associated menu if yes.*/
+    /* 4. */
     const parentNavigation = await this._navigationRepository.findOne({
       where: { 
         id: navigation.parentId,
@@ -524,8 +505,8 @@ export class NavigationService {
     ) {
       menuIdsToDelete.push(parentNavigation.menu.id);
     }
-    
-    /* delete menus */
+
+    /* 5. */
     for (const id of menuIdsToDelete) {
       await this._menuService.remove(id);
       await this._containerLayoutRepository.delete({ refId: id });
@@ -534,7 +515,7 @@ export class NavigationService {
 
     }
 
-    /* delete related role navigation permissions entities */
+    /* 6. */
     const roleNavigationsPermissions = await this._roleNavigationPermissionRepository.find({
       where: { navigationId: In(navigationsIds) }
     })
@@ -543,27 +524,15 @@ export class NavigationService {
       roleNavigationsPermission.deletedDate = new Date();
     }
     await this._roleNavigationPermissionRepository.save(roleNavigationsPermissions);
-
+    
+    /* 7. */ 
     return { affected: navigationsSoftDeleted.length }
   }
 
   /**
-   * Flatten nested navigations.
-   * @param navigation navigation to flatten.
-   * @param flatNavigations array to store flat navigations.
-   */
-  flattenNavigations(navigation: Navigation, flatNavigations: Array<Navigation>) {
-    flatNavigations.push(navigation);
-    if (navigation.children && navigation.children.length > 0) {
-      for (const child of navigation.children) {
-        this.flattenNavigations(child, flatNavigations);
-      }
-    }
-  }
-
-  /**
    * Store navigation permissions from nested navigations.
-   * @param navigations The navigations with permission name.
+   * 
+   * @param navigation The main navigation with permission name.
    * @param userNavigationPermissionsArray The array of navigation permission couple.
    */
   flattenNavigationPermissions(
@@ -573,10 +542,12 @@ export class NavigationService {
       permissionName: string;
     }>
   ) {
-    userNavigationPermissionsArray.push({
+    if (navigation['permissionName']) {
+      userNavigationPermissionsArray.push({
       navigationId: navigation.id,
       permissionName: navigation['permissionName']
     });
+    }
     if (navigation.children && navigation.children.length > 0) {
       for (const child of navigation.children) {
         this.flattenNavigationPermissions(child, userNavigationPermissionsArray);
@@ -588,6 +559,7 @@ export class NavigationService {
    * Check if navigation has a permission.
    * If yes return true else check check for his children recursively.
    * If no permission found after recursion then return false.
+   * 
    * @param navigation The navigation to check.
    * @returns true or false.
    */
@@ -604,11 +576,11 @@ export class NavigationService {
     return false;
   }
 
-
   /**
    * Clean navigations based on the following rules:
-   * * remove deleted navigations (deletedDate not null)
-   * * remove navigations with no permission or if his children or grand children have no permission
+   * - remove deleted navigations (deletedDate not null)
+   * - remove navigations with no permission or if his descendants have no permission
+   * 
    * @param navigations The array of navigations to clean.
    * @returns The array of navigations cleaned.
    */
@@ -622,6 +594,133 @@ export class NavigationService {
     return navigations.filter(
       navigation => this.doesPermissionExistOnNavigationOrHisChildren(navigation) && !navigation.deletedDate
     );
+  }
+
+  /**
+   * Valid navigation business rules before saving.
+   * 
+   * @param navigationDto The navigation to insert or update.
+   * @param navigationId The navigation id to update (optional).
+   * @throws {NotFoundException} If `navigationDto.parentId` is not found in the database.
+   * @throws {NotFoundException} If `navigationDto.navigationTypeId` is not found in the database.
+   * @throws {BadRequestException} If `navigationDto` type is a button and parent is not a menu or a redirect-button.
+   * @throws {BadRequestException} If `navigationDto` type is a component and parent is not a dialog-button or a redirect-button without nav bar.
+   * @throws {BadRequestException} If `navigationDto.name` is already used by sister navigations.
+   * @throws {BadRequestException} If `navigationDto.parentId` is equal to `navigationId`.
+   * @throws {BadRequestException} If `navigationDto` parent is found in the descendants of navigation to update.
+   */
+  async validNavigationDto(
+    navigationDto: UpdateNavigationDto,
+    navigationId?: string
+  ) {
+
+    if(navigationDto.parentId) {
+      const parentNavigation = await this._navigationRepository.findOne({
+        where: { 
+          id: navigationDto.parentId,
+          deletedDate: IsNull()
+        },
+        relations: [
+          'navigationType',
+          'menu',
+          'children'
+        ]
+      });
+    
+      if (!parentNavigation) {
+        throw new NotFoundException(`Parent ${navigationDto.parentId} doesn't exist.`)
+      }
+
+      const navigationType = await this._navigationTypeRepository.findOne({
+        where: { id: navigationDto.navigationTypeId }
+      });
+      if (!navigationType) {
+        throw new NotFoundException(`Navigation type ${navigationDto.navigationTypeId} doesn't exist.`)
+      }
+
+      /* if it is a custom button */
+      if (
+        navigationType.name === 'redirect-button' ||
+        navigationType.name === 'menu-button' ||
+        navigationType.name === 'dialog-button'
+      ) {
+        if (
+          parentNavigation.navigationType.name !== 'redirect-button' &&
+          parentNavigation.navigationType.name !== 'menu-button'
+        ) {
+          throw new BadRequestException(
+            `${navigationType.displayLabel} cannot be a added inside ${parentNavigation.navigationType.displayLabel}.`
+          );
+        }
+      }
+      /* if it is a component */
+      else {
+        if (
+          parentNavigation.navigationType.name !== 'redirect-button' &&
+          parentNavigation.navigationType.name !== 'dialog-button'
+        ) {
+          throw new BadRequestException(
+            `${navigationType.displayLabel} cannot be added inside ${parentNavigation.navigationType.displayLabel}.`
+          );
+        }
+        if (parentNavigation.menu) {
+          throw new BadRequestException(
+            `${navigationType.displayLabel} cannot be added inside a menu.`
+          );
+        }
+      }
+      
+      if (navigationDto.displayLabel) {
+        navigationDto['name'] = navigationDto.displayLabel?.toLowerCase()?.replace(/ /g, "-");
+        const sisterNavigations = parentNavigation.children.filter(child => child.id !== navigationId);
+        
+        if (sisterNavigations?.find(navigation => navigation.name ===  navigationDto['name'])) {
+          throw new BadRequestException('A sister navigation has already this name.');
+        }
+      }
+
+      if (navigationId) {
+        if (navigationId === navigationDto.parentId) {
+          throw new BadRequestException('Parent cannot be same navigation');
+        }
+
+        await this.checkIfIsADescendant(navigationId, navigationDto.parentId);
+      }      
+      
+      //TODO: Valid and external link input based on on nav type
+    }
+  }
+
+  /**
+   * Check if given navigation is in descendants of other navigation.
+   * 
+   * @param navigationId The navigation with descendants.
+   * @param parentId The navigation to check.
+   */
+  async checkIfIsADescendant(navigationId: string, parentId: string) {
+
+    const rows = await this._navigationRepository.query(
+      `
+      WITH RECURSIVE descendants AS (
+        SELECT id
+        FROM my_app.navigation
+        WHERE "parentId" = $1
+        UNION ALL
+        SELECT n.id
+        FROM my_app.navigation n
+        JOIN descendants d ON n."parentId" = d.id
+      )
+      SELECT 1
+      FROM descendants
+      WHERE id = $2
+      LIMIT 1
+      `,
+      [navigationId, parentId],
+    );
+
+    if (rows.length) {
+      throw new BadRequestException('Parent cannot be a descendant');
+    }
   }
 
 }
