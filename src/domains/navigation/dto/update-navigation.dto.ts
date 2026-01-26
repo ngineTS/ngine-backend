@@ -32,4 +32,8 @@ export class UpdateNavigationDto {
     @IsOptional()
     @IsString()
     icon?: string;
+
+    @IsOptional()
+    @IsString()
+    url?: string;
 }

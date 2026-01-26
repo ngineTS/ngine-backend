@@ -36,6 +36,9 @@ export class Navigation {
     icon: string;
 
     @Column()
+    url: string;
+
+    @Column()
     createdBy: string;
 
     @Column()
