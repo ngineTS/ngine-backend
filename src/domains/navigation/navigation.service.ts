@@ -643,7 +643,7 @@ export class NavigationService {
         navigationType.name === 'redirect-button' ||
         navigationType.name === 'menu-button' ||
         navigationType.name === 'dialog-button' ||
-        navigationType.name !== 'external-link-button'
+        navigationType.name === 'external-link-button'
       ) {
         if (
           parentNavigation.navigationType.name !== 'redirect-button' &&
