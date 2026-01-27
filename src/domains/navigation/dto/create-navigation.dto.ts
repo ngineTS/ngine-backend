@@ -34,4 +34,8 @@ export class CreateNavigationDto {
     @IsOptional()
     @IsString()
     url?: string;
+
+    @IsOptional()
+    @IsBoolean()
+    showIconOnly?: boolean;
 }

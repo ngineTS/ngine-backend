@@ -36,6 +36,9 @@ export class Navigation {
     icon: string;
 
     @Column()
+    showIconOnly: boolean;
+
+    @Column()
     url: string;
 
     @Column()

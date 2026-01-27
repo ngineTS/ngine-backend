@@ -398,7 +398,10 @@ export class NavigationService {
    * 
    * @param updateNavigationDtoArray The array of navigations.
    * @returns The array of navigations saved.
-   * @throws {ForbiddenException} If user doesn't have edit permission on oone of the navigations.
+   * @throws {ForbiddenException} If user doesn't have edit permission on one of the navigations.
+   * @description
+   * 1. Valid user permission.
+   * 2. Add audit data and update navigation.
    */
   async updateNavigations(
     updateNavigationDtoArray: UpdateNavigationDto[],
@@ -608,6 +611,7 @@ export class NavigationService {
    * @throws {BadRequestException} If `navigationDto.name` is already used by sister navigations.
    * @throws {BadRequestException} If `navigationDto.parentId` is equal to `navigationId`.
    * @throws {BadRequestException} If `navigationDto` parent is found in the descendants of navigation to update.
+   * @throws {BadRequestException} If `navigationDto.showIconOnly` is true and `navigationDto.icon` is empty.
    */
   async validNavigationDto(
     navigationDto: UpdateNavigationDto,
@@ -686,7 +690,11 @@ export class NavigationService {
         }
 
         await this.checkIfIsADescendant(navigationId, navigationDto.parentId);
-      }      
+      }
+
+      if (navigationDto.showIconOnly && !navigationDto.icon) {
+        throw new BadRequestException(`"Show icon only" can't be true if there is no icon.`);
+      }
       
       //TODO: Valid and external link input based on on nav type
     }
