@@ -80,7 +80,7 @@ export class AuthService {
     }
     
     const accessToken = await this.getAccessToken({
-      sub: payload['sub'], 
+      sub: payload['sub'],
       userEmail: payload['userEmail'],
       userNavigationPermissions: payload['userNavigationPermissions']
     });
