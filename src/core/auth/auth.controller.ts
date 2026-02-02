@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req } from '@nestjs/common';
+import { Controller, Post, Body, Req, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Public } from './auth.guard';
 import { Request } from 'express';
@@ -13,6 +13,12 @@ export class AuthController {
   @Post('sign-in')
   signIn(@Body() signInDto: Record<string, string>) {
     return this.authService.signIn(signInDto.emailAddress, signInDto.password);
+  }
+
+  @Public()
+  @Get('guest-sign-in')
+  guestSignIn() {
+    return this.authService.guestSignIn();
   }
 
   @Post('refresh')

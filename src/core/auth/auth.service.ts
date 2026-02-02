@@ -15,6 +15,25 @@ export class AuthService {
               private _userRepository: Repository<User>) {}
 
 
+  async guestSignIn() {
+    const guestUser = await this._userRepository.findOne({
+      where: { name: 'guest' }
+    });
+    if (!guestUser) {
+      throw new NotFoundException('No guest user found.');
+    }
+
+    const payload = {
+      sub: guestUser.id,
+      userEmail: guestUser.emailAddress,
+      userNavigationPermissions: []
+    };
+
+    /* return access token. */
+    const accessToken = await this.getAccessToken(payload);
+    return { access_token: accessToken };
+  }           
+
   async signIn(emailAddress: string, password: string): Promise<any> {
     const user = await this._userRepository.findOne({
         where: { emailAddress: emailAddress }

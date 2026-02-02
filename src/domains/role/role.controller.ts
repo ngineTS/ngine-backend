@@ -15,38 +15,35 @@ export class RoleController {
   @Post()
   create(
     @Body() createRoleDto: CreateRoleDto,
-    @UserId() userId: string,
-    @Request() req
+    @UserId() userId: string
   ) {
-    return this.roleService.create(createRoleDto, userId, req.user);
+    return this.roleService.create(createRoleDto, userId);
   }
 
   @Get()
-  findAllRoles(@Request() req) {
-    return this.roleService.findAllRoles(req.user);
+  findAllRoles() {
+    return this.roleService.findAllRoles();
   }
 
   @Get('rpn')
-  findAllRolesWithNavigationPermissions(@Request() req) {
-    return this.roleService.findAllRolesWithNavigationPermissions(req.user);
+  findAllRolesWithNavigationPermissions() {
+    return this.roleService.findAllRolesWithNavigationPermissions();
   }
 
   @Patch(':id')
   update(
     @Param('id') id: string,
     @Body() updateRoleDto: UpdateRoleDto,
-    @UserId() userId: string,
-    @Request() req
+    @UserId() userId: string
   ) {
-    return this.roleService.update(id, updateRoleDto, userId, req.user);
+    return this.roleService.update(id, updateRoleDto, userId);
   }
 
   @Delete(':id')
   remove(
     @Param('id') id: string,
-    @UserId() userId: string,
-    @Request() req
+    @UserId() userId: string
   ) {
-    return this.roleService.remove(id, userId, req.user);
+    return this.roleService.remove(id, userId);
   }
 }
