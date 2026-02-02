@@ -622,7 +622,10 @@ export class NavigationService {
       const parentNavigation = await this._navigationRepository.findOne({
         where: { 
           id: navigationDto.parentId,
-          deletedDate: IsNull()
+          deletedDate: IsNull(),
+          children: {
+            deletedDate: IsNull()
+          }
         },
         relations: [
           'navigationType',
