@@ -3,7 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { PasswordRecovery } from 'src/core/password-recovery/entities/password-recovery.entity';
 import { AuthService } from 'src/core/auth/auth.service';
@@ -35,7 +35,10 @@ export class UserService {
 
     //Check if user table is empty (i.e no user have registered yet)
     //This is used to assign super admin to first user
-    const users = await this.userRepository.find({ take: 1 });
+    const users = await this.userRepository.find({ 
+      where: { name: Not('guest') },
+      take: 1,
+    });
 
     //save user
     createUserDto["emailAddress"] = createUserDto["emailAddress"].toLowerCase();
@@ -64,6 +67,7 @@ export class UserService {
       'userRoles.deletedDate IS NULL'
     )
     .where('user.deletedDate IS NULL')
+    .andWhere('user.name != :guestName', { guestName: 'guest' })
     .getMany();
 
     return users;

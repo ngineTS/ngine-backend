@@ -14,7 +14,38 @@ export class AuthService {
               @InjectRepository(User)
               private _userRepository: Repository<User>) {}
 
+              
+  /**
+   * Sign guest in.
+   * 
+   * @returns The JWT guest authentication token
+   */
+  async guestSignIn() {
+    const guestUser = await this._userRepository.findOne({
+      where: { name: 'guest' }
+    });
+    if (!guestUser) {
+      throw new NotFoundException('No guest user found.');
+    }
 
+    const payload = {
+      sub: guestUser.id,
+      userEmail: guestUser.emailAddress,
+      userNavigationPermissions: []
+    };
+
+    /* return access token. */
+    const accessToken = await this.getAccessToken(payload);
+    return { access_token: accessToken };
+  }           
+
+  /**
+   * Sign user in.
+   * 
+   * @param emailAddress The user email address.
+   * @param password The user password.
+   * @returns The JWT authentication token.
+   */
   async signIn(emailAddress: string, password: string): Promise<any> {
     const user = await this._userRepository.findOne({
         where: { emailAddress: emailAddress }
@@ -42,8 +73,8 @@ export class AuthService {
 
   /**
    * Get and verify token from request.
-   * If it is valid then generate new access token
-   * else throw UnauthorizedException.
+   * If it is valid then generate new access token, else throw UnauthorizedException.
+   * 
    * @param req The request object of type Request from Express.
    * @returns The new access token.
    */
@@ -61,7 +92,7 @@ export class AuthService {
     }
     
     const accessToken = await this.getAccessToken({
-      sub: payload['sub'], 
+      sub: payload['sub'],
       userEmail: payload['userEmail'],
       userNavigationPermissions: payload['userNavigationPermissions']
     });
@@ -71,6 +102,7 @@ export class AuthService {
 
   /**
    * Get new access token from Jwt.
+   * 
    * @param payload Payload to pass to jwt sign in.
    * @returns A promise of the access token.
    */
@@ -89,6 +121,7 @@ export class AuthService {
 
   /**
    * Extract Bearer token from request.
+   * 
    * @param request The request.
    * @returns The token.
    */
