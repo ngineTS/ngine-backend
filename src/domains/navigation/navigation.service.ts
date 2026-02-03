@@ -559,20 +559,28 @@ export class NavigationService {
   }
   
   /**
-   * Check if navigation has a permission.
+   * Check if navigation has a permission and if it is disabled check if permission is minimum `add`.
    * If yes return true else check check for his children recursively.
    * If no permission found after recursion then return false.
    * 
    * @param navigation The navigation to check.
    * @returns true or false.
    */
-  doesPermissionExistOnNavigationOrHisChildren(navigation: Navigation): boolean {
+  doesPermissionExistOnNavigationOrDescendants(navigation: Navigation): boolean {
     if (navigation['permissionName']) {
+      if (navigation.isDisabled) {
+        if (navigation['permissionName'].includes('add')) {
+          return true;
+        }
+        else {
+          return false;
+        }
+      }
       return true;
     }
     else if (navigation.children && navigation.children.length > 0 ){
       for (const child of navigation.children) {
-        return this.doesPermissionExistOnNavigationOrHisChildren(child);
+        return this.doesPermissionExistOnNavigationOrDescendants(child);
       }
     }
 
@@ -583,6 +591,7 @@ export class NavigationService {
    * Clean navigations based on the following rules:
    * - remove deleted navigations (deletedDate not null)
    * - remove navigations with no permission or if his descendants have no permission
+   * - remove disabled navigations if user doesn't `add` permission on it.
    * 
    * @param navigations The array of navigations to clean.
    * @returns The array of navigations cleaned.
@@ -595,7 +604,7 @@ export class NavigationService {
     }
 
     return navigations.filter(
-      navigation => this.doesPermissionExistOnNavigationOrHisChildren(navigation) && !navigation.deletedDate
+      navigation => this.doesPermissionExistOnNavigationOrDescendants(navigation) && !navigation.deletedDate
     );
   }
 
