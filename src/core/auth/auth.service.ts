@@ -54,11 +54,11 @@ export class AuthService {
         }
     });
     
-    if (!user){
+    if (!user) {
       throw new NotFoundException("This email address doesn't exist.");
     }
 
-    if (user.isDisabled){
+    if (user.isDisabled) {
       throw new UnauthorizedException("This user has been disabled.");
     }
 
