@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/domains/user/entities/user.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { Request } from 'express';
 
 
@@ -48,11 +48,18 @@ export class AuthService {
    */
   async signIn(emailAddress: string, password: string): Promise<any> {
     const user = await this._userRepository.findOne({
-        where: { emailAddress: emailAddress }
+        where: { 
+          emailAddress: emailAddress,
+          deletedDate: IsNull()
+        }
     });
     
-    if(!user){
+    if (!user){
       throw new NotFoundException("This email address doesn't exist.");
+    }
+
+    if (user.isDisabled){
+      throw new UnauthorizedException("This user has been disabled.");
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
