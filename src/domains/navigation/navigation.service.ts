@@ -628,13 +628,10 @@ export class NavigationService {
   ) {
 
     if(navigationDto.parentId) {
-      const parentNavigation = await this._navigationRepository.findOne({
+      let parentNavigation = await this._navigationRepository.findOne({
         where: { 
           id: navigationDto.parentId,
           deletedDate: IsNull(),
-          children: {
-            deletedDate: IsNull()
-          }
         },
         relations: [
           'navigationType',
@@ -646,6 +643,7 @@ export class NavigationService {
       if (!parentNavigation) {
         throw new NotFoundException(`Parent ${navigationDto.parentId} doesn't exist.`)
       }
+      parentNavigation.children = parentNavigation.children.filter(child => !child.deletedDate);
 
       const navigationType = await this._navigationTypeRepository.findOne({
         where: { id: navigationDto.navigationTypeId }
