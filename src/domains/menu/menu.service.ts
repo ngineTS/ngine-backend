@@ -32,6 +32,7 @@ export class MenuService {
 
   /**
    * Create menu for given navigationId.
+   * 
    * @param navigationId The navigation id we want to create a menu to.
    * @returns The created menu.
    */
@@ -94,6 +95,7 @@ export class MenuService {
 
   /**
    * Update the style properties of an object.
+   * 
    * @param refId The object reference id to update.
    * @param updateMenuDto The style properties.
    * @returns The properties affected number.
@@ -150,6 +152,7 @@ export class MenuService {
 
   /**
    * Copy parent ref style and paste it to wished ref.
+   * 
    * @param refId The ref we want to paste the style to.
    * @param parentRefId The ref we want to inherit the style from.
    */
@@ -219,6 +222,7 @@ export class MenuService {
 
   /**
    * Create default container style for given refId.
+   * 
    * @param refId the object reference id.
    * @returns The container style object saved.
    */
@@ -244,6 +248,7 @@ export class MenuService {
 
   /**
    * Create default typography style for given refId.
+   * 
    * @param refId the object reference id.
    * @returns The typography style object saved.
    */
