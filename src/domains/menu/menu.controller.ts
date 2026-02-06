@@ -16,9 +16,9 @@ export class MenuController {
     return this.menuService.createNavigationBar(navigationId, userId);
   }
 
-  @Patch(':id')
-  updateStyleProperties(@Param('id') id: string, @Body() updateMenuDto: UpdateMenuDto) {
-    return this.menuService.updateStyleProperties(id, updateMenuDto);
+  @Patch(':refId')
+  updateStyleProperties(@Param('refId') refId: string, @Body() updateMenuDto: UpdateMenuDto) {
+    return this.menuService.updateStyleProperties(refId, updateMenuDto);
   }
 
   @Delete(':id')

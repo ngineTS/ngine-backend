@@ -96,7 +96,7 @@ export class MenuService {
   /**
    * Update the style properties of an object.
    * 
-   * @param refId The object reference id to update.
+   * @param refId The object reference id to update (not the id).
    * @param updateMenuDto The style properties.
    * @returns The properties affected number.
    */
