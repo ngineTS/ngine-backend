@@ -58,7 +58,8 @@ export class NavigationService {
 
     return await this._navigationRepository.find({
       where: { id: In(userNavigationIds) },
-      relations: ['navigationType']
+      relations: ['navigationType', 'parent'],
+      order: { displayLabel: 'ASC' }
     });
   }
 
