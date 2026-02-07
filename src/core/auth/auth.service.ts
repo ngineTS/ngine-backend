@@ -10,11 +10,12 @@ import { Request } from 'express';
 @Injectable()
 export class AuthService {
 
-  constructor(private _jwtService: JwtService,
-              @InjectRepository(User)
-              private _userRepository: Repository<User>) {}
+  constructor(
+    private _jwtService: JwtService,
+    @InjectRepository(User)
+    private _userRepository: Repository<User>
+  ) {}
 
-              
   /**
    * Sign guest in.
    * 
@@ -49,7 +50,7 @@ export class AuthService {
   async signIn(emailAddress: string, password: string): Promise<any> {
     const user = await this._userRepository.findOne({
         where: { 
-          emailAddress: emailAddress,
+          emailAddress: emailAddress.toLowerCase(),
           deletedDate: IsNull()
         }
     });
@@ -79,11 +80,13 @@ export class AuthService {
   }
 
   /**
+   * Refresh authentication token.
+   * 
+   * @param req The request object.
+   * @returns The new access token.
+   * @description
    * Get and verify token from request.
    * If it is valid then generate new access token, else throw UnauthorizedException.
-   * 
-   * @param req The request object of type Request from Express.
-   * @returns The new access token.
    */
   async refresh(req: Request) {
     const token = this.extractTokenFromHeader(req);

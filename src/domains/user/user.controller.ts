@@ -27,12 +27,6 @@ export class UserController {
     return this.userService.changeUserPassword(passwordChangeDto);
   }
 
-  @Public()
-  @Get('email-address/:emailAddress')
-  doesEmailAddressAlreadyExists(@Param('emailAddress') emailAddress: string){
-    return this.userService.doesEmailAddressAlreadyExists(emailAddress);
-  }
-
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(id, updateUserDto);

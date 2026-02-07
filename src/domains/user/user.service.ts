@@ -15,51 +15,66 @@ import { Role } from '../role/entities/role.entity';
 export class UserService {
 
   constructor(@InjectRepository(User)
-              private userRepository: Repository<User>,
+              private _userRepository: Repository<User>,
               @InjectRepository(UserRole)
-              private userRoleRepository: Repository<UserRole>,
+              private _userRoleRepository: Repository<UserRole>,
               @InjectRepository(Role)
-              private roleRepository: Repository<Role>,
+              private _roleRepository: Repository<Role>,
               @InjectRepository(PasswordRecovery)
-              private passwordRecoveryRepository: Repository<PasswordRecovery>,
-              private authService: AuthService) { }
+              private _passwordRecoveryRepository: Repository<PasswordRecovery>,
+              private _authService: AuthService) { }
 
 
+  /**
+   * Create User.
+   * 
+   * @param createUserDto The user payload.
+   * @returns Sign in response.
+   * @description
+   * 1. Validate email address
+   * 2. Create hash password and save user.
+   * 3. If first user of the app then assign him super admin role.
+   * 4. Sign in and return access token.
+   */
   async createUser(createUserDto: CreateUserDto) {
+    /* 1. */
+    createUserDto.emailAddress = createUserDto.emailAddress.toLowerCase();
+    const userExists = await this._userRepository.findOne({
+      where: { emailAddress: createUserDto.emailAddress }
+    });
+    if (userExists) {
+      throw new BadRequestException('This email address already exists.');
+    }
+
+    /* 2. */
     const pass = createUserDto.password;
-    
-    //create encrypted user password
     const saltOrRounds = 10;
     const hash = await bcrypt.hash(createUserDto.password, saltOrRounds);
     createUserDto.password = hash;
+    const userSaved = await this._userRepository.save(createUserDto);
 
-    //Check if user table is empty (i.e no user have registered yet)
-    //This is used to assign super admin to first user
-    const users = await this.userRepository.find({ 
+    /* 3. */
+    const users = await this._userRepository.find({ 
       where: { name: Not('guest') },
       take: 1,
     });
-
-    //save user
-    createUserDto["emailAddress"] = createUserDto["emailAddress"].toLowerCase();
-    const userSaved = await this.userRepository.save(createUserDto);
-
-    //if first user then assign super admin role
     if (!users || users.length === 0) {
-      const superAdminRole = await this.roleRepository.findOne({
+      const superAdminRole = await this._roleRepository.findOne({
         where: { name: 'super-admin' }
       });
-      await this.userRoleRepository.save({
+      await this._userRoleRepository.save({
         userId: userSaved.id,
         roleId: superAdminRole?.id,
       })
     }
-    return await this.authService.signIn(createUserDto.emailAddress, pass);
+
+    /* 4. */
+    return await this._authService.signIn(createUserDto.emailAddress, pass);
   }
 
 
   async findAll() {
-    const users = await this.userRepository
+    const users = await this._userRepository
     .createQueryBuilder('user')
     .leftJoinAndSelect(
       'user.userRoles',
@@ -74,7 +89,7 @@ export class UserService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    const updateResult = await this.userRepository.update(id, updateUserDto);
+    const updateResult = await this._userRepository.update(id, updateUserDto);
 
     if (updateResult.affected === 0) {
       throw new NotFoundException(`User id ${id} not found.`)
@@ -85,7 +100,7 @@ export class UserService {
 
   async remove(id: string, userId: string) {
     let removedTotal = 0;
-    const softDeleteUserResponse = await this.userRepository.update(id, {
+    const softDeleteUserResponse = await this._userRepository.update(id, {
       deletedDate: new Date(),
       deletedBy: userId
     })
@@ -94,7 +109,7 @@ export class UserService {
       throw new NotFoundException(`User id ${id} not found.`)
     }
 
-    const userRolesToSoftDelete = await this.userRoleRepository.find({
+    const userRolesToSoftDelete = await this._userRoleRepository.find({
       where: {userId: id}
     });
     for(let userRole of userRolesToSoftDelete) {
@@ -102,22 +117,13 @@ export class UserService {
       userRole.deletedBy = userId
     }
     removedTotal = removedTotal 
-      + (await this.userRoleRepository.save(userRolesToSoftDelete)).length;
+      + (await this._userRoleRepository.save(userRolesToSoftDelete)).length;
 
     return removedTotal + softDeleteUserResponse.affected!;
   }
 
-  async doesEmailAddressAlreadyExists(emailAddress: string): Promise<boolean> {
-    if((await this.userRepository.find({
-        where: {emailAddress: emailAddress}
-    })).length > 0){
-      return true;
-    }
-    return false;
-  }
-
   async changeUserPassword(passwordChangeDto: any) {
-    const passwordRecoveryRecord = await this.passwordRecoveryRepository.findOne({
+    const passwordRecoveryRecord = await this._passwordRecoveryRepository.findOne({
       where: {token: passwordChangeDto.token}
     });
     
@@ -129,7 +135,7 @@ export class UserService {
         if (passwordChangeDto.newPassword === passwordChangeDto.repeatPassword) {
           const saltOrRounds = 10;
           const hash = await bcrypt.hash(passwordChangeDto.newPassword, saltOrRounds);
-          const user = await this.userRepository.findOne({
+          const user = await this._userRepository.findOne({
             where: { 
               emailAddress: passwordRecoveryRecord.emailAddress
             }
@@ -137,8 +143,8 @@ export class UserService {
           if (!user) {
             throw new NotFoundException();
           }
-          await this.passwordRecoveryRepository.delete({ token: passwordChangeDto.token });
-          return await this.userRepository.update(user.id, { password: hash });
+          await this._passwordRecoveryRepository.delete({ token: passwordChangeDto.token });
+          return await this._userRepository.update(user.id, { password: hash });
         }
         else {
           throw new BadRequestException("Passwords don't match.");
