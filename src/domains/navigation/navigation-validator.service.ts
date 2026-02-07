@@ -16,7 +16,7 @@ export class NavigationValidatorService {
   ) {}
 
   /**
-   * Valid navigation business rules before saving.
+   * Valid navigation business rules.
    * 
    * @param navigationDto The navigation to insert or update.
    * @param navigationId The navigation id to update (optional).

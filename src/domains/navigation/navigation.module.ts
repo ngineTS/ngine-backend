@@ -16,6 +16,7 @@ import { ContainerStyle } from '../container-style/entities/container-style.enti
 import { TypographyStyle } from '../typography-style/entities/typography-style.entity';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 import { NavigationValidatorService } from './navigation-validator.service';
+import { RoleValidatorService } from '../role/role-validator.service';
 
 @Module({
   imports:[
@@ -37,6 +38,7 @@ import { NavigationValidatorService } from './navigation-validator.service';
     NavigationValidatorService,
     NavigationService,
     RoleService,
+    RoleValidatorService,
     AuthService,
     MenuService
   ]
