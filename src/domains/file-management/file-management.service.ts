@@ -94,6 +94,7 @@ export class FileManagementService {
 
   /**
    * Delete file from S3 bucket and soft delete media record.
+   * 
    * @param fileName The file key.
    * @param userId The user id from request token (used for audit).
    * @returns 'deleted'
