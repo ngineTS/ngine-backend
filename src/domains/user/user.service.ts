@@ -107,12 +107,19 @@ export class UserService {
 
     const updateResult = await this._userRepository.update(id, updateUserDto);
     if (updateResult.affected === 0) {
-      throw new NotFoundException(`User id ${id} not found.`)
+      throw new NotFoundException(`User id ${id} not found.`);
     }
 
     return updateResult;
   }
 
+  /**
+   * Remove User and associated user roles.
+   * 
+   * @param id The id of the user to remove.
+   * @param userId The user id from token request (used for audit).
+   * @returns The total number of records deleted (user + user roles).
+   */
   async remove(id: string, userId: string) {
     let removedTotal = 0;
     const softDeleteUserResponse = await this._userRepository.update(id, {
