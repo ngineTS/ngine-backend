@@ -17,15 +17,17 @@ export class FileManagementService {
 
   /**
    * Upload file and save media record with file key.
+   * 
    * @param file The file to upload.
    * @param userId The userId from the request token (used for audit).
    * @returns The file information saved.
+   * @throws {BadRequestException} If operation failed.
    */
   async uploadFile(file, userId: string) {
     const { originalname } = file;
 
     try {
-      const s3Response = await this.s3_upload(
+      const s3Response = await this.s3FileUpload(
         file.buffer,
         process.env.AWS_S3_BUCKET_NAME,
         originalname,
@@ -58,7 +60,7 @@ export class FileManagementService {
    * @param mimetype The file mime type.
    * @returns Upload response from S3 API.
    */
-  async s3_upload(file, bucket, name, mimetype) {
+  async s3FileUpload(file, bucket, name, mimetype) {
     const fileName: string = path.parse(name).name + uuidv4() + path.parse(name).ext
     const params = {
       Bucket: bucket,
@@ -75,6 +77,7 @@ export class FileManagementService {
    * 
    * @param fileName The file key.
    * @returns The temporary file url.
+   * @throws {BadRequestException} If operation failed.
    */
   getFile(fileName: string){
     try {
@@ -98,6 +101,7 @@ export class FileManagementService {
    * @param fileName The file key.
    * @param userId The user id from request token (used for audit).
    * @returns 'deleted'
+   * @throws {BadRequestException} If operation failed.
    */
   async deleteFile(fileName: string, userId){
     try {

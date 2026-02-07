@@ -10,5 +10,4 @@ export class NavigationTypeController {
     return this.navigationTypeService.findAll();
   }
 
-
 }

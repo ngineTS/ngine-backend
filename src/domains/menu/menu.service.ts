@@ -1,5 +1,4 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -31,17 +30,18 @@ export class MenuService {
 
 
   /**
-   * Create menu for given navigationId.
+   * Create menu for given navigation id.
    * 
-   * @param navigationId The navigation id we want to create a menu to.
+   * @param navigationId The navigation id we want to associate a menu to.
    * @returns The created menu.
    */
   async createMenu(navigationId: string): Promise<Menu> {
-    return await this._menuRepository.save({ navigationId: navigationId })
+    return await this._menuRepository.save({ navigationId: navigationId });
   }
 
   /**
-   * Create navigation bar for given navigation Id and add first redirect-button to it.
+   * Create navigation bar for given navigation id and add first redirect-button to it.
+   * 
    * @param navigationId The navigationId to attach the menu to.
    * @param userId The user who creates this navigation bar.
    */
@@ -51,7 +51,7 @@ export class MenuService {
       where: { id: navigationId }
     });
     if (!navigation) {
-      throw new NotFoundException(`No navigation found with id ${navigationId}`)
+      throw new NotFoundException(`Navigation id ${navigationId} not found.`)
     };
 
     /* Create menu and style for navigation. */
@@ -83,7 +83,8 @@ export class MenuService {
   }
 
   /**
-   * Find menu by navigationId.
+   * Find menu by navigation id.
+   * 
    * @param navigationId The navigationId that belongs to the menu.
    * @returns The menu or null if no menu found.
    */
@@ -107,7 +108,7 @@ export class MenuService {
       affectedTypographyStyle: 0
     }
 
-    /* Container layout */
+    /* container layout */
     if (updateMenuDto['containerLayout']) {
       const updateContainerLayoutResponse = await this._containerLayoutRepository.update(
         { refId: refId }, 
@@ -119,7 +120,7 @@ export class MenuService {
       affectedRelations.affectedContainerLayout = updateContainerLayoutResponse.affected;
     }
 
-    /* Container style */
+    /* container style */
     if (updateMenuDto['containerStyle']) {
       const updateContainerStyleResponse = await this._containerStyleRepository.update(
         { refId: refId }, 
@@ -131,7 +132,7 @@ export class MenuService {
       affectedRelations.affectedContainerStyle = updateContainerStyleResponse.affected;
     }
 
-    /* Typography style */
+    /* typography style */
     if (updateMenuDto['typographyStyle']) {
       const updateTypographyStyleResponse = await this._typographyStyleRepository.update(
         { refId: refId }, 
@@ -146,8 +147,19 @@ export class MenuService {
     return affectedRelations;
   }
 
+  /**
+   * Delete menu.
+   * 
+   * @param id The menu id.
+   * @returns A Delete response.
+   */
   async remove(id: string) {
-    return await this._menuRepository.delete(id);
+    const deleteResponse = await this._menuRepository.delete(id);
+    if (deleteResponse.affected === 0) {
+      throw new NotFoundException(`Menu ${id} not found.`);
+    }
+
+    return deleteResponse;
   }
 
   /**
@@ -155,6 +167,7 @@ export class MenuService {
    * 
    * @param refId The ref we want to paste the style to.
    * @param parentRefId The ref we want to inherit the style from.
+   * @throws {NotFoundException} if not style found for given parentRefId.
    */
   async inheritParentStyle(refId: string, parentRefId: string) {
     /* Get parent containerLayout. */
