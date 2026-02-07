@@ -73,6 +73,11 @@ export class UserService {
   }
 
 
+  /**
+   * Find all users and their roles. Exclude guest user.
+   * 
+   * @returns The array of users.
+   */
   async findAll() {
     const users = await this._userRepository
     .createQueryBuilder('user')
@@ -88,9 +93,19 @@ export class UserService {
     return users;
   }
 
+  /**
+   * Update user properties.
+   * 
+   * @param id The user id.
+   * @param updateUserDto The properties.
+   * @returns A promise of UpdateResult.
+   */
   async update(id: string, updateUserDto: UpdateUserDto) {
-    const updateResult = await this._userRepository.update(id, updateUserDto);
+    if (updateUserDto.emailAddress || updateUserDto.password) {
+      throw new BadRequestException('Well tried ;)');
+    }
 
+    const updateResult = await this._userRepository.update(id, updateUserDto);
     if (updateResult.affected === 0) {
       throw new NotFoundException(`User id ${id} not found.`)
     }
