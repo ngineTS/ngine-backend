@@ -93,8 +93,8 @@ export class NavigationValidatorService {
       
       if (navigationDto.displayLabel) {
         navigationDto['name'] = navigationDto.displayLabel?.toLowerCase()?.replace(/ /g, "-");
-        const sisterNavigations = parentNavigation.children.filter(child => child.id !== navigationId);
         
+        const sisterNavigations = parentNavigation.children.filter(child => child.id !== navigationId);
         if (sisterNavigations?.find(navigation => navigation.name ===  navigationDto['name'])) {
           throw new BadRequestException('A sister navigation has already this name.');
         }

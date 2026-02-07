@@ -3,7 +3,7 @@ import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Navigation } from './entities/navigation.entity';
-import { FindOptionsOrder, FindOptionsWhere, In, IsNull, Not, Repository } from 'typeorm';
+import { FindOptionsOrder, FindOptionsWhere, In, IsNull, Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 import { Permission } from '../permission/entities/permission.entity';
@@ -437,14 +437,16 @@ export class NavigationService {
    * @param navigation The navigation to delete.
    * @returns The Array of navigations that have been soft deleted.
    * @throws {ForbiddenException} If user doesn't have delete permission on navigation to delete.
+   * @throws {BadRequestException} If navigation is global navigation.
    * @description
    * 1. Valid user permission.
-   * 2. Retrieve recursively children and related menu to delete.
-   * 3. Soft delete navigation, his descendants and delete related style properties.
-   * 4. Check if parent navigation has a menu and remains without children. If yes retrieve menu to delete.
-   * 5. Delete menus retrieved on step 2 & 4 and style properties.
-   * 6. Delete roleNavigationPermissions associated to navigations deleted.
-   * 7. Return number of navigation soft deleted.
+   * 2. Insure navigation is not global navigation.
+   * 3. Retrieve recursively children and related menu to delete.
+   * 4. Soft delete navigation, his descendants and delete related style properties.
+   * 5. Check if parent navigation has a menu and remains without children. If yes retrieve menu to delete.
+   * 6. Delete menus retrieved on step 2 & 4 and style properties.
+   * 7. Delete roleNavigationPermissions associated to navigations deleted.
+   * 8. Return number of navigation soft deleted.
    */
   async removeNavigation(
     navigation: Navigation,
@@ -464,6 +466,11 @@ export class NavigationService {
     }
 
     /* 2. */
+    if (navigation.name === 'global') {
+      throw new BadRequestException('Global navigation cannot be deleted.');
+    }
+
+    /* 3. */
     const navigationsIds: Array<string> = [];
     const navigationRecordsToDelete: Array<Partial<Navigation>> = [];
     const menuIdsToDelete: Array<string> = [];
@@ -488,7 +495,7 @@ export class NavigationService {
     /* call method */
     await getDeepNavigationIds(navigation);
 
-    /* 3. */
+    /* 4. */
     const navigationsSoftDeleted = await this._navigationRepository.save(navigationRecordsToDelete);
     for (const navigation of navigationRecordsToDelete) {
       await this._containerLayoutRepository.delete({ refId: navigation['id'] });
@@ -496,7 +503,7 @@ export class NavigationService {
       await this._typographyStyleRepository.delete({ refId: navigation['id'] });
     }
 
-    /* 4. */
+    /* 5. */
     const parentNavigation = await this._navigationRepository.findOne({
       where: { 
         id: navigation.parentId,
@@ -512,7 +519,7 @@ export class NavigationService {
       menuIdsToDelete.push(parentNavigation.menu.id);
     }
 
-    /* 5. */
+    /* 6. */
     for (const id of menuIdsToDelete) {
       await this._menuService.remove(id);
       await this._containerLayoutRepository.delete({ refId: id });
@@ -521,7 +528,7 @@ export class NavigationService {
 
     }
 
-    /* 6. */
+    /* 7. */
     const roleNavigationsPermissions = await this._roleNavigationPermissionRepository.find({
       where: { navigationId: In(navigationsIds) }
     })
@@ -531,7 +538,7 @@ export class NavigationService {
     }
     await this._roleNavigationPermissionRepository.save(roleNavigationsPermissions);
     
-    /* 7. */ 
+    /* 8. */ 
     return { affected: navigationsSoftDeleted.length }
   }
 
