@@ -12,6 +12,13 @@ export class UserRoleValidatorService {
     private _userRepository: Repository<User>
   ) {}
 
+  /**
+   * Valid user role paylaod.
+   * 
+   * @param userId The user id associated to the user role payload.
+   * @throws {NotFoundException} If user id is not found.
+   * @throws {BadRequestException} If user is guest user.
+   */
   async validUserRole(userId: string) {
     const user = await this._userRepository.findOne({
       where: { 

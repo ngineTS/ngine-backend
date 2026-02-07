@@ -27,8 +27,8 @@ export class UserRoleService {
    * @description
    * 1. Valid user role payload.
    * 2. Identify and store user roles to save and those to delete.
-   * 3. Add audit data and delete user roles.
-   * 4. Add audit data and save user roles.
+   * 3. Add audit data and delete records.
+   * 4. Add audit data and save records.
    */
   async bulkSaveUserRoles(
     userId: string,

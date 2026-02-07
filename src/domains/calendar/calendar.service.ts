@@ -58,7 +58,7 @@ export class CalendarService {
   }
 
   /**
-   * Find calendar event for given navigation id.
+   * Find calendar events for given navigation id.
    * 
    * @param navigationId The navigation id associated to the calendar.
    * @returns An array of calendar events.

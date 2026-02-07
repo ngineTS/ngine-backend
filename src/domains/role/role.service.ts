@@ -149,15 +149,15 @@ export class RoleService {
       + (await this._userRoleRepository.save(userRolesToRemove)).length;
 
     /* 4. */
-    let roleNavigationPermissionsToDelete = await this._roleNavigationPermissionRepository.find({
+    let roleNavigationPermissionsToRemove = await this._roleNavigationPermissionRepository.find({
       where: { roleId: id }
     });
-    for(let roleNavigationPermission of roleNavigationPermissionsToDelete) {
+    for(let roleNavigationPermission of roleNavigationPermissionsToRemove) {
       roleNavigationPermission["deletedDate"] = new Date();
       roleNavigationPermission["deletedBy"] = userId;
     }
     removedTotal = removedTotal 
-      + (await this._userRoleRepository.save(roleNavigationPermissionsToDelete)).length;    
+      + (await this._roleNavigationPermissionRepository.save(roleNavigationPermissionsToRemove)).length;    
 
     return removedTotal + updateRoleResponse.affected!;
   }

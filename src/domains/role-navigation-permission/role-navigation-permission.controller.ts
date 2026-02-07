@@ -17,12 +17,4 @@ export class RoleNavigationPermissionController {
       userId
     );
   }
-
-  @Post('bulk-delete')
-  remove(
-    @Body() ids: string[],
-    @UserId() userId: string
-  ) {
-    return this.roleNavigationPermissionService.bulkRemove(ids, userId);
-  }
 }
