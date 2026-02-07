@@ -15,6 +15,7 @@ import { ContainerLayout } from '../container-layout/entities/container-layout.e
 import { ContainerStyle } from '../container-style/entities/container-style.entity';
 import { TypographyStyle } from '../typography-style/entities/typography-style.entity';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
+import { NavigationValidatorService } from './navigation-validator.service';
 
 @Module({
   imports:[
@@ -32,6 +33,12 @@ import { NavigationType } from '../navigation-type/entities/navigation-type.enti
     ])
   ],
   controllers: [NavigationController],
-  providers: [NavigationService, RoleService, AuthService, MenuService]
+  providers: [
+    NavigationValidatorService,
+    NavigationService,
+    RoleService,
+    AuthService,
+    MenuService
+  ]
 })
 export class NavigationModule {}
