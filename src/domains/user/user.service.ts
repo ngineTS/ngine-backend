@@ -144,6 +144,11 @@ export class UserService {
     return removedTotal + softDeleteUserResponse.affected!;
   }
 
+  /**
+   * Change user password.
+   * 
+   * @param passwordChangeDto The passwordChange dto.
+   */
   async changeUserPassword(passwordChangeDto: any) {
     const passwordRecoveryRecord = await this._passwordRecoveryRepository.findOne({
       where: {token: passwordChangeDto.token}
