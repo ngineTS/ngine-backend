@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
+import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, ValidateIf } from "class-validator";
 import { ColumnType } from "typeorm";
 import { SimpleColumnType, SpatialColumnType, WithLengthColumnType, WithPrecisionColumnType, WithWidthColumnType } from "typeorm/driver/types/ColumnTypes";
 
@@ -9,7 +9,9 @@ export class CreateCustomFormInputDto {
     @IsUUID()
     tableId: string;
 
-    @IsOptional()
+    @ValidateIf(obj => obj.inputType === 'dropdown')
+    @IsNotEmpty()
+    @IsString()
     columnType?: WithPrecisionColumnType | WithLengthColumnType | WithWidthColumnType | SpatialColumnType | SimpleColumnType;
     
     @IsOptional()

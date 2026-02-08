@@ -1,9 +1,9 @@
-import { IsBoolean, IsNumber, IsOptional, IsString, IsUUID, MaxLength, ValidateIf } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, MaxLength, ValidateIf } from 'class-validator';
 
 export class UpdateNavigationDto {
 
-    @IsOptional()
     @ValidateIf(obj => obj.displayLabel || obj.navigationTypeId)
+    @IsNotEmpty()
     @IsUUID()
     parentId?: string;
 
@@ -24,8 +24,8 @@ export class UpdateNavigationDto {
     @IsBoolean()
     isDisabled?: boolean;
 
-    @IsOptional()
     @ValidateIf(obj => obj.parentId)
+    @IsNotEmpty()
     @IsUUID()
     navigationTypeId?: string;
 
