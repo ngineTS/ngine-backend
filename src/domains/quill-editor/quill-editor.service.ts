@@ -29,16 +29,15 @@ export class QuillEditorService {
     userId: string
   ) {
     const updatedResult = await this.quillEditorRepository.update(id, updateQuillEditorDto);
-    if(updatedResult.affected === 1) {
-      return updatedResult;
-      /*return this.navigationService.updateNavigation(
-        updateQuillEditorDto["navigationId"],
-        { updatedBy: userId, updatedDate: new Date() },
-        userId
-      )*/
+    if(updatedResult.affected === 0) {
+      throw new NotFoundException();
     }
-    else {
-      throw new NotFoundException()
-    }
+
+    /*return this.navigationService.updateNavigation(
+      updateQuillEditorDto["navigationId"],
+      { updatedBy: userId, updatedDate: new Date() },
+      userId
+    )*/
+    return updatedResult;
   }
 }
