@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTableVizDto } from './dto/create-table-viz.dto';
 import { UpdateTableVizDto } from './dto/update-table-viz.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -62,16 +62,22 @@ export class TableVizService {
    * 
    * @param schema The db schema (default my_app).
    * @returns The promise of table names array.
+   * @throws {BadRequestException} If operation failed.
    */
   async findTableNames(schema: string = 'my_app'): Promise<Array<string>> {
-    const result: Array<any> = await this._dataSource.query(
-      `SELECT table_name 
-       FROM information_schema.tables 
-       WHERE table_schema = $1 
-       ORDER BY table_name;`,
-      [schema],
-    );
-    return result.map((row: { table_name: string }) => row.table_name);
+    try {
+      const result: Array<any> = await this._dataSource.query(
+        `SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = $1 
+        ORDER BY table_name;`,
+        [schema],
+      );
+      return result.map((row: { table_name: string }) => row.table_name);
+    }
+    catch (error) {
+      throw new BadRequestException(error);
+    }
   }
 
   /**
@@ -79,12 +85,18 @@ export class TableVizService {
    * 
    * @param tableName The table name.
    * @returns The table content.
+   * @throws {BadRequestException} If operation failed.
    */
   async findTableContentByTableName(tableName: string) {
-    return await this._dataSource.createQueryBuilder()
-      .select('*')
-      .from(`my_app.${tableName}`, 't')
-      .execute();
+    try {
+      return await this._dataSource.createQueryBuilder()
+        .select('*')
+        .from(`my_app.${tableName}`, 't')
+        .execute();
+    }
+    catch (error) {
+      throw new BadRequestException(error);
+    }
   }
 
 }

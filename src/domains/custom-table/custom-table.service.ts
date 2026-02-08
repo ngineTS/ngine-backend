@@ -17,13 +17,6 @@ export class CustomTableService {
       .execute();
   }
 
-  async findTableContentByTableName(tableName: string) {
-    return await this._dataSource.createQueryBuilder()
-      .select('*')
-      .from(`custom_table.${tableName}`, 't')
-      .execute();
-  }
-
   async updateTableRow(tableName: string, id: string, payload: any) {
     return await this._dataSource.createQueryBuilder()
       .update(`custom_table.${tableName}`)
@@ -40,6 +33,13 @@ export class CustomTableService {
       .execute();
   }
 
+  async findTableContentByTableName(tableName: string) {
+    return await this._dataSource.createQueryBuilder()
+      .select('*')
+      .from(`custom_table.${tableName}`, 't')
+      .execute();
+  }
+  
   /**
    * Create a postgres table in custom_table schema.
    * 
