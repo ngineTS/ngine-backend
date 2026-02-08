@@ -5,7 +5,7 @@ import { UpdateTableVizDto } from './dto/update-table-viz.dto';
 import { Feature, Permission } from 'src/core/decorators/role.decorator';
 import { RolesGuard } from 'src/core/guards/role.guard';
 
-@Feature('calendar')
+@Feature('table-viz')
 @Controller('table-viz')
 export class TableVizController {
   
