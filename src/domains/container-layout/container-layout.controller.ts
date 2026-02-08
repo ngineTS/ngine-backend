@@ -1,7 +1,14 @@
-import { Controller } from '@nestjs/common';
+import { Body, Controller, Param, Patch } from '@nestjs/common';
+import { ContainerLayoutService } from './container-layout.service';
+import { UpdateContainerLayoutDto } from './dto/update-container-layout.dto';
 
 @Controller('container-layout')
 export class ContainerLayoutController {
-  constructor() {}
+  
+  constructor(private readonly containerLayoutService: ContainerLayoutService) {}
 
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateContainerLayoutDto: UpdateContainerLayoutDto) {
+    return this.containerLayoutService.update(id, updateContainerLayoutDto);
+  }
 }

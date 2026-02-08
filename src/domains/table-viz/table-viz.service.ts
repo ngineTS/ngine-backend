@@ -9,9 +9,11 @@ import { stringToLowerCaseWithUnderscore } from 'src/core/utils/string-transfo-u
 @Injectable()
 export class TableVizService {
 
-  constructor(@InjectRepository(TableViz)
-              private _tableVizRepository: Repository<TableViz>,
-              private _dataSource: DataSource) {}
+  constructor(
+    @InjectRepository(TableViz)
+    private _tableVizRepository: Repository<TableViz>,
+    private _dataSource: DataSource
+  ) { }
 
   async create(createTableVizDto: CreateTableVizDto) {
     createTableVizDto.tableName = stringToLowerCaseWithUnderscore(createTableVizDto.tableLabel);
@@ -19,10 +21,8 @@ export class TableVizService {
   }
 
   async findByNavigationId(navigationId) {
-    return await this._tableVizRepository.findOne({
-      where: {
-        navigationId: navigationId
-      },
+    return await this._tableVizRepository.findOne({ 
+      where: { navigationId },
       relations: ['customFormInputs']
     })
   }
@@ -31,7 +31,7 @@ export class TableVizService {
     const updateResult = await this._tableVizRepository.update(id, updateTableVizDto);
 
     if (updateResult.affected === 0) {
-      throw new NotFoundException(`Id ${id} not found.`)
+      throw new NotFoundException(`Table viz id ${id} not found.`);
     }
 
     return updateResult;

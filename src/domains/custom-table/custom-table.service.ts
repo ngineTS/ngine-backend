@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { DataSource, Table, TableColumnOptions } from 'typeorm';
 import { CreateCustomFormInputDto } from '../custom-form-input/dto/create-custom-form-input.dto';
 
@@ -41,12 +41,17 @@ export class CustomTableService {
   }
 
   /**
-   * Create a postgres table in my_app schema
-   * @param tableName The name of the table to be created 
-   * @param customFormInputs An array of input config used for columns creation
-   * @returns success message
+   * Create a postgres table in custom_table schema.
+   * 
+   * @param tableName The name of the table to be created .
+   * @param customFormInputs An array of input config used for columns creation.
+   * @returns success message.
+   * @throws {BadRequestException} If column name or type is missing.
    */
-  async createDatabaseTable(tableName: string, customFormInputs: CreateCustomFormInputDto[]) {
+  async createDatabaseTable(
+    tableName: string,
+    customFormInputs: Array<CreateCustomFormInputDto>
+  ) {
     const columns: Array<TableColumnOptions> = [];
 
     columns.push({
@@ -60,7 +65,10 @@ export class CustomTableService {
     });
 
     for (let customInput of customFormInputs) {
-      columns.push({ 
+      if (!customInput.columnType || !customInput.columnName) {
+        throw new BadRequestException('Column name and type are required to create table.');
+      }
+      columns.push({
         name: customInput.columnName, 
         type: customInput.columnType,
         isArray: customInput.isList
