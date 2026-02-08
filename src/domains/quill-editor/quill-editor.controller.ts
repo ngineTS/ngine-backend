@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { QuillEditorService } from './quill-editor.service';
 import { CreateQuillEditorDto } from './dto/create-quill-editor.dto';
 import { UpdateQuillEditorDto } from './dto/update-quill-editor.dto';
@@ -21,7 +21,7 @@ export class QuillEditorController {
   @Get('navigation/:navigationId')
   @Permission('view')
   @UseGuards(RolesGuard)
-  findbyNavigationId(@Param('navigationId') navigationId: string) {
+  findbyNavigationId(@Param('navigationId', new ParseUUIDPipe()) navigationId: string) {
     return this.quillEditorService.findByNavigationId(navigationId);
   }
 
@@ -29,7 +29,7 @@ export class QuillEditorController {
   @Permission('edit')
   @UseGuards(RolesGuard)
   update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateQuillEditorDto: UpdateQuillEditorDto,
     @UserId() userId: string
   ) {

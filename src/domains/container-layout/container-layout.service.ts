@@ -12,6 +12,12 @@ export class ContainerLayoutService {
     private _containerLayoutRepository: Repository<ContainerLayout>
   ) { }
 
+  /**
+   * Update containerLayout.
+   * 
+   * @param id The containerLayout id.
+   * @param updateContainerLayoutDto The containerLayout properties to update.
+   */
   async update(id: string, updateContainerLayoutDto: UpdateContainerLayoutDto) {
     const updateResponse = await this._containerLayoutRepository.update(id, updateContainerLayoutDto);
 

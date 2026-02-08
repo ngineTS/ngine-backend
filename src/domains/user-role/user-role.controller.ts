@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param } from '@nestjs/common';
+import { Controller, Post, Body, Param, ParseUUIDPipe } from '@nestjs/common';
 import { UserRoleService } from './user-role.service';
 import { CreateUserRoleDto } from './dto/create-user-role.dto';
 import { UserId } from 'src/core/decorators/user.decorator';
@@ -9,7 +9,7 @@ export class UserRoleController {
 
   @Post('bulk-save/:userId')
   bulkSaveUserRoles(
-    @Param('userId') userId: string,
+    @Param('userId', new ParseUUIDPipe()) userId: string,
     @Body() createUserRoleDtoArray: Array<CreateUserRoleDto>,
     @UserId() createdBy: string
   ) {

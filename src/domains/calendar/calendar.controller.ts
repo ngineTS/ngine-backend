@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { CalendarService } from './calendar.service';
 import { CreateCalendarDto } from './dto/create-calendar.dto';
 import { UpdateCalendarDto } from './dto/update-calendar.dto';
@@ -20,21 +20,24 @@ export class CalendarController {
   @Get('navigation/:navigationId')
   @Permission('view')
   @UseGuards(RolesGuard)
-  findCalendarEventsByNavigationId(@Param('navigationId') navigationId: string) {
+  findCalendarEventsByNavigationId(@Param('navigationId', new ParseUUIDPipe()) navigationId: string) {
     return this.calendarService.findCalendarEventsByNavigationId(navigationId);
   }
 
   @Patch(':id')
   @Permission('edit')
   @UseGuards(RolesGuard)
-  update(@Param('id') id: string, @Body() updateCalendarDto: UpdateCalendarDto) {
+  update(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() updateCalendarDto: UpdateCalendarDto
+  ) {
     return this.calendarService.update(id, updateCalendarDto);
   }
 
   @Delete(':id')
   @Permission('delete')
   @UseGuards(RolesGuard)
-  remove(@Param('id') id: string) {
+  remove(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.calendarService.remove(id);
   }
 }

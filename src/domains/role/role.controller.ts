@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request, ParseUUIDPipe } from '@nestjs/common';
 import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -32,7 +32,7 @@ export class RoleController {
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateRoleDto: UpdateRoleDto,
     @UserId() userId: string
   ) {
@@ -41,7 +41,7 @@ export class RoleController {
 
   @Delete(':id')
   remove(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @UserId() userId: string
   ) {
     return this.roleService.remove(id, userId);

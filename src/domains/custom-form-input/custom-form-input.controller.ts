@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
 import { CustomFormInputService } from './custom-form-input.service';
 import { CreateCustomFormInputDto } from './dto/create-custom-form-input.dto';
 import { UpdateCustomFormInputDto } from './dto/update-custom-form-input.dto';
@@ -17,7 +17,10 @@ export class CustomFormInputController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCustomFormDto: UpdateCustomFormInputDto) {
+  update(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() updateCustomFormDto: UpdateCustomFormInputDto
+  ) {
     return this.customFormService.update(id, updateCustomFormDto);
   }
 

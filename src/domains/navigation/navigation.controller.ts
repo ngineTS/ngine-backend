@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Request, ParseUUIDPipe } from '@nestjs/common';
 import { NavigationService } from './navigation.service';
 import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
@@ -30,7 +30,7 @@ export class NavigationController {
 
   @Patch(':id')
   updateNavigation(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateNavigationDto: UpdateNavigationDto,
     @UserId() userId: string,
     @Request() req

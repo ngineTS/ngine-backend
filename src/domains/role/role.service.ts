@@ -29,7 +29,7 @@ export class RoleService {
    * @description
    * 1. Valid role dto.
    * 2. Transform displayLabel into name.
-   * 3. Add audit data and save.
+   * 3. Add audit data then save role.
    */
   async create(
     createRoleDto: CreateRoleDto,
@@ -91,7 +91,7 @@ export class RoleService {
    * @description
    * 1. Valid role dto.
    * 2. Transform displayLabel to name.
-   * 3. Add audit data and update.
+   * 3. Add audit data then update role.
    */
   async update(
     id: string,
@@ -115,10 +115,10 @@ export class RoleService {
   /**
    * Remove role and his relations.
    * 
-   * @param id The role id to remove.
+   * @param id The role id.
    * @description
    * 1. Valid delete role action.
-   * 2. Add audit data and soft delete role.
+   * 2. Add audit data then soft delete role.
    * 3. Soft delete related use roles.
    * 4. Soft delete related role navigation permissions.
    */
