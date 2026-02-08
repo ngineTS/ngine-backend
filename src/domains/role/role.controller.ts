@@ -4,10 +4,7 @@ import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { UserId } from 'src/core/decorators/user.decorator';
 
-/**
- * Currently, role controller permission required only all permission.
- * Validation is done in service file on method entrance.
- */
+
 @Controller('role')
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
