@@ -23,9 +23,9 @@ export class CalendarService {
   }
 
   /**
-   * Update a calendar event.
+   * Update calendar event.
    * 
-   * @param id The id of the calendar event to update.
+   * @param id The calendar event id.
    * @param updateCalendarDto The event properties to update.
    * @returns An UpdateResult type object.
    * @throws {NotFoundException} If no row affected.

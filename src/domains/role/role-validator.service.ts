@@ -42,9 +42,9 @@ export class RoleValidatorService {
    * Valid update action.
    * 
    * @param roleDto The role dto to valid.
-   * @param roleId The id of the role to update.
-   * @throws {NotFoundException} If role to update is not found.
-   * @throws {BadRequestException} If role to update is super admin.
+   * @param roleId The role id.
+   * @throws {NotFoundException} If role is not found.
+   * @throws {BadRequestException} If role is super admin.
    */
   async validUpdateAction(roleDto: UpdateRoleDto, roleId: string) {
     const role = await this._roleRepository.findOne({
@@ -80,7 +80,7 @@ export class RoleValidatorService {
    * Check if role with same displayLabel already exists.
    * 
    * @param displayLabel The role displayLabel property.
-   * @param roleId The id of the role to update.
+   * @param roleId The role id (optional).
    * @throws {BadRequestException} If another role already exists with same displayLabel.
    */
   async validRoleDisplayLabelUniqueness(displayLabel: string, roleId?: string) {

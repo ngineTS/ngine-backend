@@ -327,7 +327,7 @@ export class NavigationService {
   }
 
   /**
-   * Update navigation properties.
+   * Update navigation.
    * 
    * @param id The navigation id.
    * @param updateNavigationDto The navigation properties to update.

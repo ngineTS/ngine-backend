@@ -19,7 +19,7 @@ export class NavigationValidatorService {
    * Valid navigation business rules.
    * 
    * @param navigationDto The navigation to insert or update.
-   * @param navigationId The navigation id to update (optional).
+   * @param navigationId The navigation id (optional).
    * @throws {NotFoundException} If `navigationDto.parentId` is not found in the database.
    * @throws {NotFoundException} If `navigationDto.navigationTypeId` is not found in the database.
    * @throws {BadRequestException} If `navigationDto` type is a button and parent is not a menu or a redirect-button.

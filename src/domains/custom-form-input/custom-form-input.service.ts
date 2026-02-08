@@ -71,7 +71,7 @@ export class CustomFormInputService {
   /**
    * Update inputs configuration.
    * 
-   * @param id The customFormInput id to update.
+   * @param id The customFormInput id.
    * @param updateCustomFormDto The customFormInputs properties to update.
    * @returns Update response type.
    * @throws {NotFoundException} If no row affected.
