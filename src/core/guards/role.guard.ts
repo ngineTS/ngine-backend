@@ -12,9 +12,10 @@ import { DataSource, EntityTarget, ObjectLiteral } from 'typeorm';
 @Injectable()
 export class RolesGuard implements CanActivate {
   
-  constructor(private _reflector: Reflector,
-              private _datasource: DataSource
-             ) {}
+  constructor(
+    private _reflector: Reflector,
+    private _datasource: DataSource
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const permission = this._reflector.get(Permission, context.getHandler());
@@ -127,13 +128,14 @@ export class RolesGuard implements CanActivate {
   }
 
   /**
-   * Find record in repository by given id and entity.
-   * @param entity The entity class name.
+   * Find record in repository for given id and entity.
+   * 
+   * @param entityClassName The TypeORM entity class name.
    * @param id The id.
    * @returns The record.
    */
-  async findNavigationInTableById(entity: string, id: string) {
-    const repo = this._datasource.getRepository(entity);
+  async findNavigationInTableById(entityClassName: string, id: string) {
+    const repo = this._datasource.getRepository(entityClassName);
     return repo.findOneBy({ id });
   }
 }
