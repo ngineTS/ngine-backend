@@ -3,9 +3,10 @@ import { CalendarService } from './calendar.service';
 import { CreateCalendarDto } from './dto/create-calendar.dto';
 import { UpdateCalendarDto } from './dto/update-calendar.dto';
 import { RolesGuard } from 'src/core/guards/role.guard';
-import { Feature, Permission } from 'src/core/decorators/role.decorator';
+import { Feature, NavigationTypeName, Permission } from 'src/core/decorators/role.decorator';
 
 @Feature('Calendar')
+@NavigationTypeName('calendar')
 @Controller('calendar')
 export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}

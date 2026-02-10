@@ -28,14 +28,14 @@ export class NavigationService {
     private _userRepository: Repository<User>,
     @InjectRepository(RoleNavigationPermission)
     private _roleNavigationPermissionRepository: Repository<RoleNavigationPermission>,
-    private _authService: AuthService,
-    private _menuService: MenuService,
     @InjectRepository(ContainerLayout)
     private _containerLayoutRepository: Repository<ContainerLayout>,
     @InjectRepository(ContainerStyle)
     private _containerStyleRepository: Repository<ContainerStyle>,
     @InjectRepository(TypographyStyle)
     private _typographyStyleRepository: Repository<TypographyStyle>,
+    private _authService: AuthService,
+    private _menuService: MenuService,
     private _navigationValidatorService: NavigationValidatorService
   ) {}
 
@@ -101,13 +101,17 @@ export class NavigationService {
 
     /* Add user navigation permissions to authentication token payload. */
     if (hasToGenerateNewToken) {
-      const userNavigationPermissions: Array<{ navigationId: string; permissionName: string; }> = [];
+      const userNavigationPermissions: Array<{
+        navigationId: string;
+        permissionName: string;
+        navigationTypeName: string;
+      }> = [];
       this.flattenNavigationPermissions(mainNavigation!, userNavigationPermissions);
 
-      const payload = { 
+      const payload = {
         sub: userRequest.sub,
         userEmail: userRequest.userEmail,
-        userNavigationPermissions: userNavigationPermissions  
+        userNavigationPermissions: userNavigationPermissions
       };
       
       /* Return navigations and access token. */
@@ -553,12 +557,14 @@ export class NavigationService {
     userNavigationPermissionsArray: Array<{
       navigationId: string;
       permissionName: string;
+      navigationTypeName: string;
     }>
   ) {
     if (navigation['permissionName']) {
       userNavigationPermissionsArray.push({
       navigationId: navigation.id,
-      permissionName: navigation['permissionName']
+      permissionName: navigation['permissionName'],
+      navigationTypeName: navigation.navigationType.name
     });
     }
     if (navigation.children && navigation.children.length > 0) {

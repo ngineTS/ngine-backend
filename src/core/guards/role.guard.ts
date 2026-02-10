@@ -1,13 +1,26 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
+
+
+import { Injectable, CanActivate, ExecutionContext, NotFoundException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Feature, Permission } from '../decorators/role.decorator';
-import { DataSource, EntityTarget, ObjectLiteral } from 'typeorm';
+import { Feature, NavigationTypeName, Permission } from '../decorators/role.decorator';
+import { DataSource } from 'typeorm';
 
 /**
- * This role requires:
- * * the feature information (ex: Calendar. It has to match entity name)
- * * the permission information (view, add, edit, delete)
- * * the navigation or navigation id to validate the userNavigationPermissions against
+ * The idea here is to link a navigation to the action applied by the user.
+ * The navigation can then be compared to user navigation permissions to allow or not the action.
+ * 
+ * This role requires the following parameters:
+ * - The feature (ex: Calendar. It has to match entity name.).
+ * - The permission (or action): view, add, edit or delete.
+ * - The navigation type name.
+ * - The navigation or navigation id (if possible).
+ * 
+ * Way to identify the navigation :
+ * 1. Navigation id is used as request parameter.
+ * 2. Id is used as request parameter -> fetch navigation id inside table.
+ * 3. Navigation is used as request body.
+ * 4. No parameter, no body or no navigation found -> Valid action based on navigation type
+ * by mapping navigationTypeName with user navigationNavigationPermissions.
  */
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -24,6 +37,7 @@ export class RolesGuard implements CanActivate {
     }
     
     const entity = this._reflector.get(Feature, context.getClass());
+    const navigationTypeName = this._reflector.get(NavigationTypeName, context.getClass());
     const request = context.switchToHttp().getRequest();
     const body = request.body;
     const params = request.params;
@@ -47,13 +61,21 @@ export class RolesGuard implements CanActivate {
           if (!data) {
             throw new NotFoundException(`Id ${params.id} not found.`);
           }
-          if (user.userNavigationPermissions?.find(obj => obj.navigationId === data.navigationId)) {
-            return true;
+          if (data.navigationId) {
+            if (user.userNavigationPermissions.find(obj => obj.navigationId === data.navigationId)) {
+              return true;
+            }
+            else {
+              return false;
+            }
           }
-          else {
-            return false;
-          }
-          
+        }
+        /* if table not indexed by navigationId then check for navigation type only */
+        if (user.userNavigationPermissions.find(obj => obj.navigationTypeName === navigationTypeName)) {
+          return true;
+        }
+        else {
+          return false;
         }
 
       case 'edit':
@@ -63,17 +85,29 @@ export class RolesGuard implements CanActivate {
           if (!data) {
             throw new NotFoundException(`Id ${params.id} not found.`);
           }
-          if (
-            user.userNavigationPermissions
-              ?.find(obj => obj.navigationId === data.navigationId)?.permissionName
-              ?.includes('edit')
-          ) {
-            return true;
+          if (data.navigationId) {
+            if (
+              user.userNavigationPermissions
+                .find(obj => obj.navigationId === data.navigationId)
+                ?.permissionName?.includes('edit')
+            ) {
+              return true;
+            }
+            else {
+              return false;
+            }
           }
-          else {
-            return false;
-          }
-          
+        }
+        /* if table not indexed by navigationId then check for navigationType only */
+        if (
+          user.userNavigationPermissions
+            .find(obj => obj.navigationTypeName === navigationTypeName)?.permissionName
+            ?.includes('edit')
+        ) {
+          return true;
+        }
+        else {
+          return false;
         }
 
       case 'add':
@@ -81,7 +115,7 @@ export class RolesGuard implements CanActivate {
         if (body?.navigationId) {
           if (
             user.userNavigationPermissions
-              ?.find(obj => obj.navigationId === body.navigationId)?.permissionName
+              .find(obj => obj.navigationId === body.navigationId)?.permissionName
               ?.includes('add')
           ) {
             return true;
@@ -98,9 +132,24 @@ export class RolesGuard implements CanActivate {
           if (!data) {
             throw new NotFoundException(`Id ${params.id} not found.`);
           }
+          if (data.navigationId) {
+            if (
+              user.userNavigationPermissions
+                ?.find(obj => obj.navigationId === data.navigationId)?.permissionName
+                ?.includes('delete')
+            ) {
+              return true;
+            }
+            else {
+              return false;
+            }
+          }
+        }
+        /* if we pass a body then look for navigation id inside body props. */
+        if (body?.navigationId) {
           if (
             user.userNavigationPermissions
-              ?.find(obj => obj.navigationId === data.navigationId)?.permissionName
+              .find(obj => obj.navigationId === body.navigationId)?.permissionName
               ?.includes('delete')
           ) {
             return true;
@@ -109,18 +158,16 @@ export class RolesGuard implements CanActivate {
             return false;
           }
         }
-        /* if we pass a body then look for navigation id inside body props. */
-        if (body?.navigationId) {
-          if (
-            user.userNavigationPermissions
-              ?.find(obj => obj.navigationId === body.navigationId)?.permissionName
-              ?.includes('delete')
-          ) {
-            return true;
-          }
-          else {
-            return false;
-          }
+        /* if table not indexed by navigationId then check for navigationType only */
+        if (
+          user.userNavigationPermissions
+            .find(obj => obj.navigationTypeName === navigationTypeName)?.permissionName
+            ?.includes('delete')
+        ) {
+          return true;
+        }
+        else {
+          return false;
         }
     }
 
@@ -128,7 +175,7 @@ export class RolesGuard implements CanActivate {
   }
 
   /**
-   * Find record in repository for given id and entity.
+   * Find record in repository for given entity and id.
    * 
    * @param entityClassName The TypeORM entity class name.
    * @param id The id.
