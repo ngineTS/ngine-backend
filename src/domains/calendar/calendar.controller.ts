@@ -5,7 +5,7 @@ import { UpdateCalendarDto } from './dto/update-calendar.dto';
 import { RolesGuard } from 'src/core/guards/role.guard';
 import { Feature, Permission } from 'src/core/decorators/role.decorator';
 
-@Feature('calendar')
+@Feature('Calendar')
 @Controller('calendar')
 export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}

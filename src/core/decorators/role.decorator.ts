@@ -2,7 +2,7 @@ import { Reflector } from '@nestjs/core';
 
 export const Permission = Reflector.createDecorator<'view' | 'add' | 'edit' | 'delete'>();
 
-/* /!\ Feature name has to match postgres table name. */
-export const Feature = Reflector.createDecorator<'calendar' | 'quill_editor' | 'table-viz'>();
+/* /!\ Feature name has to match entity name. */
+export const Feature = Reflector.createDecorator<'Calendar' | 'QuillEditor' | 'TableViz'>();
 
 

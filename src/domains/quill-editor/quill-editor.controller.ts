@@ -6,7 +6,7 @@ import { UserId } from 'src/core/decorators/user.decorator';
 import { Feature, Permission } from 'src/core/decorators/role.decorator';
 import { RolesGuard } from 'src/core/guards/role.guard';
 
-@Feature('quill_editor')
+@Feature('QuillEditor')
 @Controller('quill-editor')
 export class QuillEditorController {
   constructor(private readonly quillEditorService: QuillEditorService) {}
