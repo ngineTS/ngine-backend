@@ -15,7 +15,11 @@ export class NavigationController {
     @UserId() userId: string,
     @Request() req
   ) {
-    return this.navigationService.saveNavigation(createNavigationDto, userId, req.user.userNavigationPermissions);
+    return this.navigationService.saveNavigation(
+      createNavigationDto,
+      userId,
+      req.user.userNavigationPermissions
+    );
   }
 
   @Get()

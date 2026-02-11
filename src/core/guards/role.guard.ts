@@ -6,21 +6,20 @@ import { Feature, NavigationTypeName, Permission } from '../decorators/role.deco
 import { DataSource } from 'typeorm';
 
 /**
- * The idea here is to link a navigation to the action applied by the user.
+ * The idea, here, is to link a navigation to the action applied by the user.
  * The navigation can then be compared to user navigation permissions to allow or not the action.
  * 
  * This role requires the following parameters:
  * - The feature (ex: Calendar. It has to match entity name.).
  * - The permission (or action): view, add, edit or delete.
- * - The navigation type name.
  * - The navigation or navigation id (if possible).
+ * - The navigation type name.
  * 
- * Way to identify the navigation :
- * 1. Navigation id is used as request parameter.
- * 2. Id is used as request parameter -> fetch navigation id inside table.
- * 3. Navigation is used as request body.
- * 4. No parameter, no body or no navigation found -> Valid action based on navigation type
- * by mapping navigationTypeName with user navigationNavigationPermissions.
+ * Ways to identify navigation:
+ * - navigation id is used as request parameter
+ * - entity id is used as request parameter -> fetch navigation id from table
+ * - navigation is used as request body.
+ * - no parameter, no body or no navigation found -> Valid action based on navigation type.
  */
 @Injectable()
 export class RolesGuard implements CanActivate {

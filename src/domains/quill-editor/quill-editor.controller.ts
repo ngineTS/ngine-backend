@@ -3,10 +3,11 @@ import { QuillEditorService } from './quill-editor.service';
 import { CreateQuillEditorDto } from './dto/create-quill-editor.dto';
 import { UpdateQuillEditorDto } from './dto/update-quill-editor.dto';
 import { UserId } from 'src/core/decorators/user.decorator';
-import { Feature, Permission } from 'src/core/decorators/role.decorator';
+import { Feature, NavigationTypeName, Permission } from 'src/core/decorators/role.decorator';
 import { RolesGuard } from 'src/core/guards/role.guard';
 
 @Feature('QuillEditor')
+@NavigationTypeName('my-quill-editor')
 @Controller('quill-editor')
 export class QuillEditorController {
   constructor(private readonly quillEditorService: QuillEditorService) {}

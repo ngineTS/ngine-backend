@@ -1,4 +1,4 @@
-import { Body, Controller, Param, ParseUUIDPipe, Patch } from '@nestjs/common';
+import { Body, Controller, Param, ParseUUIDPipe, Patch, Request } from '@nestjs/common';
 import { ContainerLayoutService } from './container-layout.service';
 import { UpdateContainerLayoutDto } from './dto/update-container-layout.dto';
 
@@ -10,8 +10,13 @@ export class ContainerLayoutController {
   @Patch(':id')
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() updateContainerLayoutDto: UpdateContainerLayoutDto
+    @Body() updateContainerLayoutDto: UpdateContainerLayoutDto,
+    @Request() req
   ) {
-    return this.containerLayoutService.update(id, updateContainerLayoutDto);
+    return this.containerLayoutService.update(
+      id,
+      updateContainerLayoutDto,
+      req.user.userNavigationPermissions
+    );
   }
 }

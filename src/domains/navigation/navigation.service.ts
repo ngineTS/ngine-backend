@@ -78,6 +78,7 @@ export class NavigationService {
       userNavigationPermissions: Array<{
         navigationId: string;
         permissionName: string;
+        navigationTypeName: string;
       }>
     },
     hasToGenerateNewToken = false,
@@ -290,6 +291,7 @@ export class NavigationService {
     userNavigationPermissions: Array<{
       navigationId: string;
       permissionName: string;
+      navigationTypeName: string;
     }>
   ): Promise<Navigation> {
     /* valid permission */
@@ -351,6 +353,7 @@ export class NavigationService {
     userNavigationPermissions: Array<{
       navigationId: string;
       permissionName: string;
+      navigationTypeName: string;
     }> 
   ) {
     const dbNavigation = await this._navigationRepository.findOne({
@@ -416,6 +419,7 @@ export class NavigationService {
     userNavigationPermissions: Array<{
       navigationId: string;
       permissionName: string;
+      navigationTypeName: string;
     }> 
   ) {
     updateNavigationDtoArray.forEach(navigation => {
@@ -458,6 +462,7 @@ export class NavigationService {
     userNavigationPermissions: Array<{
       navigationId: string;
       permissionName: string;
+      navigationTypeName: string;
     }>
   ) {
     /* 1. */
