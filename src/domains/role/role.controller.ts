@@ -6,11 +6,10 @@ import { UserId } from 'src/core/decorators/user.decorator';
 import { Feature, NavigationTypeName, Permission } from 'src/core/decorators/role.decorator';
 import { RolesGuard } from 'src/core/guards/role.guard';
 
-@Feature('Role')
 @NavigationTypeName('role-management')
 @Controller('role')
 export class RoleController {
-  constructor(private readonly roleService: RoleService) {}
+  constructor(private readonly roleService: RoleService) { }
 
   @Permission('add')
   @UseGuards(RolesGuard)

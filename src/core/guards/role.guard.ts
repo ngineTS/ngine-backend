@@ -1,5 +1,3 @@
-
-
 import { Injectable, CanActivate, ExecutionContext, NotFoundException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Feature, NavigationTypeName, Permission } from '../decorators/role.decorator';
@@ -10,16 +8,16 @@ import { DataSource } from 'typeorm';
  * The navigation can then be compared to user navigation permissions to allow or not the action.
  * 
  * This role requires the following parameters:
- * - The feature (ex: Calendar. It has to match entity name.).
- * - The permission (or action): view, add, edit or delete.
- * - The navigation or navigation id (if possible).
- * - The navigation type name.
+ * - The feature (ex: Calendar. It has to match entity name.)
+ * - The permission (or action): view, add, edit or delete
+ * - The navigation or navigation id (if possible)
+ * - The navigation type name
  * 
  * Ways to identify navigation:
  * - navigation id is used as request parameter
  * - entity id is used as request parameter -> fetch navigation id from table
- * - navigation is used as request body.
- * - no parameter, no body or no navigation found -> Valid action based on navigation type.
+ * - navigation is used as request body
+ * - no parameter, no body or no navigation found -> Valid action based on navigation type
  */
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -55,7 +53,7 @@ export class RolesGuard implements CanActivate {
           }
         }
         /* if we look for a specific id then find navigation id associated */
-        if (params.id) {
+        if (params.id && entity) {
           const data = await this.findNavigationInTableById(entity, params.id);
           if (!data) {
             throw new NotFoundException(`Id ${params.id} not found.`);
@@ -79,7 +77,7 @@ export class RolesGuard implements CanActivate {
 
       case 'edit':
         /* if we look for a specific id then find navigation id associated. */
-        if (params.id) {
+        if (params.id && entity) {
           const data = await this.findNavigationInTableById(entity, params.id);   
           if (!data) {
             throw new NotFoundException(`Id ${params.id} not found.`);
@@ -126,7 +124,7 @@ export class RolesGuard implements CanActivate {
 
       case 'delete':
         /* if we look for a specific id then find navigation id associated. */
-        if (params.id) {
+        if (params.id && entity) {
           const data = await this.findNavigationInTableById(entity, params.id);
           if (!data) {
             throw new NotFoundException(`Id ${params.id} not found.`);

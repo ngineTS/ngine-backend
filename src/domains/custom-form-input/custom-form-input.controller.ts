@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, ParseUUIDPipe } from '@nestjs/common';
 import { CustomFormInputService } from './custom-form-input.service';
 import { CreateCustomFormInputDto } from './dto/create-custom-form-input.dto';
 import { UpdateCustomFormInputDto } from './dto/update-custom-form-input.dto';

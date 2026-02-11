@@ -1,15 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Request, Res, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Public } from 'src/core/auth/auth.guard';
-import { Response } from 'express';
 import { UserId } from 'src/core/decorators/user.decorator';
+import { NavigationTypeName, Permission } from 'src/core/decorators/role.decorator';
+import { RolesGuard } from 'src/core/guards/role.guard';
 
 @Controller('user')
+@NavigationTypeName('user-management')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @Permission('view')
+  @UseGuards(RolesGuard)
   @Get()
   findAll() {
     return this.userService.findAll();
@@ -27,6 +31,8 @@ export class UserController {
     return this.userService.changeUserPassword(passwordChangeDto);
   }
 
+  @Permission('edit')
+  @UseGuards(RolesGuard)
   @Patch(':id')
   update(
     @Param('id', new ParseUUIDPipe()) id: string, 
@@ -35,6 +41,8 @@ export class UserController {
     return this.userService.update(id, updateUserDto);
   }
 
+  @Permission('delete')
+  @UseGuards(RolesGuard)
   @Delete(':id')
   remove(
     @Param('id', new ParseUUIDPipe()) id: string,
