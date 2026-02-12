@@ -1,6 +1,5 @@
 import { Controller, Get, Body, Patch, Param, Delete, Post } from '@nestjs/common';
 import { CustomTableService } from './custom-table.service';
-import { UpdateCustomTableDto } from './dto/update-custom-table.dto';
 
 @Controller('custom-table')
 export class CustomTableController {

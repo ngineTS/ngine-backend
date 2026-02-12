@@ -4,11 +4,11 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Public } from 'src/core/auth/auth.guard';
 import { UserId } from 'src/core/decorators/user.decorator';
-import { NavigationTypeName, Permission } from 'src/core/decorators/role.decorator';
+import { NavigationTypeNameArray, Permission } from 'src/core/decorators/role.decorator';
 import { RolesGuard } from 'src/core/guards/role.guard';
 
 @Controller('user')
-@NavigationTypeName('user-management')
+@NavigationTypeNameArray(['user-management'])
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

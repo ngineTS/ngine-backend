@@ -6,14 +6,15 @@ export const Permission = Reflector.createDecorator<'view' | 'add' | 'edit' | 'd
 export const Feature = Reflector.createDecorator<'Calendar' | 'QuillEditor' | 'TableViz' | 'Role'>();
 
 /* /!\ NavigationTypeName shall match name in navigation_type table. */ 
-export const NavigationTypeName = Reflector.createDecorator<'role-management' 
+export const NavigationTypeNameArray = Reflector.createDecorator<Array<NavigationTypeName>>();
+
+type NavigationTypeName = 'role-management' 
     | 'user-management'
     | 'media-library'
     | 'analytic'
     | 'calendar'
     | 'my-quill-editor'
     | 'content-management'
-    | 'content-visualization'    
->();
+    | 'content-visualization';
 
 

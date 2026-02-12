@@ -1,6 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext, NotFoundException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Feature, NavigationTypeName, Permission } from '../decorators/role.decorator';
+import { Feature, NavigationTypeNameArray, Permission } from '../decorators/role.decorator';
 import { DataSource } from 'typeorm';
 
 /**
@@ -34,7 +34,7 @@ export class RolesGuard implements CanActivate {
     }
     
     const entity = this._reflector.get(Feature, context.getClass());
-    const navigationTypeName = this._reflector.get(NavigationTypeName, context.getClass());
+    const navigationTypeNameArray = this._reflector.get(NavigationTypeNameArray, context.getClass());
     const request = context.switchToHttp().getRequest();
     const body = request.body;
     const params = request.params;
@@ -68,7 +68,7 @@ export class RolesGuard implements CanActivate {
           }
         }
         /* if table not indexed by navigationId then check for navigation type only */
-        if (user.userNavigationPermissions.find(obj => obj.navigationTypeName === navigationTypeName)) {
+        if (user.userNavigationPermissions.find(obj => navigationTypeNameArray.includes(obj.navigationTypeName))) {
           return true;
         }
         else {
@@ -98,7 +98,7 @@ export class RolesGuard implements CanActivate {
         /* if table not indexed by navigationId then check for navigationType only */
         if (
           user.userNavigationPermissions
-            .find(obj => obj.navigationTypeName === navigationTypeName)?.permissionName
+            .find(obj => navigationTypeNameArray.includes(obj.navigationTypeName))?.permissionName
             ?.includes('edit')
         ) {
           return true;
@@ -158,7 +158,7 @@ export class RolesGuard implements CanActivate {
         /* if table not indexed by navigationId then check for navigationType only */
         if (
           user.userNavigationPermissions
-            .find(obj => obj.navigationTypeName === navigationTypeName)?.permissionName
+            .find(obj =>  navigationTypeNameArray.includes(obj.navigationTypeName))?.permissionName
             ?.includes('delete')
         ) {
           return true;
