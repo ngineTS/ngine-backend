@@ -55,7 +55,6 @@ export class ContainerLayoutService {
       !userNavigationPermissionsArray.find(obj => obj.navigationId === containerLayout.refId)
         ?.permissionName.includes('edit')
     ) {
-      console.log('Ehhh ça va pas ou quoi ???');
       throw new ForbiddenException();
     }
   }

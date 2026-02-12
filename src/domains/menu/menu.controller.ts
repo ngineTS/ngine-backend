@@ -1,4 +1,4 @@
-import { Controller, Get, Body, Patch, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Body, Patch, Param, Delete, ParseUUIDPipe, Request } from '@nestjs/common';
 import { MenuService } from './menu.service';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { UserId } from 'src/core/decorators/user.decorator';
@@ -11,20 +11,25 @@ export class MenuController {
   createNavigationBar(
     @Param('navigationId', new ParseUUIDPipe()) navigationId: string,
     @UserId() userId: string,
+    @Request() req
   ) {
-    return this.menuService.createNavigationBar(navigationId, userId);
+    return this.menuService.createNavigationBar(
+      navigationId,
+      userId,
+      req.user.userNavigationPermissions
+    );
   }
 
   @Patch(':refId')
   updateStyleProperties(
     @Param('refId') refId: string,
-    @Body() updateMenuDto: UpdateMenuDto
+    @Body() updateMenuDto: UpdateMenuDto,
+    @Request() req
   ) {
-    return this.menuService.updateStyleProperties(refId, updateMenuDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id', new ParseUUIDPipe()) id: string) {
-    return this.menuService.remove(id);
+    return this.menuService.updateStyleProperties(
+      refId,
+      updateMenuDto,
+      req.user.userNavigationPermissions
+    );
   }
 }

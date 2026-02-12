@@ -17,6 +17,7 @@ import { TypographyStyle } from '../typography-style/entities/typography-style.e
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 import { NavigationValidatorService } from './navigation-validator.service';
 import { RoleValidatorService } from '../role/role-validator.service';
+import { MenuValidatorService } from '../menu/menu-validator.service';
 
 @Module({
   imports:[
@@ -40,7 +41,8 @@ import { RoleValidatorService } from '../role/role-validator.service';
     RoleService,
     RoleValidatorService,
     AuthService,
-    MenuService
+    MenuService,
+    MenuValidatorService
   ]
 })
 export class NavigationModule {}

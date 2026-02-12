@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -9,6 +9,7 @@ import { TypographyStyle } from '../typography-style/entities/typography-style.e
 import { Navigation } from '../navigation/entities/navigation.entity';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 import { omitObjectProperty } from 'src/core/utils/omit-object-property.util';
+import { MenuValidatorService } from './menu-validator.service';
 
 @Injectable()
 export class MenuService {
@@ -25,7 +26,8 @@ export class MenuService {
     @InjectRepository(Navigation)
     private _navigationRepository: Repository<Navigation>,
     @InjectRepository(NavigationType)
-    private _navigationTypeRepository: Repository<NavigationType>
+    private _navigationTypeRepository: Repository<NavigationType>,
+    private _menuValidatorService: MenuValidatorService
   ) {}
 
 
@@ -44,21 +46,35 @@ export class MenuService {
    * 
    * @param navigationId The navigationId to attach the menu to.
    * @param userId The user who creates this navigation bar.
+   * @param userNavigationPermissionsArray The user navigation permissions.
+   * @throws {ForbiddenException} If user doesn't have add permission on navigation.
+   * @description
+   * 1. Valid user permission.
+   * 2. Create navigation bar for given navigation with same style as navigation.
+   * 3. Create first navigation inside navigation bar with same style as navigation.
    */
-  async createNavigationBar(navigationId: string, userId: string) {
-    /* Get navigation from navigationId and throw error if not found. */
-    const navigation = await this._navigationRepository.findOne({
-      where: { id: navigationId }
-    });
-    if (!navigation) {
-      throw new NotFoundException(`Navigation id ${navigationId} not found.`)
-    };
+  async createNavigationBar(
+    navigationId: string,
+    userId: string,
+    userNavigationPermissionsArray: Array<{
+      navigationId: string;
+      permissionName: string;
+      navigationTypeName: string;
+    }>
+  ) {
+    /* 1. */
+    if (
+      !userNavigationPermissionsArray.find(obj => obj.navigationId === navigationId)
+        ?.permissionName.includes('add')
+    ) {
+      throw new ForbiddenException();
+    }
 
-    /* Create menu and style for navigation. */
+    /* 2. */
     const menuSaved = await this._menuRepository.save({ navigationId: navigationId });
     await this.inheritParentStyle(menuSaved.id, navigationId);
 
-    /* Create first redirect-button child and style. */
+    /* 3. */
     const redirectButtonNavigationType = await this._navigationTypeRepository.findOne({
       where: { name: 'redirect-button' }
     });
@@ -78,7 +94,6 @@ export class MenuService {
     const firstAutoCreatedChildSaved = await this._navigationRepository.save(firstAutoCreatedChild);
     await this.inheritParentStyle(firstAutoCreatedChildSaved.id, navigationId);
     
-    /* Return success message. */
     return JSON.stringify('Navigation bar successfully created.');
   }
 
@@ -101,7 +116,17 @@ export class MenuService {
    * @param updateMenuDto The style properties.
    * @returns The properties affected number.
    */
-  async updateStyleProperties(refId: string, updateMenuDto: UpdateMenuDto) {
+  async updateStyleProperties(
+    refId: string,
+    updateMenuDto: UpdateMenuDto,
+    userNavigationPermissionsArray: Array<{
+      navigationId: string;
+      permissionName: string;
+      navigationTypeName: string;
+    }>
+  ) {
+    await this._menuValidatorService.validPermissionToUpdateStyle(refId, userNavigationPermissionsArray);
+
     const affectedRelations: { [prop: string]: number | undefined } = {
       affectedContainerLayout: 0,
       affectedContainerStyle: 0,
@@ -151,7 +176,7 @@ export class MenuService {
    * Delete menu.
    * 
    * @param id The menu id.
-   * @returns A Delete response.
+   * @returns A delete response.
    */
   async remove(id: string) {
     const deleteResponse = await this._menuRepository.delete(id);
@@ -211,6 +236,7 @@ export class MenuService {
 
   /**
    * Create default container layout for given refId.
+   * 
    * @param refId the object reference id.
    * @returns The container layout object saved.
    */
