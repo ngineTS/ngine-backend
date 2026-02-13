@@ -1,13 +1,13 @@
-import { IsBoolean, IsNotEmpty, IsString, IsUUID } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
 
 export class CreateTableVizDto {
     @IsNotEmpty()
     @IsUUID()
     navigationId: string;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
-    tableName: string;
+    tableName?: string;
 
     @IsNotEmpty()
     @IsString()

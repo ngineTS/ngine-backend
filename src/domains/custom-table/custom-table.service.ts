@@ -86,7 +86,7 @@ export class CustomTableService {
     );
     await queryRunner.release();
 
-    return { message: `Tenant ${tableName} table created.` };
+    return { message: `${tableName} table created.` };
   }
 
 }
