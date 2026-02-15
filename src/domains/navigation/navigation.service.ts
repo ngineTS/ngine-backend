@@ -51,6 +51,7 @@ export class NavigationService {
       userNavigationPermissions: Array<{
         navigationId: string;
         permissionName: string;
+        navigationTypeName: string;
       }>
     }
   ) {

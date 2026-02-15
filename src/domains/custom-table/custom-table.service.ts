@@ -1,15 +1,36 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { DataSource, Table, TableColumnOptions } from 'typeorm';
 import { CreateCustomFormInputDto } from '../custom-form-input/dto/create-custom-form-input.dto';
+import { CustomTableValidatorService } from './custom-table-validator.service';
 
 
 @Injectable()
 export class CustomTableService {
 
-  constructor(private _dataSource: DataSource) { }
+  constructor(
+    private _dataSource: DataSource,
+    private _customTableValidatorService: CustomTableValidatorService
+  ) { }
 
+  /**
+   * Add record to table.
+   * 
+   * @param tableName The table name
+   * @param payload The record.
+   * @param userNavigationPermissions The user navigation permissions.
+   * @returns The record saved.
+   */
+  async saveTableContent(
+    tableName: string,
+    payload: any,
+    userNavigationPermissions: Array<{
+      navigationId: string;
+      permissionName: string;
+      navigationTypeName: string;
+    }>
+  ) {
+    await this._customTableValidatorService.validPermission(tableName, 'add', userNavigationPermissions);
 
-  async saveTableContent(tableName: string, payload: any) {
     return await this._dataSource.createQueryBuilder()
       .insert()
       .into(`custom_table.${tableName}`)
@@ -17,7 +38,27 @@ export class CustomTableService {
       .execute();
   }
 
-  async updateTableRow(tableName: string, id: string, payload: any) {
+  /**
+   * Update table record.
+   * 
+   * @param tableName The table name.
+   * @param id The record id.
+   * @param payload The property to update.
+   * @param userNavigationPermissions The user navigation permissions.
+   * @returns An UpdateResult response.
+   */
+  async updateTableRow(
+    tableName: string,
+    id: string,
+    payload: any,
+    userNavigationPermissions: Array<{
+      navigationId: string;
+      permissionName: string;
+      navigationTypeName: string;
+    }>
+  ) {
+    await this._customTableValidatorService.validPermission(tableName, 'edit', userNavigationPermissions);
+
     return await this._dataSource.createQueryBuilder()
       .update(`custom_table.${tableName}`)
       .set(payload)
@@ -25,15 +66,49 @@ export class CustomTableService {
       .execute();
   }
 
-  async deleteTableRow(tableName: string, id: string) {
-    await this._dataSource.createQueryBuilder()
+  /**
+   * Delete table record. 
+   * 
+   * @param tableName The table name.
+   * @param id The record id.
+   * @param userNavigationPermissions The user navigation permissions.
+   * @returns A DeleteResult response.
+   */
+  async deleteTableRow(
+    tableName: string,
+    id: string,
+    userNavigationPermissions: Array<{
+      navigationId: string;
+      permissionName: string;
+      navigationTypeName: string;
+    }>
+  ) {
+    await this._customTableValidatorService.validPermission(tableName, 'delete', userNavigationPermissions);
+
+    return await this._dataSource.createQueryBuilder()
       .delete()
       .from(`custom_table.${tableName}`)
       .where("id = :id", { id: id })
       .execute();
   }
 
-  async findTableContentByTableName(tableName: string) {
+  /**
+   * Get all table content.
+   * 
+   * @param tableName The table name.
+   * @param userNavigationPermissions The user navigation permissions.
+   * @returns An array with content.
+   */
+  async findTableContentByTableName(
+    tableName: string,
+    userNavigationPermissions: Array<{
+      navigationId: string;
+      permissionName: string;
+      navigationTypeName: string;
+    }>
+  ) {
+    await this._customTableValidatorService.validPermission(tableName, 'view', userNavigationPermissions);
+
     return await this._dataSource.createQueryBuilder()
       .select('*')
       .from(`custom_table.${tableName}`, 't')
@@ -88,5 +163,4 @@ export class CustomTableService {
 
     return { message: `${tableName} table created.` };
   }
-
 }

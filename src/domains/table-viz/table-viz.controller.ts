@@ -2,25 +2,25 @@ import { Controller, Get, Post, Body, Patch, Param, UseGuards } from '@nestjs/co
 import { TableVizService } from './table-viz.service';
 import { CreateTableVizDto } from './dto/create-table-viz.dto';
 import { UpdateTableVizDto } from './dto/update-table-viz.dto';
-import { Feature, Permission } from 'src/core/decorators/role.decorator';
+import { Feature, NavigationTypeNameArray, Permission } from 'src/core/decorators/role.decorator';
 import { RolesGuard } from 'src/core/guards/role.guard';
 
 @Feature('TableViz')
+@NavigationTypeNameArray(['content-visualization', 'content-management'])
 @Controller('table-viz')
 export class TableVizController {
-  
   constructor(private readonly tableVizService: TableVizService) {}
 
-  @Post()
   @Permission('add')
   @UseGuards(RolesGuard)
+  @Post()
   create(@Body() createTableVizDto: CreateTableVizDto) {
     return this.tableVizService.create(createTableVizDto);
   }
 
-  @Get('navigation/:navigationId')
   @Permission('view')
   @UseGuards(RolesGuard)
+  @Get('navigation/:navigationId')
   findByNavigationId(@Param('navigationId') navigationId: string) {
     return this.tableVizService.findByNavigationId(navigationId);
   }
