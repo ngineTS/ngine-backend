@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, UseGuards, Request } from '@nestjs/common';
 import { TableVizService } from './table-viz.service';
 import { CreateTableVizDto } from './dto/create-table-viz.dto';
 import { UpdateTableVizDto } from './dto/update-table-viz.dto';
@@ -31,8 +31,14 @@ export class TableVizController {
   }
 
   @Get('table-content/:tableName')
-  findTableContentByTableName(@Param('tableName') tableName: string) {
-    return this.tableVizService.findTableContentByTableName(tableName);
+  findTableContentByTableName(
+    @Param('tableName') tableName: string,
+    @Request() req
+  ) {
+    return this.tableVizService.findTableContentByTableName(
+      tableName,
+      req.user.userNavigationPermissions
+    );
   }
 
   @Permission('edit')
