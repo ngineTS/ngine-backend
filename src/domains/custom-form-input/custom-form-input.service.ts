@@ -3,10 +3,11 @@ import { CreateCustomFormInputDto } from './dto/create-custom-form-input.dto';
 import { UpdateCustomFormInputDto } from './dto/update-custom-form-input.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CustomFormInput } from './entities/custom-form-input.entity';
-import { ColumnType, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { stringToLowerCaseWithUnderscore } from 'src/core/utils/string-transfo-util';
 import { SimpleColumnType, SpatialColumnType, WithLengthColumnType, WithPrecisionColumnType, WithWidthColumnType } from 'typeorm/driver/types/ColumnTypes';
 import { CustomTableService } from '../custom-table/custom-table.service';
+import { CustomTableValidatorService } from '../custom-table/custom-table-validator.service';
 
 @Injectable()
 export class CustomFormInputService {
@@ -14,7 +15,8 @@ export class CustomFormInputService {
   constructor(
     @InjectRepository(CustomFormInput)
     private _customFormInputRepository: Repository<CustomFormInput>,
-    private _customTableService: CustomTableService
+    private _customTableService: CustomTableService,
+    private _customTableValidatorService: CustomTableValidatorService
   ) { }
 
   /**
@@ -39,31 +41,40 @@ export class CustomFormInputService {
    * 
    * @param createCustomFormDto The inputs configuration.
    * @param tableName The table name.
+   * @param userNavigationPermissions The user navigation permissions.
    * @returns The inputs metadata saved.
    * @description
-   * 1. Map input type to postgres column type and define column name.
-   * 2. Create table from table name and column configuration.
-   * 3. Save inputs metadata.
+   * 1. Valid user permission.
+   * 2. Map input type to postgres column type and define column name.
+   * 3. Create table from table name and column configuration.
+   * 4. Save inputs metadata.
    */
   async create(
     createCustomFormDto: Array<CreateCustomFormInputDto>,
-    tableName: string
+    tableName: string,
+    userNavigationPermissions: Array<{
+      navigationId: string;
+      permissionName: string;
+      navigationTypeName: string;
+    }>
   ) {
     /* 1. */
+    await this._customTableValidatorService.validPermission(tableName, 'add', userNavigationPermissions);
+
+    /* 2. */
     createCustomFormDto.forEach(column => {
       if (column.inputType === 'dropdown' && column.columnType) {
         column.columnType = this.inputTypeDatabaseTypeMap.get(column.columnType);
       } else {
         column.columnType = this.inputTypeDatabaseTypeMap.get(column.inputType);
       }
-    
       column.columnName = stringToLowerCaseWithUnderscore(column.inputLabel);
     });
 
-    /* 2. */
+    /* 3. */
     await this._customTableService.createDatabaseTable(tableName, createCustomFormDto);
 
-    /* 3. */
+    /* 4. */
     return this._customFormInputRepository.save(createCustomFormDto);
   }
 
@@ -83,7 +94,7 @@ export class CustomFormInputService {
     const updateResponse = await this._customFormInputRepository.update(id, updateCustomFormDto);
 
     if (updateResponse.affected === 0) {
-      throw new NotFoundException(`Custom form input ${id} not found.`)
+      throw new NotFoundException(`Custom form input ${id} not found.`);
     }
 
     return updateResponse;
