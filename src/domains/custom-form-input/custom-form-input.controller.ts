@@ -11,7 +11,7 @@ export class CustomFormInputController {
   @Post(':tableName')
   create(
     @Param('tableName') tableName: string,
-    @Body() createCustomFormDto: CreateCustomFormInputDto[],
+    @Body() createCustomFormDto: Array<CreateCustomFormInputDto>,
     @Request() req
   ) {
     return this.customFormService.create(
@@ -21,12 +21,16 @@ export class CustomFormInputController {
     );
   }
 
-  /*
-  @Patch(':id')
+  @Patch(':tableName')
   update(
-    @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() updateCustomFormDto: UpdateCustomFormInputDto
+    @Param('tableName') tableName: string,
+    @Body() createCustomFormDto: Array<CreateCustomFormInputDto>,
+    @Request() req
   ) {
-    return this.customFormService.update(id, updateCustomFormDto);
-  }*/
+    return this.customFormService.update(
+      tableName,
+      createCustomFormDto,
+      req.user.userNavigationPermissions
+    );
+  }
 }

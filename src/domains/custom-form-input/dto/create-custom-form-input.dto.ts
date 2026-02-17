@@ -5,6 +5,9 @@ import { SimpleColumnType, SpatialColumnType, WithLengthColumnType, WithPrecisio
 
 export class CreateCustomFormInputDto {
 
+    @IsUUID()
+    id: string;
+
     @IsNotEmpty()
     @IsUUID()
     tableId: string;

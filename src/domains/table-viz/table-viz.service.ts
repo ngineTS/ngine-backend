@@ -6,6 +6,7 @@ import { DataSource, Repository } from 'typeorm';
 import { TableViz } from './entities/table-viz.entity';
 import { stringToLowerCaseWithUnderscore } from 'src/core/utils/string-transfo-util';
 import { CustomTableValidatorService } from '../custom-table/custom-table-validator.service';
+import { CustomTableService } from '../custom-table/custom-table.service';
 
 @Injectable()
 export class TableVizService {
@@ -14,7 +15,8 @@ export class TableVizService {
     @InjectRepository(TableViz)
     private _tableVizRepository: Repository<TableViz>,
     private _dataSource: DataSource,
-    private _customTableValidatorService: CustomTableValidatorService
+    private _customTableValidatorService: CustomTableValidatorService,
+    private _customTableService: CustomTableService
   ) { }
 
   /**
@@ -35,15 +37,33 @@ export class TableVizService {
    * @param updateTableVizDto The table viz properties to update.
    * @returns An UpdateResult object.
    * @throws {NotFoundException} If table viz id not found.
+   * @description
+   * 1. If `tableLabel` has changed:
+   * - modify `tableName`
+   * - if tableViz is a custom table (i.e. `isEditable` true) then modify database custom table name.
+   * 2. Update table viz properties and return `tableName`.
    */
   async update(id: string, updateTableVizDto: UpdateTableVizDto) {
-    const updateResult = await this._tableVizRepository.update(id, updateTableVizDto);
-
-    if (updateResult.affected === 0) {
+    const currentTableViz = await this._tableVizRepository.findOneBy({id});
+    if (!currentTableViz) {
       throw new NotFoundException(`Table viz id ${id} not found.`);
     }
+    
+    /* 1. */
+    if (updateTableVizDto.tableLabel) {
+      updateTableVizDto.tableName = stringToLowerCaseWithUnderscore(updateTableVizDto.tableLabel);
 
-    return updateResult;
+      if (updateTableVizDto.isEditable) {
+        await this._customTableService.renameDatabaseTable(
+          currentTableViz.tableName,
+          updateTableVizDto.tableName
+        );
+      }
+    }
+
+    /* 2 */
+    await this._tableVizRepository.update(id, updateTableVizDto);
+    return JSON.stringify(updateTableVizDto.tableName ?? currentTableViz.tableName);
   }
 
   /**
