@@ -31,7 +31,6 @@ export class CustomTableController {
     );
   }
 
-
   @Patch(':tableName/:id')
   updateTableRow(
     @Param('tableName') tableName: string,
@@ -46,7 +45,6 @@ export class CustomTableController {
       req.user.userNavigationPermissions
     );
   }
-
 
   @Delete(':tableName/:id')
   deleteTableRow(
