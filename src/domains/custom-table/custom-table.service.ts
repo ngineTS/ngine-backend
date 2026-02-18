@@ -21,7 +21,7 @@ export class CustomTableService {
    * @param userNavigationPermissions The user navigation permissions.
    * @returns The record saved.
    */
-  async saveTableContent(
+  async addTableRow(
     tableName: string,
     payload: any,
     userNavigationPermissions: Array<{
@@ -197,9 +197,6 @@ export class CustomTableService {
     inputsToUpdate: Array<CreateCustomFormInputDto>,
     inputsToDelete: Array<CustomFormInput>
   ) {
-    console.log('ADD', inputsToAdd);
-    console.log('UPDATE', inputsToUpdate);
-    console.log('DELETE', inputsToDelete);
     let queryRunner = this._dataSource.createQueryRunner();
 
     /* 1. */

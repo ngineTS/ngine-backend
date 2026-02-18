@@ -1,6 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateCustomFormInputDto } from './dto/create-custom-form-input.dto';
-import { UpdateCustomFormInputDto } from './dto/update-custom-form-input.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CustomFormInput } from './entities/custom-form-input.entity';
 import { Repository } from 'typeorm';
@@ -8,7 +7,6 @@ import { stringToLowerCaseWithUnderscore } from 'src/core/utils/string-transfo-u
 import { SimpleColumnType, SpatialColumnType, WithLengthColumnType, WithPrecisionColumnType, WithWidthColumnType } from 'typeorm/driver/types/ColumnTypes';
 import { CustomTableService } from '../custom-table/custom-table.service';
 import { CustomTableValidatorService } from '../custom-table/custom-table-validator.service';
-import { TableViz } from '../table-viz/entities/table-viz.entity';
 
 @Injectable()
 export class CustomFormInputService {
@@ -16,8 +14,6 @@ export class CustomFormInputService {
   constructor(
     @InjectRepository(CustomFormInput)
     private _customFormInputRepository: Repository<CustomFormInput>,
-    @InjectRepository(TableViz)
-    private _tableVizRepository: Repository<TableViz>,
     private _customTableService: CustomTableService,
     private _customTableValidatorService: CustomTableValidatorService
   ) { }
@@ -110,8 +106,6 @@ export class CustomFormInputService {
     /* 1. */
     await this._customTableValidatorService.validPermission(tableName, 'edit', userNavigationPermissions);
 
-    console.log('TABLE NAME', tableName);
-    console.log('PAYLOAD', createCustomInputsFormDto);
     /* 2. */
     createCustomInputsFormDto.forEach(column => {
       if (column.inputType === 'dropdown' && column.columnType) {
@@ -124,7 +118,6 @@ export class CustomFormInputService {
 
     /* 3. */
     const inputsToAdd = createCustomInputsFormDto.filter(payloadInput => !payloadInput.id);
-    console.log('inputs to add', inputsToAdd);
 
     /* 4. */
     const dbInputs = await this._customFormInputRepository.find({
@@ -133,7 +126,6 @@ export class CustomFormInputService {
     const inputsToDelete = dbInputs.filter(dbInput => 
       !createCustomInputsFormDto.find(payloadInput => payloadInput.id === dbInput.id)
     );
-    console.log('inputs to delete', inputsToDelete);
 
     /* 5. */
     const inputsToUpdate = createCustomInputsFormDto.filter(payloadInput => 
@@ -147,7 +139,6 @@ export class CustomFormInputService {
     inputsToUpdate.forEach(input => 
       input['oldColumnName'] = dbInputs.find(obj => obj.id === input.id)?.columnName
     );
-    console.log('inputs to update', inputsToUpdate);
 
     /* 6 */
     this._customTableService.updateDatabaseTable(

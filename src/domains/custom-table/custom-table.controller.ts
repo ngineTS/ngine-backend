@@ -24,7 +24,7 @@ export class CustomTableController {
     @Body() payload: any,
     @Request() req
   ) {
-    return this.customTableService.saveTableContent(
+    return this.customTableService.addTableRow(
       tableName,
       payload,
       req.user.userNavigationPermissions
