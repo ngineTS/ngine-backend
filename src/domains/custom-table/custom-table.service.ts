@@ -184,7 +184,7 @@ export class CustomTableService {
    * @param inputsToUpdate An array of inputs config used to update table columns.
    * @param inputsToDelete An array of inputs config used to drop table columns.
    * @returns success message.
-   * @throws {BadRequestException} If column name or type is missing.
+   * @throws {BadRequestException} If column name or type is missing when adding or updating column.
    * @throws {BadRequestException} If error occurs during table update.
    * @description
    * 1. Add new columns.
@@ -202,7 +202,7 @@ export class CustomTableService {
     /* 1. */
     for (let input of inputsToAdd) {
       if (!input.columnType || !input.columnName) {
-        throw new BadRequestException('Column name and type are required to create table.');
+        throw new BadRequestException('Column name and type are required to add column.');
       }
       try {
         await queryRunner.addColumn(
@@ -223,7 +223,7 @@ export class CustomTableService {
     /* 2. */
     for (let input of inputsToUpdate) {
       if (!input.columnType || !input.columnName) {
-        throw new BadRequestException('Column name and type are required to create table.');
+        throw new BadRequestException('Column name and type are required to update column.');
       }
       try {
         await queryRunner.renameColumn(

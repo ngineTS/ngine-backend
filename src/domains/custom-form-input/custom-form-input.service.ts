@@ -32,7 +32,11 @@ export class CustomFormInputService {
     ["date", "timestamp"],
     ["date-and-time", "timestamp"],
     ["file", "varchar"],
-    ["checkbox", "boolean"]
+    ["checkbox", "boolean"],
+    ["varchar", "varchar"],
+    ["boolean", "boolean"],
+    ["int", "int"],
+    ["timestamp", "timestamp"]
   ]);
 
   /**
@@ -59,20 +63,10 @@ export class CustomFormInputService {
   ) {
     /* 1. */
     await this._customTableValidatorService.validPermission(tableName, 'add', userNavigationPermissions);
-
     /* 2. */
-    createCustomInputsFormDto.forEach(column => {
-      if (column.inputType === 'dropdown' && column.columnType) {
-        column.columnType = this.inputTypeDatabaseTypeMap.get(column.columnType);
-      } else {
-        column.columnType = this.inputTypeDatabaseTypeMap.get(column.inputType);
-      }
-      column.columnName = stringToLowerCaseWithUnderscore(column.inputLabel);
-    });
-
+    this.setUpColumnNameAndType(createCustomInputsFormDto);
     /* 3. */
     await this._customTableService.createDatabaseTable(tableName, createCustomInputsFormDto);
-
     /* 4. */
     return this._customFormInputRepository.save(createCustomInputsFormDto);
   }
@@ -107,14 +101,7 @@ export class CustomFormInputService {
     await this._customTableValidatorService.validPermission(tableName, 'edit', userNavigationPermissions);
 
     /* 2. */
-    createCustomInputsFormDto.forEach(column => {
-      if (column.inputType === 'dropdown' && column.columnType) {
-        column.columnType = this.inputTypeDatabaseTypeMap.get(column.columnType);
-      } else {
-        column.columnType = this.inputTypeDatabaseTypeMap.get(column.inputType);
-      }
-      column.columnName = stringToLowerCaseWithUnderscore(column.inputLabel);
-    });
+    this.setUpColumnNameAndType(createCustomInputsFormDto); 
 
     /* 3. */
     const inputsToAdd = createCustomInputsFormDto.filter(payloadInput => !payloadInput.id);
@@ -141,7 +128,7 @@ export class CustomFormInputService {
     );
 
     /* 6 */
-    this._customTableService.updateDatabaseTable(
+    await this._customTableService.updateDatabaseTable(
       tableName,
       inputsToAdd,
       inputsToUpdate,
@@ -152,6 +139,22 @@ export class CustomFormInputService {
     inputsToDelete.forEach(async input => await this._customFormInputRepository.delete(input.id));
     inputsToUpdate.forEach(async input => await this._customFormInputRepository.save(input));
     inputsToAdd.forEach(async input => await this._customFormInputRepository.save(input));
+  }
+
+  /**
+   * Setup column name and type from input label and type.
+   * 
+   * @param createCustomInputsFormDto The custom form inputs configuration.
+   */
+  setUpColumnNameAndType(createCustomInputsFormDto: Array<CreateCustomFormInputDto>) {
+    createCustomInputsFormDto.forEach(column => {
+      if (column.inputType === 'dropdown' && column.columnType) {
+        column.columnType = this.inputTypeDatabaseTypeMap.get(column.columnType);
+      } else {
+        column.columnType = this.inputTypeDatabaseTypeMap.get(column.inputType);
+      }
+      column.columnName = stringToLowerCaseWithUnderscore(column.inputLabel);
+    });
   }
 
 }
