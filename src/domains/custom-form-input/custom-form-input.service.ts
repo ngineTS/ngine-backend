@@ -49,7 +49,7 @@ export class CustomFormInputService {
    * @description
    * 1. Valid user permission.
    * 2. Map input type to postgres column type and define column name.
-   * 3. Create table from table name and column configuration.
+   * 3. Create database custom table based on table name and column configuration.
    * 4. Save inputs metadata.
    */
   async create(
@@ -95,6 +95,8 @@ export class CustomFormInputService {
    * 3. Identify new inputs to add.
    * 4. Identify inputs to delete.
    * 5. Identify inputs to update.
+   * 6. Update database custom table.
+   * 7. Update inputs metadata.
    */
   async update(
     tableName: string,
@@ -142,8 +144,23 @@ export class CustomFormInputService {
         )
       )
     )
-    console.log(inputsToUpdate);
+    inputsToUpdate.forEach(input => 
+      input['oldColumnName'] = dbInputs.find(obj => obj.id === input.id)?.columnName
+    );
+    console.log('inputs to update', inputsToUpdate);
 
+    /* 6 */
+    this._customTableService.updateDatabaseTable(
+      tableName,
+      inputsToAdd,
+      inputsToUpdate,
+      inputsToDelete
+    );
+
+    /* 7. */
+    inputsToDelete.forEach(async input => await this._customFormInputRepository.delete(input.id));
+    inputsToUpdate.forEach(async input => await this._customFormInputRepository.save(input));
+    inputsToAdd.forEach(async input => await this._customFormInputRepository.save(input));
   }
 
 }
