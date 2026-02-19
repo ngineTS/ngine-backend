@@ -20,7 +20,7 @@ export class FileManagementController {
     @UserId() userId: string
   ) {
     await this.fileUploadValidatorService.validFileType(file);
-    return await this.fileManagementService.uploadFile(file, userId);
+    return this.fileManagementService.uploadFile(file, userId);
   }
  
   @Get(':fileName')
