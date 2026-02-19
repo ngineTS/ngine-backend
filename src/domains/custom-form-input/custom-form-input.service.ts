@@ -28,14 +28,14 @@ export class CustomFormInputService {
     ["text", "varchar"],
     ["password", "varchar"],
     ["textarea", "varchar"],
-    ["number", "int"],
+    ["number", "float4"],
     ["date", "timestamp"],
     ["date-and-time", "timestamp"],
     ["file", "varchar"],
     ["checkbox", "boolean"],
     ["varchar", "varchar"],
     ["boolean", "boolean"],
-    ["int", "int"],
+    ["float4", "float4"],
     ["timestamp", "timestamp"]
   ]);
 
