@@ -4,10 +4,15 @@ import { TableVizController } from './table-viz.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TableViz } from './entities/table-viz.entity';
 import { CustomTableValidatorService } from '../custom-table/custom-table-validator.service';
+import { CustomTableService } from '../custom-table/custom-table.service';
 
 @Module({
   imports:[TypeOrmModule.forFeature([TableViz])],
   controllers: [TableVizController],
-  providers: [TableVizService, CustomTableValidatorService],
+  providers: [
+    TableVizService,
+    CustomTableService,
+    CustomTableValidatorService
+  ],
 })
 export class TableVizModule {}

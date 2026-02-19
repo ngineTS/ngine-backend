@@ -1,4 +1,4 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, Matches } from "class-validator";
 
 export class CreateTableVizDto {
     @IsNotEmpty()
@@ -11,6 +11,9 @@ export class CreateTableVizDto {
 
     @IsNotEmpty()
     @IsString()
+    @Matches(/^[A-Za-z ]+$/, {
+      message: 'Module name must contain only letters.',
+    })
     tableLabel: string;
 
     @IsNotEmpty()

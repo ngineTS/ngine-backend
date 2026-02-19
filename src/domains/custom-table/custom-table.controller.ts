@@ -24,13 +24,12 @@ export class CustomTableController {
     @Body() payload: any,
     @Request() req
   ) {
-    return this.customTableService.saveTableContent(
+    return this.customTableService.addTableRow(
       tableName,
       payload,
       req.user.userNavigationPermissions
     );
   }
-
 
   @Patch(':tableName/:id')
   updateTableRow(
@@ -46,7 +45,6 @@ export class CustomTableController {
       req.user.userNavigationPermissions
     );
   }
-
 
   @Delete(':tableName/:id')
   deleteTableRow(

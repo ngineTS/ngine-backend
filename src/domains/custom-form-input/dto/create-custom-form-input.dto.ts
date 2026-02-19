@@ -1,9 +1,10 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, ValidateIf } from "class-validator";
+import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, Matches, ValidateIf } from "class-validator";
 import { ColumnType } from "typeorm";
 import { SimpleColumnType, SpatialColumnType, WithLengthColumnType, WithPrecisionColumnType, WithWidthColumnType } from "typeorm/driver/types/ColumnTypes";
 
 
 export class CreateCustomFormInputDto {
+    id: string;
 
     @IsNotEmpty()
     @IsUUID()
@@ -24,6 +25,9 @@ export class CreateCustomFormInputDto {
 
     @IsNotEmpty()
     @IsString()
+    @Matches(/^[A-Za-z ]+$/, {
+        message: 'Input label name must contain only letters.',
+    })
     inputLabel: string;
 
     @IsOptional()

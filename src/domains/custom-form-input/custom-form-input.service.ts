@@ -1,6 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateCustomFormInputDto } from './dto/create-custom-form-input.dto';
-import { UpdateCustomFormInputDto } from './dto/update-custom-form-input.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CustomFormInput } from './entities/custom-form-input.entity';
 import { Repository } from 'typeorm';
@@ -29,28 +28,32 @@ export class CustomFormInputService {
     ["text", "varchar"],
     ["password", "varchar"],
     ["textarea", "varchar"],
-    ["number", "int"],
+    ["number", "float4"],
     ["date", "timestamp"],
     ["date-and-time", "timestamp"],
     ["file", "varchar"],
-    ["checkbox", "boolean"]
+    ["checkbox", "boolean"],
+    ["varchar", "varchar"],
+    ["boolean", "boolean"],
+    ["float4", "float4"],
+    ["timestamp", "timestamp"]
   ]);
 
   /**
    * Create a new table based on inputs configuration and save inputs metadata.
    * 
-   * @param createCustomFormDto The inputs configuration.
+   * @param createCustomInputsFormDto The inputs configuration.
    * @param tableName The table name.
    * @param userNavigationPermissions The user navigation permissions.
    * @returns The inputs metadata saved.
    * @description
    * 1. Valid user permission.
    * 2. Map input type to postgres column type and define column name.
-   * 3. Create table from table name and column configuration.
+   * 3. Create database custom table based on table name and column configuration.
    * 4. Save inputs metadata.
    */
   async create(
-    createCustomFormDto: Array<CreateCustomFormInputDto>,
+    createCustomInputsFormDto: Array<CreateCustomFormInputDto>,
     tableName: string,
     userNavigationPermissions: Array<{
       navigationId: string;
@@ -60,9 +63,91 @@ export class CustomFormInputService {
   ) {
     /* 1. */
     await this._customTableValidatorService.validPermission(tableName, 'add', userNavigationPermissions);
+    /* 2. */
+    this.setUpColumnNameAndType(createCustomInputsFormDto);
+    /* 3. */
+    await this._customTableService.createDatabaseTable(tableName, createCustomInputsFormDto);
+    /* 4. */
+    return this._customFormInputRepository.save(createCustomInputsFormDto);
+  }
+
+  
+  /**
+   * Update inputs configuration.
+   * 
+   * @param tableName The table name.
+   * @param createCustomInputsFormDto The inputs configuration.
+   * @returns Update response type.
+   * @throws {NotFoundException} If no row affected.
+   * @description
+   * 1. Valid user permission.
+   * 2. Map input type to postgres column type and define column name.
+   * 3. Identify new inputs to add.
+   * 4. Identify inputs to delete.
+   * 5. Identify inputs to update.
+   * 6. Update database custom table.
+   * 7. Update inputs metadata.
+   */
+  async update(
+    tableName: string,
+    createCustomInputsFormDto: Array<CreateCustomFormInputDto>,
+    userNavigationPermissions: Array<{
+      navigationId: string;
+      permissionName: string;
+      navigationTypeName: string;
+    }>
+  ) {
+    /* 1. */
+    await this._customTableValidatorService.validPermission(tableName, 'edit', userNavigationPermissions);
 
     /* 2. */
-    createCustomFormDto.forEach(column => {
+    this.setUpColumnNameAndType(createCustomInputsFormDto); 
+
+    /* 3. */
+    const inputsToAdd = createCustomInputsFormDto.filter(payloadInput => !payloadInput.id);
+
+    /* 4. */
+    const dbInputs = await this._customFormInputRepository.find({
+      where: { tableId: createCustomInputsFormDto[0].tableId }
+    });
+    const inputsToDelete = dbInputs.filter(dbInput => 
+      !createCustomInputsFormDto.find(payloadInput => payloadInput.id === dbInput.id)
+    );
+
+    /* 5. */
+    const inputsToUpdate = createCustomInputsFormDto.filter(payloadInput => 
+      dbInputs.find(dbInput => 
+        dbInput.id === payloadInput.id && (
+          dbInput.columnName !== payloadInput.columnName ||
+          dbInput.columnType !== payloadInput.columnType 
+        )
+      )
+    )
+    inputsToUpdate.forEach(input => 
+      input['oldColumnName'] = dbInputs.find(obj => obj.id === input.id)?.columnName
+    );
+
+    /* 6 */
+    await this._customTableService.updateDatabaseTable(
+      tableName,
+      inputsToAdd,
+      inputsToUpdate,
+      inputsToDelete
+    );
+
+    /* 7. */
+    inputsToDelete.forEach(async input => await this._customFormInputRepository.delete(input.id));
+    inputsToUpdate.forEach(async input => await this._customFormInputRepository.save(input));
+    inputsToAdd.forEach(async input => await this._customFormInputRepository.save(input));
+  }
+
+  /**
+   * Setup column name and type from input label and type.
+   * 
+   * @param createCustomInputsFormDto The custom form inputs configuration.
+   */
+  setUpColumnNameAndType(createCustomInputsFormDto: Array<CreateCustomFormInputDto>) {
+    createCustomInputsFormDto.forEach(column => {
       if (column.inputType === 'dropdown' && column.columnType) {
         column.columnType = this.inputTypeDatabaseTypeMap.get(column.columnType);
       } else {
@@ -70,34 +155,6 @@ export class CustomFormInputService {
       }
       column.columnName = stringToLowerCaseWithUnderscore(column.inputLabel);
     });
-
-    /* 3. */
-    await this._customTableService.createDatabaseTable(tableName, createCustomFormDto);
-
-    /* 4. */
-    return this._customFormInputRepository.save(createCustomFormDto);
-  }
-
-  
-  /**
-   * Update inputs configuration.
-   * 
-   * @param id The customFormInput id.
-   * @param updateCustomFormDto The customFormInputs properties to update.
-   * @returns Update response type.
-   * @throws {NotFoundException} If no row affected.
-   */
-  async update(
-    id: string,
-    updateCustomFormDto: UpdateCustomFormInputDto
-  ) {
-    const updateResponse = await this._customFormInputRepository.update(id, updateCustomFormDto);
-
-    if (updateResponse.affected === 0) {
-      throw new NotFoundException(`Custom form input ${id} not found.`);
-    }
-
-    return updateResponse;
   }
 
 }

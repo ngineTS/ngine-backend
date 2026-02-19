@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Patch, Param, ParseUUIDPipe, Request } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, ParseUUIDPipe, Request, ParseArrayPipe } from '@nestjs/common';
 import { CustomFormInputService } from './custom-form-input.service';
 import { CreateCustomFormInputDto } from './dto/create-custom-form-input.dto';
 import { UpdateCustomFormInputDto } from './dto/update-custom-form-input.dto';
@@ -11,22 +11,28 @@ export class CustomFormInputController {
   @Post(':tableName')
   create(
     @Param('tableName') tableName: string,
-    @Body() createCustomFormDto: CreateCustomFormInputDto[],
+    @Body(new ParseArrayPipe({ items: CreateCustomFormInputDto }))
+    createCustomFormInputDto: Array<CreateCustomFormInputDto>,
     @Request() req
   ) {
     return this.customFormService.create(
-      createCustomFormDto,
+      createCustomFormInputDto,
       tableName,
       req.user.userNavigationPermissions
     );
   }
 
-  /*
-  @Patch(':id')
+  @Patch(':tableName')
   update(
-    @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() updateCustomFormDto: UpdateCustomFormInputDto
+    @Param('tableName') tableName: string,
+    @Body(new ParseArrayPipe({ items: CreateCustomFormInputDto }))
+    createCustomFormInputDto: Array<CreateCustomFormInputDto>,
+    @Request() req
   ) {
-    return this.customFormService.update(id, updateCustomFormDto);
-  }*/
+    return this.customFormService.update(
+      tableName,
+      createCustomFormInputDto,
+      req.user.userNavigationPermissions
+    );
+  }
 }
