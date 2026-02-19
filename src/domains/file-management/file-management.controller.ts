@@ -13,7 +13,7 @@ export class FileManagementController {
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file', {
-    limits: { fileSize: 500 * 1024 * 1024 } // 500MB max 
+    limits: { fileSize: 500 * 1024 * 1024 } // 500MB max
   }))
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
