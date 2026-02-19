@@ -115,6 +115,11 @@ export class MenuService {
    * @param refId The object reference id.
    * @param updateMenuDto The style properties.
    * @returns The properties affected number.
+   * @description
+   * 1. Valid user permission
+   * 2. If containerLayout property then update containerLayout.
+   * 3. If containerLayout property then update containerLayout.
+   * 4. If containerLayout property then update containerLayout.
    */
   async updateStyleProperties(
     refId: string,
@@ -125,6 +130,7 @@ export class MenuService {
       navigationTypeName: string;
     }>
   ) {
+    /* 1. */
     await this._menuValidatorService.validPermissionToUpdateStyle(refId, userNavigationPermissionsArray);
 
     const affectedRelations: { [prop: string]: number | undefined } = {
@@ -133,7 +139,7 @@ export class MenuService {
       affectedTypographyStyle: 0
     }
 
-    /* container layout */
+    /* 2. */
     if (updateMenuDto['containerLayout']) {
       const updateContainerLayoutResponse = await this._containerLayoutRepository.update(
         { refId: refId }, 
@@ -145,7 +151,7 @@ export class MenuService {
       affectedRelations.affectedContainerLayout = updateContainerLayoutResponse.affected;
     }
 
-    /* container style */
+    /* 3. */
     if (updateMenuDto['containerStyle']) {
       const updateContainerStyleResponse = await this._containerStyleRepository.update(
         { refId: refId }, 
@@ -157,7 +163,7 @@ export class MenuService {
       affectedRelations.affectedContainerStyle = updateContainerStyleResponse.affected;
     }
 
-    /* typography style */
+    /* 4. */
     if (updateMenuDto['typographyStyle']) {
       const updateTypographyStyleResponse = await this._typographyStyleRepository.update(
         { refId: refId }, 
