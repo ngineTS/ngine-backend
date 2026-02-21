@@ -6,7 +6,6 @@ import { Repository } from 'typeorm';
 import { stringToLowerCaseWithUnderscore } from 'src/core/utils/string-transfo-util';
 import { SimpleColumnType, SpatialColumnType, WithLengthColumnType, WithPrecisionColumnType, WithWidthColumnType } from 'typeorm/driver/types/ColumnTypes';
 import { CustomTableService } from '../custom-table/custom-table.service';
-import { CustomTableValidatorService } from '../custom-table/custom-table-validator.service';
 
 @Injectable()
 export class CustomFormInputService {
@@ -15,7 +14,6 @@ export class CustomFormInputService {
     @InjectRepository(CustomFormInput)
     private _customFormInputRepository: Repository<CustomFormInput>,
     private _customTableService: CustomTableService,
-    private _customTableValidatorService: CustomTableValidatorService
   ) { }
 
   /**
@@ -44,7 +42,6 @@ export class CustomFormInputService {
    * 
    * @param createCustomInputsFormDto The inputs configuration.
    * @param tableName The table name.
-   * @param userNavigationPermissions The user navigation permissions.
    * @returns The inputs metadata saved.
    * @description
    * 1. Map input type to postgres column type and define column name.
