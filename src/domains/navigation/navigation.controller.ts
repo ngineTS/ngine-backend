@@ -4,69 +4,90 @@ import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { UserId } from 'src/core/decorators/user.decorator';
 import { Navigation } from './entities/navigation.entity';
+import { UserNavigationPermissions } from 'src/core/decorators/user-navigation-permissions.decorator';
+import { NavigationPermissions } from 'src/core/models/navigation-permissions.interface';
+import { UserEmail } from 'src/core/decorators/user-email.decorator';
+import { NavigationValidatorService } from './navigation-validator.service';
 
 @Controller('navigation')
 export class NavigationController {
-  constructor(private readonly navigationService: NavigationService) {}
+  
+  constructor(
+    private readonly _navigationService: NavigationService,
+    private readonly _navigationValidatorService: NavigationValidatorService,
+  ) {}
 
   @Post()
-  saveNavigation(
+  async saveNavigation(
     @Body() createNavigationDto: CreateNavigationDto,
     @UserId() userId: string,
-    @Request() req
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    return this.navigationService.saveNavigation(
+    this._navigationValidatorService.validAddPermission(
+      createNavigationDto,
+      userNavigationPermissions
+    );
+    await this._navigationValidatorService.validNavigationDto(createNavigationDto);
+    return this._navigationService.saveNavigation(
       createNavigationDto,
       userId,
-      req.user.userNavigationPermissions
     );
   }
 
   @Get()
-  findNestedNavigations(@Request() req) {
-    return this.navigationService.findNestedNavigations(req.user, true);
+  findNestedNavigations(
+    @UserId() userId: string,
+    @UserEmail() UserEmail: string,
+  ) {
+    return this._navigationService.findNestedNavigations(userId, UserEmail, true);
   }
 
   @Get('flat')
-  findAllNavigations(@Request() req) {
-    return this.navigationService.findAllNavigations(req.user);
+  findAllNavigations(@UserNavigationPermissions() userNavigationPermissions: NavigationPermissions) {
+    return this._navigationService.findAllNavigations(userNavigationPermissions);
   }
 
   @Patch(':id')
-  updateNavigation(
+  async updateNavigation(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateNavigationDto: UpdateNavigationDto,
     @UserId() userId: string,
-    @Request() req
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    return this.navigationService.updateNavigation(
+    await this._navigationValidatorService.validEditPermission(
       id,
       updateNavigationDto,
-      userId,
-      req.user.userNavigationPermissions
+      userNavigationPermissions
     );
+    await this._navigationValidatorService.validNavigationDto(updateNavigationDto, id);
+    return this._navigationService.updateNavigation(id, updateNavigationDto, userId);
   }
 
   @Post('bulk-update')
   updateNavigations(
-    @Body() updateNavigationDtoArray: UpdateNavigationDto[],
+    @Body() navigations: Array<Navigation>,
     @UserId() userId: string,
-    @Request() req
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    return this.navigationService.updateNavigations(
-      updateNavigationDtoArray,
-      userId,
-      req.user.userNavigationPermissions
+    this._navigationValidatorService.validEditPermissionOnArrayOfNavigations(
+      navigations,
+      userNavigationPermissions
     );
+    return this._navigationService.updateNavigations(navigations, userId);
+
   }
 
   @Post('delete')
   removeNavigation(
     @Body() navigation: Navigation,
     @UserId() userId: string,
-    @Request() req
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    return this.navigationService.removeNavigation(navigation, userId, req.user.userNavigationPermissions);
+    this._navigationValidatorService.validDeletePermission(
+      navigation,
+      userNavigationPermissions
+    );
+    return this._navigationService.removeNavigation(navigation, userId);
   }
 
 }
