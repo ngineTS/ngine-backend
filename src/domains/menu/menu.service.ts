@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -27,7 +27,6 @@ export class MenuService {
     private _navigationRepository: Repository<Navigation>,
     @InjectRepository(NavigationType)
     private _navigationTypeRepository: Repository<NavigationType>,
-    private _menuValidatorService: MenuValidatorService
   ) {}
 
 
@@ -98,9 +97,9 @@ export class MenuService {
    * @param updateMenuDto The style properties.
    * @returns The properties affected number.
    * @description
-   * 1. If containerLayout property then update containerLayout.
-   * 2. If containerLayout property then update containerLayout.
-   * 3. If containerLayout property then update containerLayout.
+   * 1. If containerLayout property then update containerLayout entity.
+   * 2. If containerStyle property then update containerStyle entity
+   * 3. If typographyStyle property then update typographyStyle entity.
    */
   async updateStyleProperties(refId: string, updateMenuDto: UpdateMenuDto) {
     const affectedRelations: { [prop: string]: number | undefined } = {

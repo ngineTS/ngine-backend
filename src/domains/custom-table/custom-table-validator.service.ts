@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { TableViz } from "../table-viz/entities/table-viz.entity";
 import { In, Repository } from "typeorm";
+import { NavigationPermissions } from "src/core/models/navigation-permissions.interface";
 
 @Injectable()
 export class CustomTableValidatorService {
@@ -22,18 +23,14 @@ export class CustomTableValidatorService {
   async validPermission(
     tableName: string,
     action: 'view' | 'add' | 'edit' | 'delete',
-    userNavigationPermissionsArray: Array<{
-      navigationId: string;
-      permissionName: string;
-      navigationTypeName: string;
-    }>
+    userNavigationPermissions: NavigationPermissions
   ) {
     if (action !== 'view') {
-      userNavigationPermissionsArray = userNavigationPermissionsArray
+      userNavigationPermissions = userNavigationPermissions
         .filter(obj => obj.permissionName.includes(action));
     }
 
-    const navigationIdsRelatedToAction = userNavigationPermissionsArray
+    const navigationIdsRelatedToAction = userNavigationPermissions
       .map<string>(obj => obj.navigationId);
 
     const tableVizRecord = await this._tableVizRepository.findOne({
