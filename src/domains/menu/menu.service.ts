@@ -46,35 +46,17 @@ export class MenuService {
    * 
    * @param navigationId The navigationId to attach the menu to.
    * @param userId The user who creates this navigation bar.
-   * @param userNavigationPermissionsArray The user navigation permissions.
    * @throws {ForbiddenException} If user doesn't have add permission on navigation.
    * @description
-   * 1. Valid user permission.
-   * 2. Create navigation bar for given navigation with same style as navigation.
-   * 3. Create first navigation inside navigation bar with same style as navigation.
+   * 1. Create navigation bar for given navigation with same style as navigation.
+   * 2. Create first navigation inside navigation bar with same style as navigation.
    */
-  async createNavigationBar(
-    navigationId: string,
-    userId: string,
-    userNavigationPermissionsArray: Array<{
-      navigationId: string;
-      permissionName: string;
-      navigationTypeName: string;
-    }>
-  ) {
+  async createNavigationBar(navigationId: string, userId: string) {
     /* 1. */
-    if (
-      !userNavigationPermissionsArray.find(obj => obj.navigationId === navigationId)
-        ?.permissionName.includes('add')
-    ) {
-      throw new ForbiddenException();
-    }
-
-    /* 2. */
     const menuSaved = await this._menuRepository.save({ navigationId: navigationId });
     await this.inheritParentStyle(menuSaved.id, navigationId);
 
-    /* 3. */
+    /* 2. */
     const redirectButtonNavigationType = await this._navigationTypeRepository.findOne({
       where: { name: 'redirect-button' }
     });
@@ -116,30 +98,18 @@ export class MenuService {
    * @param updateMenuDto The style properties.
    * @returns The properties affected number.
    * @description
-   * 1. Valid user permission
+   * 1. If containerLayout property then update containerLayout.
    * 2. If containerLayout property then update containerLayout.
    * 3. If containerLayout property then update containerLayout.
-   * 4. If containerLayout property then update containerLayout.
    */
-  async updateStyleProperties(
-    refId: string,
-    updateMenuDto: UpdateMenuDto,
-    userNavigationPermissionsArray: Array<{
-      navigationId: string;
-      permissionName: string;
-      navigationTypeName: string;
-    }>
-  ) {
-    /* 1. */
-    await this._menuValidatorService.validPermissionToUpdateStyle(refId, userNavigationPermissionsArray);
-
+  async updateStyleProperties(refId: string, updateMenuDto: UpdateMenuDto) {
     const affectedRelations: { [prop: string]: number | undefined } = {
       affectedContainerLayout: 0,
       affectedContainerStyle: 0,
       affectedTypographyStyle: 0
     }
 
-    /* 2. */
+    /* 1. */
     if (updateMenuDto['containerLayout']) {
       const updateContainerLayoutResponse = await this._containerLayoutRepository.update(
         { refId: refId }, 
@@ -151,7 +121,7 @@ export class MenuService {
       affectedRelations.affectedContainerLayout = updateContainerLayoutResponse.affected;
     }
 
-    /* 3. */
+    /* 2. */
     if (updateMenuDto['containerStyle']) {
       const updateContainerStyleResponse = await this._containerStyleRepository.update(
         { refId: refId }, 
@@ -163,7 +133,7 @@ export class MenuService {
       affectedRelations.affectedContainerStyle = updateContainerStyleResponse.affected;
     }
 
-    /* 4. */
+    /* 3. */
     if (updateMenuDto['typographyStyle']) {
       const updateTypographyStyleResponse = await this._typographyStyleRepository.update(
         { refId: refId }, 

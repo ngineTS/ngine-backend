@@ -1,35 +1,36 @@
-import { Controller, Get, Body, Patch, Param, Delete, ParseUUIDPipe, Request } from '@nestjs/common';
+import { Controller, Get, Body, Patch, Param, ParseUUIDPipe } from '@nestjs/common';
 import { MenuService } from './menu.service';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { UserId } from 'src/core/decorators/user.decorator';
+import { MenuValidatorService } from './menu-validator.service';
+import { UserNavigationPermissions } from 'src/core/decorators/user-navigation-permissions.decorator';
+import { NavigationPermissions } from 'src/core/models/navigation-permissions.interface';
 
 @Controller('menu')
 export class MenuController {
-  constructor(private readonly menuService: MenuService) {}
+
+  constructor(
+    private readonly _menuService: MenuService,
+    private readonly _menuValidatorService: MenuValidatorService, 
+  ) {}
 
   @Get('create-navigation-bar/:navigationId')
   createNavigationBar(
     @Param('navigationId', new ParseUUIDPipe()) navigationId: string,
     @UserId() userId: string,
-    @Request() req
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    return this.menuService.createNavigationBar(
-      navigationId,
-      userId,
-      req.user.userNavigationPermissions
-    );
+    this._menuValidatorService.validPermissionToCreateNavigationBar(navigationId, userNavigationPermissions);
+    return this._menuService.createNavigationBar(navigationId, userId);
   }
 
   @Patch(':refId')
-  updateStyleProperties(
+  async updateStyleProperties(
     @Param('refId') refId: string,
     @Body() updateMenuDto: UpdateMenuDto,
-    @Request() req
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    return this.menuService.updateStyleProperties(
-      refId,
-      updateMenuDto,
-      req.user.userNavigationPermissions
-    );
+    await this._menuValidatorService.validPermissionToUpdateStyle(refId, userNavigationPermissions);
+    return this._menuService.updateStyleProperties(refId, updateMenuDto);
   }
 }

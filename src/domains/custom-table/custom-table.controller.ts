@@ -10,7 +10,7 @@ import { NavigationPermissions } from 'src/core/models/navigation-permissions.in
 export class CustomTableController {
 
   constructor(
-    private readonly customTableService: CustomTableService,
+    private readonly _customTableService: CustomTableService,
     private readonly _customTableValidatorService: CustomTableValidatorService
   ) {}
 
@@ -20,7 +20,7 @@ export class CustomTableController {
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
     await this._customTableValidatorService.validPermission(tableName, 'view', userNavigationPermissions);
-    return this.customTableService.findTableContentByTableName(tableName);
+    return this._customTableService.findTableContentByTableName(tableName);
   }
 
   @Post(':tableName')
@@ -30,7 +30,7 @@ export class CustomTableController {
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
     await this._customTableValidatorService.validPermission(tableName, 'add', userNavigationPermissions);
-    return this.customTableService.addTableRow(tableName, payload);
+    return this._customTableService.addTableRow(tableName, payload);
   }
 
   @Patch(':tableName/:id')
@@ -41,7 +41,7 @@ export class CustomTableController {
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
     await this._customTableValidatorService.validPermission(tableName, 'edit', userNavigationPermissions);
-    return this.customTableService.updateTableRow(tableName, id, payload);
+    return this._customTableService.updateTableRow(tableName, id, payload);
   }
 
   @Delete(':tableName/:id')
@@ -51,7 +51,7 @@ export class CustomTableController {
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
     await this._customTableValidatorService.validPermission(tableName, 'delete', userNavigationPermissions);
-    return this.customTableService.deleteTableRow(tableName, id);
+    return this._customTableService.deleteTableRow(tableName, id);
   }
 
 }

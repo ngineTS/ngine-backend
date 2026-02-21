@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Menu } from "./entities/menu.entity";
 import { Repository } from "typeorm";
+import { NavigationPermissions } from "src/core/models/navigation-permissions.interface";
 
 @Injectable()
 export class MenuValidatorService {
@@ -12,10 +13,10 @@ export class MenuValidatorService {
   ) { }
 
   /**
-   * Valid user permission based on refId.
+   * Valid permission to update style based on refId.
    * 
    * @param refId The refId (menu id or navigation id).
-   * @param userNavigationPermissionsArray The user navigation permissions.
+   * @param userNavigationPermissions The user navigation permissions.
    * @throws {ForbiddenException} If the user doesn't have edit permission on the navigation associated to the ref.
    * @description
    * Check if user has edit permission for given refId.
@@ -25,14 +26,10 @@ export class MenuValidatorService {
    */
   async validPermissionToUpdateStyle(
     refId: string,
-    userNavigationPermissionsArray: Array<{
-      navigationId: string;
-      permissionName: string;
-      navigationTypeName: string;
-    }>
+    userNavigationPermissions: NavigationPermissions
   ) {
     if(
-      !userNavigationPermissionsArray.find(obj => obj.navigationId === refId)
+      !userNavigationPermissions.find(obj => obj.navigationId === refId)
         ?.permissionName.includes('edit')
     ) {
       const menu = await this._menuRepository.findOneBy({ id: refId });
@@ -40,11 +37,30 @@ export class MenuValidatorService {
         throw new ForbiddenException();
       }
       else if (
-        !userNavigationPermissionsArray.find(obj => obj.navigationId === menu.navigationId)
+        !userNavigationPermissions.find(obj => obj.navigationId === menu.navigationId)
           ?.permissionName.includes('edit')
       ) {
         throw new ForbiddenException();
       }
+    }
+  }
+
+  /**
+   * Valid permission to create navigation bar.
+   * 
+   * @param navigationId The navigation id.
+   * @param userNavigationPermissions The user navigation permissions.
+   * @throws {ForbiddenException} If user doesn't have 'add' access on navigation.
+   */
+  validPermissionToCreateNavigationBar(
+    navigationId: string,
+    userNavigationPermissions: NavigationPermissions
+  ) {
+    if (
+      !userNavigationPermissions.find(obj => obj.navigationId === navigationId)
+        ?.permissionName.includes('add')
+    ) {
+      throw new ForbiddenException();
     }
   }
 
