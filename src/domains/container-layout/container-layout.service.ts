@@ -20,43 +20,9 @@ export class ContainerLayoutService {
    */
   async update(
     id: string,
-    updateContainerLayoutDto: UpdateContainerLayoutDto,
-    userNavigationPermissionsArray: Array<{
-      navigationId: string;
-      permissionName: string;
-      navigationTypeName: string;
-    }>
+    updateContainerLayoutDto: UpdateContainerLayoutDto
   ) {
-    await this.validPermission(id, userNavigationPermissionsArray);
     return this._containerLayoutRepository.update(id, updateContainerLayoutDto);
-  }
-
-  /**
-   * Valid permission to edit container layout.
-   * @param containerLayoutId The container layout id.
-   * @param userNavigationPermissionsArray The user navigation permissions.
-   */
-  async validPermission(
-    containerLayoutId: string,
-    userNavigationPermissionsArray: Array<{
-      navigationId: string;
-      permissionName: string;
-      navigationTypeName: string;
-    }>
-  ) {
-    const containerLayout = await this._containerLayoutRepository.findOneBy({ id: containerLayoutId });
-
-    if (!containerLayout) {
-      throw new NotFoundException(`Container layout with id ${containerLayoutId} has not been found.`);
-    }
-
-    /* /!\ Here we are sure refId is a navigation id and not a menu id  because this API is used to resize navigation. */
-    if(
-      !userNavigationPermissionsArray.find(obj => obj.navigationId === containerLayout.refId)
-        ?.permissionName.includes('edit')
-    ) {
-      throw new ForbiddenException();
-    }
   }
   
 }
