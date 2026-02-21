@@ -14,16 +14,17 @@ import { Role } from '../role/entities/role.entity';
 @Injectable()
 export class UserService {
 
-  constructor(@InjectRepository(User)
-              private _userRepository: Repository<User>,
-              @InjectRepository(UserRole)
-              private _userRoleRepository: Repository<UserRole>,
-              @InjectRepository(Role)
-              private _roleRepository: Repository<Role>,
-              @InjectRepository(PasswordRecovery)
-              private _passwordRecoveryRepository: Repository<PasswordRecovery>,
-              private _authService: AuthService) { }
-
+  constructor(
+    @InjectRepository(User)
+    private _userRepository: Repository<User>,
+    @InjectRepository(UserRole)
+    private _userRoleRepository: Repository<UserRole>,
+    @InjectRepository(Role)
+    private _roleRepository: Repository<Role>,
+    @InjectRepository(PasswordRecovery)
+    private _passwordRecoveryRepository: Repository<PasswordRecovery>,
+    private _authService: AuthService
+  ) { }
 
   /**
    * Create User.

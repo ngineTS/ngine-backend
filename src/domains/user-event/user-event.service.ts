@@ -8,8 +8,10 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class UserEventService {
 
-  constructor(@InjectRepository(UserEvent)
-              private _userEventRepository: Repository<UserEvent>) {}
+  constructor(
+    @InjectRepository(UserEvent)
+    private _userEventRepository: Repository<UserEvent>
+  ) { }
   
   async create(createUserEventDto: CreateUserEventDto, userId: string) {
     createUserEventDto['date'] = new Date();

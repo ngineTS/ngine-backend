@@ -3,7 +3,6 @@ import { CreateUserRoleDto } from './dto/create-user-role.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRole } from './entities/user-role.entity';
 import { IsNull, Repository } from 'typeorm';
-import { UserRoleValidatorService } from './user-role-validator.service';
 
 @Injectable()
 export class UserRoleService {
@@ -11,8 +10,7 @@ export class UserRoleService {
   constructor(
     @InjectRepository(UserRole)
     private _userRoleRepository: Repository<UserRole>,
-    private _userRoleValidatorService: UserRoleValidatorService
-  ) {}
+  ) { }
 
   /**
    * Bulk save user roles for given user.
@@ -20,15 +18,14 @@ export class UserRoleService {
    * - if it is not part of the payload but found in db then delete it
    * - if it is part of the payload and not found in db then insert it
    * 
-   * @param userId The id of the user.
+   * @param userId The user id from request.
    * @param createUserRoleDtoArray The array of user roles payload.
    * @param createdBy The user id from the request token (used for audit).
    * @return The user roles saved.
    * @description
-   * 1. Valid user role payload.
-   * 2. Identify and store user roles to save and those to delete.
-   * 3. Add audit data and delete records.
-   * 4. Add audit data and save records.
+   * 1. Identify and store user roles to save and those to delete.
+   * 2. Add audit data and delete records.
+   * 3. Add audit data and save records.
    */
   async bulkSaveUserRoles(
     userId: string,
@@ -36,9 +33,6 @@ export class UserRoleService {
     createdBy: string
   ) {
     /* 1. */
-    await this._userRoleValidatorService.validUserRole(userId);
-
-    /* 2. */
     const userRoleIdsToDelete: string[] = [];
     const userRolesPayloadToSave: Array<CreateUserRoleDto> = [];    
     /* get db user roles. */
@@ -61,7 +55,7 @@ export class UserRoleService {
       }
     }
     
-    /* 3. */
+    /* 2. */
     const recordsToDelete: any[] = [];
     userRoleIdsToDelete.forEach(id => 
       recordsToDelete.push({
@@ -72,7 +66,7 @@ export class UserRoleService {
     )
     await this._userRoleRepository.save(recordsToDelete);
 
-    /* 4. */
+    /* 3. */
     for (let element of userRolesPayloadToSave) {
       element["createdDate"] = new Date();
       element["createdBy"] = createdBy;
