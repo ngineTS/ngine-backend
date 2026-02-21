@@ -2,61 +2,56 @@ import { Controller, Get, Body, Patch, Param, Delete, Post, UseGuards, Request }
 import { CustomTableService } from './custom-table.service';
 import { NavigationTypeNameArray, Permission } from 'src/core/decorators/role.decorator';
 import { RolesGuard } from 'src/core/guards/role.guard';
+import { CustomTableValidatorService } from './custom-table-validator.service';
+import { UserNavigationPermissions } from 'src/core/decorators/user-navigation-permissions.decorator';
+import { NavigationPermissions } from 'src/core/models/navigation-permissions.interface';
 
 @Controller('custom-table')
 export class CustomTableController {
-  constructor(private readonly customTableService: CustomTableService) {}
+
+  constructor(
+    private readonly customTableService: CustomTableService,
+    private readonly _customTableValidatorService: CustomTableValidatorService
+  ) {}
 
   @Get('table/:tableName')
-  findTableContentByTableName(
+  async findTableContentByTableName(
     @Param('tableName') tableName: string,
-    @Request() req
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    return this.customTableService.findTableContentByTableName(
-      tableName,
-      req.user.userNavigationPermissions
-    );
+    await this._customTableValidatorService.validPermission(tableName, 'view', userNavigationPermissions);
+    return this.customTableService.findTableContentByTableName(tableName);
   }
 
   @Post(':tableName')
-  saveTableContent(
+  async addTableRow(
     @Param('tableName') tableName: string, 
     @Body() payload: any,
-    @Request() req
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    return this.customTableService.addTableRow(
-      tableName,
-      payload,
-      req.user.userNavigationPermissions
-    );
+    await this._customTableValidatorService.validPermission(tableName, 'add', userNavigationPermissions);
+    return this.customTableService.addTableRow(tableName, payload);
   }
 
   @Patch(':tableName/:id')
-  updateTableRow(
+  async updateTableRow(
     @Param('tableName') tableName: string,
     @Param('id') id: string,  
     @Body() payload: any,
-    @Request() req
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    return this.customTableService.updateTableRow(
-      tableName,
-      id,
-      payload,
-      req.user.userNavigationPermissions
-    );
+    await this._customTableValidatorService.validPermission(tableName, 'edit', userNavigationPermissions);
+    return this.customTableService.updateTableRow(tableName, id, payload);
   }
 
   @Delete(':tableName/:id')
-  deleteTableRow(
+  async deleteTableRow(
     @Param('tableName') tableName: string,
     @Param('id') id: string,
-    @Request() req
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    return this.customTableService.deleteTableRow(
-      tableName,
-      id,
-      req.user.userNavigationPermissions
-    );
+    await this._customTableValidatorService.validPermission(tableName, 'delete', userNavigationPermissions);
+    return this.customTableService.deleteTableRow(tableName, id);
   }
 
 }

@@ -21,18 +21,8 @@ export class CustomTableService {
    * @param userNavigationPermissions The user navigation permissions.
    * @returns The record saved.
    */
-  async addTableRow(
-    tableName: string,
-    payload: any,
-    userNavigationPermissions: Array<{
-      navigationId: string;
-      permissionName: string;
-      navigationTypeName: string;
-    }>
-  ) {
-    await this._customTableValidatorService.validPermission(tableName, 'add', userNavigationPermissions);
-
-    return await this._dataSource.createQueryBuilder()
+  async addTableRow(tableName: string, payload: any) {
+    return this._dataSource.createQueryBuilder()
       .insert()
       .into(`custom_table.${tableName}`)
       .values(payload)
@@ -48,19 +38,8 @@ export class CustomTableService {
    * @param userNavigationPermissions The user navigation permissions.
    * @returns An UpdateResult response.
    */
-  async updateTableRow(
-    tableName: string,
-    id: string,
-    payload: any,
-    userNavigationPermissions: Array<{
-      navigationId: string;
-      permissionName: string;
-      navigationTypeName: string;
-    }>
-  ) {
-    await this._customTableValidatorService.validPermission(tableName, 'edit', userNavigationPermissions);
-
-    return await this._dataSource.createQueryBuilder()
+  async updateTableRow(tableName: string, id: string, payload: any) {
+    return this._dataSource.createQueryBuilder()
       .update(`custom_table.${tableName}`)
       .set(payload)
       .where("id = :id", { id: id })
@@ -75,18 +54,8 @@ export class CustomTableService {
    * @param userNavigationPermissions The user navigation permissions.
    * @returns A DeleteResult response.
    */
-  async deleteTableRow(
-    tableName: string,
-    id: string,
-    userNavigationPermissions: Array<{
-      navigationId: string;
-      permissionName: string;
-      navigationTypeName: string;
-    }>
-  ) {
-    await this._customTableValidatorService.validPermission(tableName, 'delete', userNavigationPermissions);
-
-    return await this._dataSource.createQueryBuilder()
+  async deleteTableRow(tableName: string, id: string) {
+    return this._dataSource.createQueryBuilder()
       .delete()
       .from(`custom_table.${tableName}`)
       .where("id = :id", { id: id })
@@ -100,17 +69,8 @@ export class CustomTableService {
    * @param userNavigationPermissions The user navigation permissions.
    * @returns An array with content.
    */
-  async findTableContentByTableName(
-    tableName: string,
-    userNavigationPermissions: Array<{
-      navigationId: string;
-      permissionName: string;
-      navigationTypeName: string;
-    }>
-  ) {
-    await this._customTableValidatorService.validPermission(tableName, 'view', userNavigationPermissions);
-
-    return await this._dataSource.createQueryBuilder()
+  async findTableContentByTableName(tableName: string) {
+    return this._dataSource.createQueryBuilder()
       .select('*')
       .from(`custom_table.${tableName}`, 't')
       .execute();
