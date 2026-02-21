@@ -1,24 +1,19 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { DataSource, Table, TableColumn, TableColumnOptions } from 'typeorm';
 import { CreateCustomFormInputDto } from '../custom-form-input/dto/create-custom-form-input.dto';
-import { CustomTableValidatorService } from './custom-table-validator.service';
 import { CustomFormInput } from '../custom-form-input/entities/custom-form-input.entity';
 
 
 @Injectable()
 export class CustomTableService {
 
-  constructor(
-    private _dataSource: DataSource,
-    private _customTableValidatorService: CustomTableValidatorService
-  ) { }
+  constructor(private _dataSource: DataSource) { }
 
   /**
    * Add record to table.
    * 
    * @param tableName The table name
    * @param payload The record.
-   * @param userNavigationPermissions The user navigation permissions.
    * @returns The record saved.
    */
   async addTableRow(tableName: string, payload: any) {
@@ -35,7 +30,6 @@ export class CustomTableService {
    * @param tableName The table name.
    * @param id The record id.
    * @param payload The property to update.
-   * @param userNavigationPermissions The user navigation permissions.
    * @returns An UpdateResult response.
    */
   async updateTableRow(tableName: string, id: string, payload: any) {
@@ -51,7 +45,6 @@ export class CustomTableService {
    * 
    * @param tableName The table name.
    * @param id The record id.
-   * @param userNavigationPermissions The user navigation permissions.
    * @returns A DeleteResult response.
    */
   async deleteTableRow(tableName: string, id: string) {
@@ -66,7 +59,6 @@ export class CustomTableService {
    * Get all table content.
    * 
    * @param tableName The table name.
-   * @param userNavigationPermissions The user navigation permissions.
    * @returns An array with content.
    */
   async findTableContentByTableName(tableName: string) {
