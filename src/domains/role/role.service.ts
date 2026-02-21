@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,7 +6,6 @@ import { Role } from './entities/role.entity';
 import { IsNull, Repository } from 'typeorm';
 import { UserRole } from '../user-role/entities/user-role.entity';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
-import { RoleValidatorService } from './role-validator.service';
 
 @Injectable()
 export class RoleService {
@@ -18,7 +17,6 @@ export class RoleService {
     private _userRoleRepository: Repository<UserRole>,
     @InjectRepository(RoleNavigationPermission)
     private _roleNavigationPermissionRepository: Repository<RoleNavigationPermission>,
-    private _roleValidatorService: RoleValidatorService
   ) {}
 
   /**

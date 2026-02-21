@@ -37,7 +37,6 @@ export class NavigationService {
     private _typographyStyleRepository: Repository<TypographyStyle>,
     private _authService: AuthService,
     private _menuService: MenuService,
-    private _navigationValidatorService: NavigationValidatorService
   ) {}
 
   /**

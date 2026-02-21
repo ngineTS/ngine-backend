@@ -5,7 +5,7 @@ import { IsNull, Repository } from "typeorm";
 import { CreateRoleNavigationPermissionDto } from "./dto/create-role-navigation-permission.dto";
 
 @Injectable()
-export class RoleNavigationPermissionValidator {
+export class RoleNavigationPermissionValidatorService {
 
   constructor(
     @InjectRepository(Role)

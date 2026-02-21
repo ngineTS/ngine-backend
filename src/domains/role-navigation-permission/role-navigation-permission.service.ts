@@ -3,7 +3,6 @@ import { CreateRoleNavigationPermissionDto } from './dto/create-role-navigation-
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { RoleNavigationPermission } from './entities/role-navigation-permission.entity';
-import { RoleNavigationPermissionValidator } from './role-navigation-permission-validator.service';
 
 @Injectable()
 export class RoleNavigationPermissionService {
@@ -11,9 +10,7 @@ export class RoleNavigationPermissionService {
   constructor(
     @InjectRepository(RoleNavigationPermission)
     private _roleNavigationPermissionRepository: Repository<RoleNavigationPermission>,
-    private _roleNavigationPermissionValidatorService: RoleNavigationPermissionValidator
   ) { }
-
 
   /**
    * Save array of roleNavigationPermissions.
@@ -21,26 +18,19 @@ export class RoleNavigationPermissionService {
    * - if it is not part of the payload but found in db then delete it
    * - if it is part of the payload and not found in db then insert it
    * 
-   * 
    * @param createRoleNavigationPermissionDtoArray The roleNavigationPermissions to save;
-   * @param userId The userId from request token (used for audit).
+   * @param userId The userId from request.
    * @returns The roleNavigationPermissions saved.
    * @description
-   * 1. Valid roleNavigationPermissions.
-   * 2. Identify and store roleNavigationPermissions to save and those to delete.
-   * 3. Add audit data and delete records.
-   * 4. Add audit data and save user records.
+   * 1. Identify and store roleNavigationPermissions to save and those to delete.
+   * 2. Add audit data and delete records.
+   * 3. Add audit data and save user records.
    */
   async saveRoleNavigationArray(
     createRoleNavigationPermissionDtoArray: Array<CreateRoleNavigationPermissionDto>,
     userId: string
   ) {
     /* 1. */
-    this._roleNavigationPermissionValidatorService.validRoleNavigationPermission(
-      createRoleNavigationPermissionDtoArray
-    );
-
-    /* 2. */
     const roleNavigationPermissionIdsToDelete: string[] = [];
     const roleNavigationPermissionsPayloadToSave: Array<CreateRoleNavigationPermissionDto> = [];    
     /* get db roleNavigationPermissions */
@@ -67,7 +57,7 @@ export class RoleNavigationPermissionService {
       }
     }
     
-    /* 3. */
+    /* 2. */
     const recordsToDelete: any[] = [];
     roleNavigationPermissionIdsToDelete.forEach(id => 
       recordsToDelete.push({
@@ -78,7 +68,7 @@ export class RoleNavigationPermissionService {
     )
     await this._roleNavigationPermissionRepository.save(recordsToDelete);
 
-    /* 4. */
+    /* 3. */
     for (let element of roleNavigationPermissionsPayloadToSave) {
       element["createdDate"] = new Date();
       element["createdBy"] = userId;
