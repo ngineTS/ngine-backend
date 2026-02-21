@@ -1,38 +1,43 @@
-import { Controller, Post, Body, Patch, Param, ParseUUIDPipe, Request, ParseArrayPipe } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, ParseArrayPipe } from '@nestjs/common';
 import { CustomFormInputService } from './custom-form-input.service';
 import { CreateCustomFormInputDto } from './dto/create-custom-form-input.dto';
-import { UpdateCustomFormInputDto } from './dto/update-custom-form-input.dto';
+import { CustomTableValidatorService } from '../custom-table/custom-table-validator.service';
+import { UserNavigationPermissions } from 'src/core/decorators/user-navigation-permissions.decorator';
+import { NavigationPermissions } from 'src/core/models/navigation-permissions.interface';
 
 @Controller('custom-form-input')
 export class CustomFormInputController {
 
-  constructor(private readonly customFormService: CustomFormInputService) {}
+  constructor(
+    private readonly _customFormInputService: CustomFormInputService,
+    private readonly _customTableValidatorService: CustomTableValidatorService
+  ) {}
 
   @Post(':tableName')
-  create(
+  async create(
     @Param('tableName') tableName: string,
     @Body(new ParseArrayPipe({ items: CreateCustomFormInputDto }))
     createCustomFormInputDto: Array<CreateCustomFormInputDto>,
-    @Request() req
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    return this.customFormService.create(
+    await this._customTableValidatorService.validPermission(tableName, 'add', userNavigationPermissions);
+    return this._customFormInputService.create(
       createCustomFormInputDto,
       tableName,
-      req.user.userNavigationPermissions
     );
   }
 
   @Patch(':tableName')
-  update(
+  async update(
     @Param('tableName') tableName: string,
     @Body(new ParseArrayPipe({ items: CreateCustomFormInputDto }))
     createCustomFormInputDto: Array<CreateCustomFormInputDto>,
-    @Request() req
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    return this.customFormService.update(
+    await this._customTableValidatorService.validPermission(tableName, 'edit', userNavigationPermissions);
+    return this._customFormInputService.update(
       tableName,
       createCustomFormInputDto,
-      req.user.userNavigationPermissions
     );
   }
 }

@@ -47,27 +47,19 @@ export class CustomFormInputService {
    * @param userNavigationPermissions The user navigation permissions.
    * @returns The inputs metadata saved.
    * @description
-   * 1. Valid user permission.
-   * 2. Map input type to postgres column type and define column name.
-   * 3. Create database custom table based on table name and column configuration.
-   * 4. Save inputs metadata.
+   * 1. Map input type to postgres column type and define column name.
+   * 2. Create database custom table based on table name and column configuration.
+   * 3. Save inputs metadata.
    */
   async create(
     createCustomInputsFormDto: Array<CreateCustomFormInputDto>,
-    tableName: string,
-    userNavigationPermissions: Array<{
-      navigationId: string;
-      permissionName: string;
-      navigationTypeName: string;
-    }>
+    tableName: string
   ) {
     /* 1. */
-    await this._customTableValidatorService.validPermission(tableName, 'add', userNavigationPermissions);
-    /* 2. */
     this.setUpColumnNameAndType(createCustomInputsFormDto);
-    /* 3. */
+    /* 2. */
     await this._customTableService.createDatabaseTable(tableName, createCustomInputsFormDto);
-    /* 4. */
+    /* 3. */
     return this._customFormInputRepository.save(createCustomInputsFormDto);
   }
 
@@ -80,33 +72,24 @@ export class CustomFormInputService {
    * @returns Update response type.
    * @throws {NotFoundException} If no row affected.
    * @description
-   * 1. Valid user permission.
-   * 2. Map input type to postgres column type and define column name.
-   * 3. Identify new inputs to add.
-   * 4. Identify inputs to delete.
-   * 5. Identify inputs to update.
-   * 6. Update database custom table.
-   * 7. Update inputs metadata.
+   * 1. Map input type to postgres column type and define column name.
+   * 2. Identify new inputs to add.
+   * 3. Identify inputs to delete.
+   * 4. Identify inputs to update.
+   * 5. Update database custom table.
+   * 6. Update inputs metadata.
    */
   async update(
     tableName: string,
-    createCustomInputsFormDto: Array<CreateCustomFormInputDto>,
-    userNavigationPermissions: Array<{
-      navigationId: string;
-      permissionName: string;
-      navigationTypeName: string;
-    }>
+    createCustomInputsFormDto: Array<CreateCustomFormInputDto>
   ) {
     /* 1. */
-    await this._customTableValidatorService.validPermission(tableName, 'edit', userNavigationPermissions);
-
-    /* 2. */
     this.setUpColumnNameAndType(createCustomInputsFormDto); 
 
-    /* 3. */
+    /* 2. */
     const inputsToAdd = createCustomInputsFormDto.filter(payloadInput => !payloadInput.id);
 
-    /* 4. */
+    /* 3. */
     const dbInputs = await this._customFormInputRepository.find({
       where: { tableId: createCustomInputsFormDto[0].tableId }
     });
@@ -114,7 +97,7 @@ export class CustomFormInputService {
       !createCustomInputsFormDto.find(payloadInput => payloadInput.id === dbInput.id)
     );
 
-    /* 5. */
+    /* 4. */
     const inputsToUpdate = createCustomInputsFormDto.filter(payloadInput => 
       dbInputs.find(dbInput => 
         dbInput.id === payloadInput.id && (
@@ -127,7 +110,7 @@ export class CustomFormInputService {
       input['oldColumnName'] = dbInputs.find(obj => obj.id === input.id)?.columnName
     );
 
-    /* 6 */
+    /* 5 */
     await this._customTableService.updateDatabaseTable(
       tableName,
       inputsToAdd,
@@ -135,7 +118,7 @@ export class CustomFormInputService {
       inputsToDelete
     );
 
-    /* 7. */
+    /* 6. */
     inputsToDelete.forEach(async input => await this._customFormInputRepository.delete(input.id));
     inputsToUpdate.forEach(async input => await this._customFormInputRepository.save(input));
     inputsToAdd.forEach(async input => await this._customFormInputRepository.save(input));
