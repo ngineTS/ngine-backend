@@ -5,7 +5,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { TableViz } from './entities/table-viz.entity';
 import { stringToLowerCaseWithUnderscore } from 'src/core/utils/string-transfo-util';
-import { CustomTableValidatorService } from '../custom-table/custom-table-validator.service';
 import { CustomTableService } from '../custom-table/custom-table.service';
 
 @Injectable()
@@ -15,7 +14,6 @@ export class TableVizService {
     @InjectRepository(TableViz)
     private _tableVizRepository: Repository<TableViz>,
     private _dataSource: DataSource,
-    private _customTableValidatorService: CustomTableValidatorService,
     private _customTableService: CustomTableService
   ) { }
 
@@ -109,16 +107,7 @@ export class TableVizService {
    * @returns The table content.
    * @throws {BadRequestException} If operation failed.
    */
-  async findTableContentByTableName(
-    tableName: string,
-    userNavigationPermissions: Array<{
-      navigationId: string;
-      permissionName: string;
-      navigationTypeName: string;
-    }>
-  ) {
-    await this._customTableValidatorService.validPermission(tableName, 'view', userNavigationPermissions);
-
+  async findTableContentByTableName(tableName: string) {
     try {
       return await this._dataSource.createQueryBuilder()
         .select('*')
