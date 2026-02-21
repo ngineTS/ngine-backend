@@ -8,9 +8,10 @@ import { QuillEditor } from './entities/quill-editor.entity';
 @Injectable()
 export class QuillEditorService {
 
-  constructor(@InjectRepository(QuillEditor)
-              private quillEditorRepository: Repository<QuillEditor>
-             ) {}
+  constructor(
+    @InjectRepository(QuillEditor)
+    private quillEditorRepository: Repository<QuillEditor>
+  ) { }
 
 
   create(createQuillEditorDto: CreateQuillEditorDto) {

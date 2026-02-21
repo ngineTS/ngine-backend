@@ -105,8 +105,8 @@ export class NavigationValidatorService {
    * 
    * @param navigation The navigation to delete.
    * @param userNavigationPermissions The user navigation permissions from the request.
-   * @throws {ForbiddenException} If user doesn't have delete permission on navigation or
-   * if navigation is global one.
+   * @throws {ForbiddenException} If user doesn't have delete permission on navigation 
+   * @throws {BadRequestException} If navigation is global navigation.
    */
   validDeletePermission(
     navigation: Navigation,
@@ -121,7 +121,7 @@ export class NavigationValidatorService {
     }
 
     if (navigation.name === 'global') {
-      throw new ForbiddenException('Global navigation cannot be deleted.');
+      throw new BadRequestException('Global navigation cannot be deleted.');
     }
   }
 

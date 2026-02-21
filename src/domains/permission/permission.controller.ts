@@ -6,13 +6,14 @@ import { RolesGuard } from 'src/core/guards/role.guard';
 @NavigationTypeNameArray(['role-management'])
 @Controller('permission')
 export class PermissionController {
-  constructor(private readonly permissionService: PermissionService) {}
+
+  constructor(private readonly _permissionService: PermissionService) {}
 
   @Permission('view')
   @UseGuards(RolesGuard)
   @Get()
   findAll() {
-    return this.permissionService.findAll();
+    return this._permissionService.findAll();
   }
 
 }

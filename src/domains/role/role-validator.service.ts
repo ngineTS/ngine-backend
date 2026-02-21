@@ -73,7 +73,7 @@ export class RoleValidatorService {
    * @param roleDto The role dto to valid.
    */
   async validInsertAction(roleDto: CreateRoleDto) {
-      await this.validRoleDisplayLabelUniqueness(roleDto.displayLabel);
+    await this.validRoleDisplayLabelUniqueness(roleDto.displayLabel);
   }
 
   /**
@@ -85,15 +85,15 @@ export class RoleValidatorService {
    */
   async validRoleDisplayLabelUniqueness(displayLabel: string, roleId?: string) {
     const roleWithSameNameExists = await this._roleRepository.findOne({
-        where: { 
-          displayLabel,
-          deletedDate: IsNull()
-        }
-      })
-
-      if (roleWithSameNameExists && roleWithSameNameExists.id !== roleId) {
-        throw new BadRequestException(`Role '${displayLabel}' already exists.`);
+      where: { 
+        displayLabel,
+        deletedDate: IsNull()
       }
+    })
+
+    if (roleWithSameNameExists && roleWithSameNameExists.id !== roleId) {
+      throw new BadRequestException(`Role '${displayLabel}' already exists.`);
+    }
   }
 
 }

@@ -22,34 +22,6 @@ export class RoleService {
   ) {}
 
   /**
-   * Save Role.
-   * 
-   * @param createRoleDto The role payload.
-   * @returns The role saved.
-   * @description
-   * 1. Valid role dto.
-   * 2. Transform displayLabel into name.
-   * 3. Add audit data then save role.
-   */
-  async create(
-    createRoleDto: CreateRoleDto,
-    userId: string
-  ) {
-    /* 1. */
-    await this._roleValidatorService.validInsertAction(createRoleDto);
-
-    /* 2. */
-    createRoleDto["name"] = createRoleDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
-    
-    /* 3. */
-    createRoleDto["createdDate"] = new Date();
-    createRoleDto["createdBy"] = userId;
-    createRoleDto["updatedDate"] = new Date();
-    createRoleDto["updatedBy"] = userId;
-    return await this._roleRepository.save(createRoleDto);
-  }
-
-  /**
    * Find all roles without relations, ordered alphabeatically.
    */
   async findAllRoles() {
@@ -83,30 +55,44 @@ export class RoleService {
   }
 
   /**
+   * Save Role.
+   * 
+   * @param createRoleDto The role payload.
+   * @param userId The user id from request.
+   * @returns The role saved.
+   * @description
+   * 1. Transform displayLabel into name.
+   * 2. Add audit data then save role.
+   */
+  async create(createRoleDto: CreateRoleDto, userId: string) {
+    /* 1. */
+    createRoleDto["name"] = createRoleDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
+    
+    /* 2. */
+    createRoleDto["createdDate"] = new Date();
+    createRoleDto["createdBy"] = userId;
+    createRoleDto["updatedDate"] = new Date();
+    createRoleDto["updatedBy"] = userId;
+    return this._roleRepository.save(createRoleDto);
+  }
+
+  /**
    * Update role.
    * 
    * @param id The role id.
    * @param updateRoleDto The role payload.
    * @returns The update response object.
    * @description
-   * 1. Valid role dto.
-   * 2. Transform displayLabel to name.
-   * 3. Add audit data then update role.
+   * 1. Transform displayLabel to name.
+   * 2. Add audit data then update role.
    */
-  async update(
-    id: string,
-    updateRoleDto: UpdateRoleDto,
-    userId: string
-  ) {
+  async update(id: string, updateRoleDto: UpdateRoleDto, userId: string) {
     /* 1. */
-    await this._roleValidatorService.validUpdateAction(updateRoleDto, id);
-
-    /* 2. */
     if (updateRoleDto['displayLabel']) {
       updateRoleDto["name"] = updateRoleDto["displayLabel"]?.toLowerCase()?.replace(/ /g, "-");
     }
 
-    /* 3. */
+    /* 2. */
     updateRoleDto["updatedDate"] = new Date();
     updateRoleDto["updatedBy"] = userId;
     return this._roleRepository.update(id, updateRoleDto);
@@ -117,27 +103,19 @@ export class RoleService {
    * 
    * @param id The role id.
    * @description
-   * 1. Valid delete role action.
-   * 2. Add audit data then soft delete role.
-   * 3. Soft delete related use roles.
-   * 4. Soft delete related role navigation permissions.
+   * 1. Add audit data then soft delete role.
+   * 2. Soft delete related use roles.
+   * 3. Soft delete related role navigation permissions.
    */
-  async remove(
-    id: string,
-    userId: string,
-  ) {
+  async remove(id: string, userId: string) {
     let removedTotal = 0;
-
     /* 1. */
-    await this._roleValidatorService.validDeleteAction(id);
-
-    /* 2. */
     const updateRoleResponse = await this._roleRepository.update(id, {
       deletedDate: new Date(),
       deletedBy: userId
     });
 
-    /* 3. */
+    /* 2. */
     let userRolesToRemove = await this._userRoleRepository.find({
       where: { roleId: id }
     });
@@ -148,7 +126,7 @@ export class RoleService {
     removedTotal = removedTotal 
       + (await this._userRoleRepository.save(userRolesToRemove)).length;
 
-    /* 4. */
+    /* 3. */
     let roleNavigationPermissionsToRemove = await this._roleNavigationPermissionRepository.find({
       where: { roleId: id }
     });

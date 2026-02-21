@@ -5,54 +5,62 @@ import { UpdateRoleDto } from './dto/update-role.dto';
 import { UserId } from 'src/core/decorators/user.decorator';
 import { NavigationTypeNameArray, Permission } from 'src/core/decorators/role.decorator';
 import { RolesGuard } from 'src/core/guards/role.guard';
+import { RoleValidatorService } from './role-validator.service';
 
 @NavigationTypeNameArray(['role-management'])
 @Controller('role')
 export class RoleController {
-  constructor(private readonly roleService: RoleService) { }
+
+  constructor(
+    private readonly _roleService: RoleService,
+    private readonly _roleValidatorService: RoleValidatorService
+  ) { }
 
   @Permission('add')
   @UseGuards(RolesGuard)
   @Post()
-  create(
+  async create(
     @Body() createRoleDto: CreateRoleDto,
     @UserId() userId: string
   ) {
-    return this.roleService.create(createRoleDto, userId);
+    await this._roleValidatorService.validInsertAction(createRoleDto);
+    return this._roleService.create(createRoleDto, userId);
   }
 
   @Permission('view')
   @UseGuards(RolesGuard)
   @Get()
   findAllRoles() {
-    return this.roleService.findAllRoles();
+    return this._roleService.findAllRoles();
   }
 
   @Permission('view')
   @UseGuards(RolesGuard)
   @Get('rpn')
   findAllRolesWithNavigationPermissions() {
-    return this.roleService.findAllRolesWithNavigationPermissions();
+    return this._roleService.findAllRolesWithNavigationPermissions();
   }
 
   @Permission('edit')
   @UseGuards(RolesGuard)
   @Patch(':id')
-  update(
+  async update(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateRoleDto: UpdateRoleDto,
     @UserId() userId: string
   ) {
-    return this.roleService.update(id, updateRoleDto, userId);
+    await this._roleValidatorService.validUpdateAction(updateRoleDto, id);
+    return this._roleService.update(id, updateRoleDto, userId);
   }
 
   @Permission('delete')
   @UseGuards(RolesGuard)
   @Delete(':id')
-  remove(
+  async remove(
     @Param('id', new ParseUUIDPipe()) id: string,
     @UserId() userId: string
   ) {
-    return this.roleService.remove(id, userId);
+    await this._roleValidatorService.validDeleteAction(id);
+    return this._roleService.remove(id, userId);
   }
 }

@@ -8,12 +8,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 @Injectable()
 export class PermissionService {
 
-  constructor(@InjectRepository(Permission)
-              private _permissionRepository: Repository<Permission>) { }
+  constructor(
+    @InjectRepository(Permission)
+    private readonly _permissionRepository: Repository<Permission>
+  ) { }
 
   async findAll() {
     return await this._permissionRepository.find({
-      where: {deletedDate: IsNull()}
+      where: { deletedDate: IsNull() }
     });
   }
 
