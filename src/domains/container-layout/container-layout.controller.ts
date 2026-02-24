@@ -20,9 +20,6 @@ export class ContainerLayoutController {
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
     await this._containerLayoutValidatorService.validPermission(id, userNavigationPermissions);
-    return this._containerLayoutService.update(
-      id,
-      updateContainerLayoutDto,
-    );
+    return this._containerLayoutService.update(id, updateContainerLayoutDto);
   }
 }

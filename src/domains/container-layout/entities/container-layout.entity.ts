@@ -42,4 +42,9 @@ export class ContainerLayout {
     @Column()
 	gap: number;
 
+    @Column()
+	xPos: number;
+
+    @Column()
+	yPos: number;
 }
