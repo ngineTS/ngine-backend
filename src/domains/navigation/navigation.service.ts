@@ -13,7 +13,6 @@ import { ContainerLayout } from '../container-layout/entities/container-layout.e
 import { ContainerStyle } from '../container-style/entities/container-style.entity';
 import { TypographyStyle } from '../typography-style/entities/typography-style.entity';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
-import { NavigationValidatorService } from './navigation-validator.service';
 import { NavigationPermissions } from 'src/core/models/navigation-permissions.interface';
 
 
@@ -507,8 +506,8 @@ export class NavigationService {
   /**
    * Clean navigations based on the following rules:
    * - remove deleted navigations (deletedDate not null)
-   * - remove navigations with no permission or if his descendants have no permission
-   * - remove disabled navigations if user doesn't `add` permission on it.
+   * - remove navigations if them and their descendants have no permission
+   * - remove disabled navigations if user doesn't have `add` permission on it.
    * 
    * @param navigations The array of navigations to clean.
    * @returns The array of navigations cleaned.
