@@ -71,15 +71,13 @@ export class NavigationService {
   ) {
     /* define TypeORM find options (relation, order, where). */
     const relations = new Set<string>();
-    const order: FindOptionsOrder<Navigation> = { order: 'ASC' };
     const where: FindOptionsWhere<Navigation> = { id: '00000000-0000-0000-0000-000000000000' };
-    this.generateRelationsAndOrder(8, relations, order); //TO DO: Replace 6 by the exact depth wished
+    this.generateRelationsAndOrder(8, relations); //TO DO: Replace 6 by the exact depth wished
     
     /* get main navigation from db. */
     let mainNavigation = await this._navigationRepository.findOne({
       relations: [...relations],
       where: where,
-      order: order
     });
 
     /* get user navigation permissions and clean navigations accordingly. */
@@ -116,8 +114,7 @@ export class NavigationService {
    */
   generateRelationsAndOrder(
     depth: number, 
-    relations: Set<string>, 
-    order: FindOptionsOrder<Navigation>, 
+    relations: Set<string>,
     base: string = ''
   ) {
     relations.add(base + 'navigationType');
@@ -132,8 +129,7 @@ export class NavigationService {
     if (depth > 0) {
       relations.add(base + 'children');
       base = base + 'children.';
-      order.children = { order: 'ASC' };
-      this.generateRelationsAndOrder(depth - 1, relations, order.children, base);
+      this.generateRelationsAndOrder(depth - 1, relations, base);
     }
   }
 
