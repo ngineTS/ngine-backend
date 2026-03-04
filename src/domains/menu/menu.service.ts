@@ -163,7 +163,7 @@ export class MenuService {
   }
 
   /**
-   * Copy parent ref style and paste it to wished ref.
+   * Copy object style.
    * 
    * @param refId The ref we want to paste the style to.
    * @param parentRefId The ref we want to inherit the style from.
@@ -185,6 +185,7 @@ export class MenuService {
     if (!parentContainerStyle) {
       throw new NotFoundException(`No container style found with refId ${parentRefId}`);
     }
+    
     /* Get parent typographyStyle. */
     let parentTypographyStyle = await this._typographyStyleRepository.findOne({
       where: { refId: parentRefId }

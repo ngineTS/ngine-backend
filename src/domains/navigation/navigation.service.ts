@@ -261,7 +261,7 @@ export class NavigationService {
    * @description
    * 1. Add audit data and save navigation.
    * 2. Inherit style from parent and save style properties.
-   * 3. Associate menu to navigation up to navigation type.
+   * 3. If navigation is a menu button then create menu.
    */
   async saveNavigation(
     createNavigationDto: CreateNavigationDto,
@@ -302,7 +302,7 @@ export class NavigationService {
    * @returns An UpdateResponse type object.
    * @throws {NotFoundException} If navigation id is not found in database.
    * @description
-   * 1. Get existing navigationfrom db.
+   * 1. Get existing navigation from db.
    * 2. If parent has changed and old parent has no more children then delete his menu.
    * 3. Add audit data and update navigation.
    */
