@@ -3,7 +3,7 @@ import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Navigation } from './entities/navigation.entity';
-import { FindOptionsOrder, FindOptionsWhere, In, IsNull, Repository } from 'typeorm';
+import { FindOptionsWhere, In, IsNull, Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 import { Permission } from '../permission/entities/permission.entity';
@@ -319,9 +319,8 @@ export class NavigationService {
       throw new NotFoundException();
     }
     
+    /* 2. */
     if ('parentId' in updateNavigationDto && updateNavigationDto.parentId !== dbNavigation.parentId) {
-      
-      /* 2. */
       const oldParentNavigation = await this._navigationRepository.findOne({
         relations: ['children', 'menu'],
         where: { 
