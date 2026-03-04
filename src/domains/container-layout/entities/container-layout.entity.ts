@@ -40,9 +40,6 @@ export class ContainerLayout {
 	paddingLeft: number;
 
     @Column()
-	gap: number;
-
-    @Column()
 	xPos: number;
 
     @Column()
