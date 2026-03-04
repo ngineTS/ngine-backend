@@ -196,6 +196,8 @@ export class MenuService {
 
     /* Change refId and save containerLayout. */
     const containerLayoutPayload = omitObjectProperty(parentContainerLayout, 'id');
+    containerLayoutPayload.xPos = 0;
+    containerLayoutPayload.yPos = 0;
     containerLayoutPayload.refId = refId;
     await this._containerLayoutRepository.save(containerLayoutPayload);
 
