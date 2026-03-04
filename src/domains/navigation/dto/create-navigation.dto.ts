@@ -8,7 +8,7 @@ export class CreateNavigationDto {
 
     @IsNotEmpty()
     @IsString()
-    @MaxLength(50)
+    @MaxLength(30)
     displayLabel: string;
 
     @IsOptional()
