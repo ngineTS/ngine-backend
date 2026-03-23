@@ -7,9 +7,12 @@ export class QuillEditor {
     id: string;
 
     @Column()
+    navigationId: string;
+ 
+    @Column()
     content: string;
 
     @Column()
-    navigationId: string
+    fileName: string;
 
 }
