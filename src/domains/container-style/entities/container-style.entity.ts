@@ -44,4 +44,7 @@ export class ContainerStyle {
 
     @Column()
     isBorderLeftHidden: boolean;
+
+    @Column()
+    backgroundImage: string;
 }
