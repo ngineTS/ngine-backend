@@ -20,6 +20,11 @@ export class MediaController {
     return this.mediaService.findAll(orderBy, order);
   }
 
+  @Get('file-name/:fileName')
+  findMediaByFileName(@Param('fileName') fileName: string) {
+    return this.mediaService.findMediaByFileName(fileName);
+  }
+
   @Delete(':fileName')
   remove(
     @Param('fileName') fileName: string,
