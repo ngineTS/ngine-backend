@@ -9,10 +9,10 @@ export class ContainerLayout {
     @Column()
     refId: string;
 
-    @Column()
+    @Column({ type: 'float' })
 	width: number;
 
-    @Column()
+    @Column({ type: 'float' })
 	height: number;
     
     @Column()
