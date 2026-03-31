@@ -44,6 +44,8 @@ import { ContainerLayoutModule } from './domains/container-layout/container-layo
 import { MenuModule } from './domains/menu/menu.module';
 import { ContainerStyleModule } from './domains/container-style/container-style.module';
 import { TypographyStyleModule } from './domains/typography-style/typography-style.module';
+import { AppSettingModule } from './app-setting/app-setting.module';
+import { AppSetting } from './app-setting/entities/app-setting.entity';
 
 
 @Module({
@@ -87,7 +89,8 @@ import { TypographyStyleModule } from './domains/typography-style/typography-sty
         Menu,
         ContainerLayout,
         ContainerStyle,
-        TypographyStyle
+        TypographyStyle,
+        AppSetting
       ]
     }),
     NavigationModule,
@@ -110,7 +113,8 @@ import { TypographyStyleModule } from './domains/typography-style/typography-sty
     MenuModule,
     ContainerLayoutModule,
     ContainerStyleModule,
-    TypographyStyleModule
+    TypographyStyleModule,
+    AppSettingModule
   ],
   controllers: [AppController],
   providers: [AppService],
