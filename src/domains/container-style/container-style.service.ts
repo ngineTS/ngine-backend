@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ContainerStyle } from './entities/container-style.entity';
 import { Repository } from 'typeorm';
+import { CreateContainerStyleDto } from './dto/create-container-style.dto';
 
 @Injectable()
 export class ContainerStyleService {
@@ -21,6 +22,26 @@ export class ContainerStyleService {
     return this._containerStyleRepository.findOne({
       where: { refId: '00000000-0000-0000-0000-000000000000' }
     });
+  }
+
+  /**
+   * Create object containr style based on default value.
+   * 
+   * @param refId The object id.
+   * @returns The container style saved.
+   * @throws {NotFoundException} If default container style not found.
+   */
+  async createObjectContainerStyle(refId: string) {
+    const defaultContainerStyle = await this.geDefaultContainerStyle();
+
+    if (!defaultContainerStyle) {
+      throw new NotFoundException('Default container style not found.');
+    }
+
+    const { id, ...objectContainerStyle } = defaultContainerStyle;
+    objectContainerStyle.refId = refId;
+
+    return this._containerStyleRepository.save(objectContainerStyle);
   }
 
 }

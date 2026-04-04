@@ -18,6 +18,9 @@ import { NavigationType } from '../navigation-type/entities/navigation-type.enti
 import { NavigationValidatorService } from './navigation-validator.service';
 import { RoleValidatorService } from '../role/role-validator.service';
 import { MenuValidatorService } from '../menu/menu-validator.service';
+import { ContainerLayoutService } from '../container-layout/container-layout.service';
+import { ContainerStyleService } from '../container-style/container-style.service';
+import { TypographyStyleService } from '../typography-style/typography-style.service';
 
 @Module({
   imports:[
@@ -42,7 +45,10 @@ import { MenuValidatorService } from '../menu/menu-validator.service';
     RoleValidatorService,
     AuthService,
     MenuService,
-    MenuValidatorService
+    MenuValidatorService,
+    ContainerLayoutService,
+    ContainerStyleService,
+    TypographyStyleService
   ]
 })
 export class NavigationModule {}

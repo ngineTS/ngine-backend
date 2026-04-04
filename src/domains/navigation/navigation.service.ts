@@ -14,6 +14,9 @@ import { ContainerStyle } from '../container-style/entities/container-style.enti
 import { TypographyStyle } from '../typography-style/entities/typography-style.entity';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 import { NavigationPermissions } from 'src/core/models/navigation-permissions.interface';
+import { ContainerStyleService } from '../container-style/container-style.service';
+import { TypographyStyleService } from '../typography-style/typography-style.service';
+import { ContainerLayoutService } from '../container-layout/container-layout.service';
 
 
 @Injectable()
@@ -36,6 +39,9 @@ export class NavigationService {
     private _typographyStyleRepository: Repository<TypographyStyle>,
     private _authService: AuthService,
     private _menuService: MenuService,
+    private _containerLayoutService: ContainerLayoutService,
+    private _containerStyleService: ContainerStyleService,
+    private _typographyStyleService: TypographyStyleService
   ) {}
 
   /**
@@ -260,7 +266,7 @@ export class NavigationService {
    * @returns The navigation saved.
    * @description
    * 1. Add audit data and save navigation.
-   * 2. Inherit style from parent and save style properties.
+   * 2. Assign style properties.
    * 3. If navigation is a menu button then create menu.
    */
   async saveNavigation(
@@ -275,11 +281,9 @@ export class NavigationService {
     const navigationSaved = await this._navigationRepository.save(createNavigationDto);
 
     /* 2. */
-    let parentRefId = navigationSaved.parentId;
-    if (parentRefId === '00000000-0000-0000-0000-000000000000') {
-      parentRefId = (await this._menuService.findOneByNavigationId(parentRefId))!.id;
-    }
-    await this._menuService.inheritParentStyle(navigationSaved.id, parentRefId);
+    await this._containerLayoutService.createObjectContainerLayout({ refId: navigationSaved.id });
+    await this._containerStyleService.createObjectContainerStyle(navigationSaved.id);
+    await this._typographyStyleService.createObjectTypographyStyle(navigationSaved.id);
 
     /* 3. */
     const menuButtonNavigationType = await this._navigationTypeRepository.findOne({
@@ -287,7 +291,9 @@ export class NavigationService {
     });
     if (navigationSaved.navigationTypeId === menuButtonNavigationType!.id) {
       const menuSaved = await this._menuService.createMenu(navigationSaved.id);
-      await this._menuService.inheritParentStyle(menuSaved.id, navigationSaved.id);
+      await this._containerStyleService.createObjectContainerStyle(menuSaved.id);
+      await this._typographyStyleService.createObjectTypographyStyle(menuSaved.id);
+      await this._containerLayoutService.createObjectContainerLayout({ refId: menuSaved.id });
     }
 
     return navigationSaved;

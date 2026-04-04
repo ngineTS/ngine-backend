@@ -8,8 +8,9 @@ import { ContainerStyle } from '../container-style/entities/container-style.enti
 import { TypographyStyle } from '../typography-style/entities/typography-style.entity';
 import { Navigation } from '../navigation/entities/navigation.entity';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
-import { omitObjectProperty } from 'src/core/utils/omit-object-property.util';
-import { MenuValidatorService } from './menu-validator.service';
+import { ContainerStyleService } from '../container-style/container-style.service';
+import { ContainerLayoutService } from '../container-layout/container-layout.service';
+import { TypographyStyleService } from '../typography-style/typography-style.service';
 
 @Injectable()
 export class MenuService {
@@ -27,6 +28,9 @@ export class MenuService {
     private _navigationRepository: Repository<Navigation>,
     @InjectRepository(NavigationType)
     private _navigationTypeRepository: Repository<NavigationType>,
+    private _containerLayoutService: ContainerLayoutService,
+    private _containerStyleService: ContainerStyleService,
+    private _typographyStyleService: TypographyStyleService,
   ) {}
 
 
@@ -47,13 +51,14 @@ export class MenuService {
    * @param userId The user who creates this navigation bar.
    * @throws {ForbiddenException} If user doesn't have add permission on navigation.
    * @description
-   * 1. Create navigation bar for given navigation with same style as navigation.
-   * 2. Create first navigation inside navigation bar with same style as navigation.
+   * 1. Create navigation bar for given navigation and assign style properties.
+   * 2. Create first navigation inside navigation bar and assign style properties.
    */
   async createNavigationBar(navigationId: string, userId: string) {
     /* 1. */
     const menuSaved = await this._menuRepository.save({ navigationId: navigationId });
-    await this.inheritParentStyle(menuSaved.id, navigationId);
+    await this._containerLayoutRepository.save({ refId: menuSaved.id, width: 100, height: 75 });
+    await this._containerStyleService.createObjectContainerStyle(menuSaved.id);
 
     /* 2. */
     const redirectButtonNavigationType = await this._navigationTypeRepository.findOne({
@@ -73,7 +78,9 @@ export class MenuService {
       updatedBy: userId
     }
     const firstAutoCreatedChildSaved = await this._navigationRepository.save(firstAutoCreatedChild);
-    await this.inheritParentStyle(firstAutoCreatedChildSaved.id, navigationId);
+    await this._containerLayoutService.createObjectContainerLayout({ refId: firstAutoCreatedChildSaved.id });
+    await this._containerStyleService.createObjectContainerStyle(firstAutoCreatedChildSaved.id);
+    await this._typographyStyleService.createObjectTypographyStyle(firstAutoCreatedChildSaved.id);
     
     return JSON.stringify('Navigation bar successfully created.');
   }
@@ -160,126 +167,6 @@ export class MenuService {
     }
 
     return deleteResponse;
-  }
-
-  /**
-   * Copy object style.
-   * 
-   * @param refId The ref we want to paste the style to.
-   * @param parentRefId The ref we want to inherit the style from.
-   * @throws {NotFoundException} if not style found for given parentRefId.
-   */
-  async inheritParentStyle(refId: string, parentRefId: string) {
-    /* Get parent containerLayout. */
-    let parentContainerLayout = await this._containerLayoutRepository.findOne({
-      where: { refId: parentRefId }
-    });
-    if (!parentContainerLayout) {
-      throw new NotFoundException(`No container layout found with refId ${parentRefId}`);
-    }
-
-    /* Get parent containerStyle. */
-    let parentContainerStyle = await this._containerStyleRepository.findOne({
-      where: { refId: parentRefId }
-    });
-    if (!parentContainerStyle) {
-      throw new NotFoundException(`No container style found with refId ${parentRefId}`);
-    }
-    
-    /* Get parent typographyStyle. */
-    let parentTypographyStyle = await this._typographyStyleRepository.findOne({
-      where: { refId: parentRefId }
-    });
-    if (!parentTypographyStyle) {
-      throw new NotFoundException(`No typography style found with refId ${parentRefId}`);
-    }
-
-    /* Change refId and save containerLayout. */
-    const containerLayoutPayload = omitObjectProperty(parentContainerLayout, 'id');
-    containerLayoutPayload.xPos = 0;
-    containerLayoutPayload.yPos = 0;
-    containerLayoutPayload.refId = refId;
-    await this._containerLayoutRepository.save(containerLayoutPayload);
-
-    /* Change refId and save containerStyle. */
-    const containerStylePayload = omitObjectProperty(parentContainerStyle, 'id');
-    containerStylePayload.refId = refId;
-    await this._containerStyleRepository.save(containerStylePayload);
-
-    /* Change refId and save typographyStyle. */
-    const typographyStylePayload = omitObjectProperty(parentTypographyStyle, 'id');
-    typographyStylePayload.refId = refId;
-    await this._typographyStyleRepository.save(typographyStylePayload);
-  }
-
-  /**
-   * Create default container layout for given refId.
-   * 
-   * @param refId the object reference id.
-   * @returns The container layout object saved.
-   */
-  async createDefaultContainerLayout(refId: string): Promise<ContainerLayout> {
-    const containerLayoutPayload = {
-      refId: refId,
-      width: 50,
-      height: 50,
-      marginTop: 0,
-      marginRight: 0,
-      marginBottom: 0,
-      marginLeft: 0,
-      paddingTop: 0,
-      paddingRight: 0,
-      paddingBottom: 0,
-      paddingLeft: 0,
-      gap: 10
-    }
-
-    return await this._containerLayoutRepository.save(containerLayoutPayload);
-  }
-
-  /**
-   * Create default container style for given refId.
-   * 
-   * @param refId the object reference id.
-   * @returns The container style object saved.
-   */
-  async createDefaultContainerStyle(refId: string): Promise<ContainerStyle> {
-    const containerStylePayload = {
-      refId: refId,
-      backgroundColor: '#636363',
-      borderColor: '#1E90FF',
-      borderStyle: 'solid',
-      borderWidth: 4,
-      borderTopLeftRadius: 0,
-      borderTopRightRadius: 0,
-      borderBottomLeftRadius: 0,
-      borderBottomRightRadius: 0,
-      isBorderTopHidden: false,
-      isBorderRightHidden: false,
-      isBorderBottomHidden: false,
-      isBorderLeftHidden: false
-    }
-    
-    return await this._containerStyleRepository.save(containerStylePayload);
-  }
-
-  /**
-   * Create default typography style for given refId.
-   * 
-   * @param refId the object reference id.
-   * @returns The typography style object saved.
-   */
-  async createDefaultTypographyStyle(refId: string): Promise<TypographyStyle> {
-    const typographyStylePayload = {
-      refId: refId,
-      fontFamily: 'Roboto',
-      fontSize: 16,
-      fontWeight: 400,
-      color: '#D3D3D3',
-      activeColor: '#1E90FF'
-    }
-
-    return await this._typographyStyleRepository.save(typographyStylePayload);
   }
 
 }
