@@ -56,7 +56,10 @@ export class UserService {
 
     /* 3. */
     const users = await this._userRepository.find({ 
-      where: { name: Not('guest') },
+      where: { 
+        name: Not('guest'),
+        emailAddress: Not(createUserDto.emailAddress)
+      },
       take: 1,
     });
     if (!users || users.length === 0) {
