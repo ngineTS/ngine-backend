@@ -3,9 +3,6 @@ import { UpdateMenuDto } from './dto/update-menu.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Menu } from './entities/menu.entity';
-import { ContainerLayout } from '../container-layout/entities/container-layout.entity';
-import { ContainerStyle } from '../container-style/entities/container-style.entity';
-import { TypographyStyle } from '../typography-style/entities/typography-style.entity';
 import { Navigation } from '../navigation/entities/navigation.entity';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 import { ContainerStyleService } from '../container-style/container-style.service';
@@ -18,12 +15,6 @@ export class MenuService {
   constructor(
     @InjectRepository(Menu)
     private _menuRepository: Repository<Menu>,
-    @InjectRepository(ContainerLayout)
-    private _containerLayoutRepository: Repository<ContainerLayout>,
-    @InjectRepository(ContainerStyle)
-    private _containerStyleRepository: Repository<ContainerStyle>,
-    @InjectRepository(TypographyStyle)
-    private _typographyStyleRepository: Repository<TypographyStyle>,
     @InjectRepository(Navigation)
     private _navigationRepository: Repository<Navigation>,
     @InjectRepository(NavigationType)
@@ -57,7 +48,7 @@ export class MenuService {
   async createNavigationBar(navigationId: string, userId: string) {
     /* 1. */
     const menuSaved = await this._menuRepository.save({ navigationId: navigationId });
-    await this._containerLayoutRepository.save({ refId: menuSaved.id, width: 100, height: 75 });
+    await this._containerLayoutService.createObjectContainerLayout({ refId: menuSaved.id, width: 100, height: 75 });
     await this._containerStyleService.createObjectContainerStyle(menuSaved.id);
 
     /* 2. */
@@ -117,37 +108,43 @@ export class MenuService {
 
     /* 1. */
     if (updateMenuDto['containerLayout']) {
-      const updateContainerLayoutResponse = await this._containerLayoutRepository.update(
-        { refId: refId }, 
+      const updateContainerLayoutResponse = await this._containerLayoutService.updateByRefId(
+        refId, 
         updateMenuDto['containerLayout']
       );
+
       if (updateContainerLayoutResponse.affected === 0) {
         throw new NotFoundException('No container layout associated tho this menu id has been found.')
       }
+
       affectedRelations.affectedContainerLayout = updateContainerLayoutResponse.affected;
     }
 
     /* 2. */
     if (updateMenuDto['containerStyle']) {
-      const updateContainerStyleResponse = await this._containerStyleRepository.update(
-        { refId: refId }, 
+      const updateContainerStyleResponse = await this._containerStyleService.updateByRefId(
+        refId, 
         updateMenuDto['containerStyle']
       );
+
       if (updateContainerStyleResponse.affected === 0) {
         throw new NotFoundException('No container style associated tho this menu id has been found.')
       }
+
       affectedRelations.affectedContainerStyle = updateContainerStyleResponse.affected;
     }
 
     /* 3. */
     if (updateMenuDto['typographyStyle']) {
-      const updateTypographyStyleResponse = await this._typographyStyleRepository.update(
-        { refId: refId }, 
+      const updateTypographyStyleResponse = await this._typographyStyleService.updateByRefId(
+        refId, 
         updateMenuDto['typographyStyle']
       );
+
       if (updateTypographyStyleResponse.affected === 0) {
         throw new NotFoundException('No typography style associated tho this menu id has been found.')
       }
+
       affectedRelations.affectedTypographyStyle = updateTypographyStyleResponse.affected;
     }
 

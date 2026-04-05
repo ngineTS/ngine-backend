@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ContainerStyle } from './entities/container-style.entity';
 import { Repository } from 'typeorm';
-import { CreateContainerStyleDto } from './dto/create-container-style.dto';
+import { UpdateContainerStyleDto } from './dto/update-container-style.dto';
 
 @Injectable()
 export class ContainerStyleService {
@@ -12,7 +12,6 @@ export class ContainerStyleService {
     private _containerStyleRepository: Repository<ContainerStyle>
   ) { }
 
-  
   /**
    * Get default container style.
    * 
@@ -42,6 +41,30 @@ export class ContainerStyleService {
     objectContainerStyle.refId = refId;
 
     return this._containerStyleRepository.save(objectContainerStyle);
+  }
+
+  /**
+   * Update container style by ref id.
+   * 
+   * @param refId The ref id.
+   * @param updateContainerStyleDto The container style properties.
+   * @returns A promise of UpdateResponse object.
+   */
+  updateByRefId(refId: string, updateContainerStyletDto: UpdateContainerStyleDto) {
+    return this._containerStyleRepository.update(
+      { refId: refId }, 
+      updateContainerStyletDto
+    );
+  }
+
+  /**
+   * Delete container style by ref id.
+   * 
+   * @param refId The ref id.
+   * @returns A promise of DeleteResponse object.
+   */
+  deleteByRefId(refId: string) {
+    return this._containerStyleRepository.delete({ refId: refId });
   }
 
 }
