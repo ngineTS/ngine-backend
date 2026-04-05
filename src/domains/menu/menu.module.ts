@@ -9,6 +9,9 @@ import { TypographyStyle } from '../typography-style/entities/typography-style.e
 import { Navigation } from '../navigation/entities/navigation.entity';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 import { MenuValidatorService } from './menu-validator.service';
+import { ContainerLayoutService } from '../container-layout/container-layout.service';
+import { ContainerStyleService } from '../container-style/container-style.service';
+import { TypographyStyleService } from '../typography-style/typography-style.service';
 
 @Module({
   imports:[
@@ -22,6 +25,12 @@ import { MenuValidatorService } from './menu-validator.service';
     ])
   ],
   controllers: [MenuController],
-  providers: [MenuService, MenuValidatorService],
+  providers: [
+    MenuService,
+    MenuValidatorService,
+    ContainerLayoutService,
+    ContainerStyleService,
+    TypographyStyleService
+  ],
 })
 export class MenuModule {}

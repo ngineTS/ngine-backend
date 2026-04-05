@@ -9,11 +9,11 @@ import { RoleNavigationPermission } from '../role-navigation-permission/entities
 import { Permission } from '../permission/entities/permission.entity';
 import { AuthService } from 'src/core/auth/auth.service';
 import { MenuService } from '../menu/menu.service';
-import { ContainerLayout } from '../container-layout/entities/container-layout.entity';
-import { ContainerStyle } from '../container-style/entities/container-style.entity';
-import { TypographyStyle } from '../typography-style/entities/typography-style.entity';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
 import { NavigationPermissions } from 'src/core/models/navigation-permissions.interface';
+import { ContainerStyleService } from '../container-style/container-style.service';
+import { TypographyStyleService } from '../typography-style/typography-style.service';
+import { ContainerLayoutService } from '../container-layout/container-layout.service';
 
 
 @Injectable()
@@ -28,14 +28,11 @@ export class NavigationService {
     private _userRepository: Repository<User>,
     @InjectRepository(RoleNavigationPermission)
     private _roleNavigationPermissionRepository: Repository<RoleNavigationPermission>,
-    @InjectRepository(ContainerLayout)
-    private _containerLayoutRepository: Repository<ContainerLayout>,
-    @InjectRepository(ContainerStyle)
-    private _containerStyleRepository: Repository<ContainerStyle>,
-    @InjectRepository(TypographyStyle)
-    private _typographyStyleRepository: Repository<TypographyStyle>,
     private _authService: AuthService,
     private _menuService: MenuService,
+    private _containerLayoutService: ContainerLayoutService,
+    private _containerStyleService: ContainerStyleService,
+    private _typographyStyleService: TypographyStyleService
   ) {}
 
   /**
@@ -260,7 +257,7 @@ export class NavigationService {
    * @returns The navigation saved.
    * @description
    * 1. Add audit data and save navigation.
-   * 2. Inherit style from parent and save style properties.
+   * 2. Assign style properties.
    * 3. If navigation is a menu button then create menu.
    */
   async saveNavigation(
@@ -275,11 +272,9 @@ export class NavigationService {
     const navigationSaved = await this._navigationRepository.save(createNavigationDto);
 
     /* 2. */
-    let parentRefId = navigationSaved.parentId;
-    if (parentRefId === '00000000-0000-0000-0000-000000000000') {
-      parentRefId = (await this._menuService.findOneByNavigationId(parentRefId))!.id;
-    }
-    await this._menuService.inheritParentStyle(navigationSaved.id, parentRefId);
+    await this._containerLayoutService.createObjectContainerLayout({ refId: navigationSaved.id });
+    await this._containerStyleService.createObjectContainerStyle(navigationSaved.id);
+    await this._typographyStyleService.createObjectTypographyStyle(navigationSaved.id);
 
     /* 3. */
     const menuButtonNavigationType = await this._navigationTypeRepository.findOne({
@@ -287,7 +282,9 @@ export class NavigationService {
     });
     if (navigationSaved.navigationTypeId === menuButtonNavigationType!.id) {
       const menuSaved = await this._menuService.createMenu(navigationSaved.id);
-      await this._menuService.inheritParentStyle(menuSaved.id, navigationSaved.id);
+      await this._containerLayoutService.createObjectContainerLayout({ refId: menuSaved.id });
+      await this._containerStyleService.createObjectContainerStyle(menuSaved.id);
+      await this._typographyStyleService.createObjectTypographyStyle(menuSaved.id);
     }
 
     return navigationSaved;
@@ -330,9 +327,9 @@ export class NavigationService {
       });
       if (oldParentNavigation?.menu && oldParentNavigation?.children?.filter(obj => !obj.deletedDate).length === 1) {
         await this._menuService.remove(oldParentNavigation.menu.id);
-        await this._containerLayoutRepository.delete({ refId: oldParentNavigation.menu.id });
-        await this._containerStyleRepository.delete({ refId: oldParentNavigation.menu.id });
-        await this._typographyStyleRepository.delete({ refId: oldParentNavigation.menu.id });
+        await this._containerLayoutService.deleteByRefId(oldParentNavigation.menu.id);
+        await this._containerStyleService.deleteByRefId(oldParentNavigation.menu.id);
+        await this._typographyStyleService.deleteByRefId(oldParentNavigation.menu.id);
       }
     }
 
@@ -375,7 +372,7 @@ export class NavigationService {
   async removeNavigation(navigation: Navigation, userId: string) {
     /* 1. */
     const navigationsIds: Array<string> = [];
-    const navigationRecordsToDelete: Array<Partial<Navigation>> = [];
+    const navigationRecordsToDelete: Array<Pick<Navigation, 'id' | 'deletedBy' | 'deletedDate'>> = [];
     const menuIdsToDelete: Array<string> = [];
     /* declare method to retrieve navigations and menus to delete */
     const getDeepNavigationIds = async (navigation: Navigation) => {
@@ -401,11 +398,11 @@ export class NavigationService {
     /* 2. */
     const navigationsSoftDeleted = await this._navigationRepository.save(navigationRecordsToDelete);
     for (const navigation of navigationRecordsToDelete) {
-      await this._containerLayoutRepository.delete({ refId: navigation['id'] });
-      await this._containerStyleRepository.delete({ refId: navigation['id']});
-      await this._typographyStyleRepository.delete({ refId: navigation['id'] });
+      await this._containerLayoutService.deleteByRefId(navigation.id);
+      await this._containerStyleService.deleteByRefId(navigation.id);
+      await this._typographyStyleService.deleteByRefId(navigation.id);
     }
-
+    
     /* 3. */
     const parentNavigation = await this._navigationRepository.findOne({
       where: { 
@@ -425,10 +422,9 @@ export class NavigationService {
     /* 4. */
     for (const id of menuIdsToDelete) {
       await this._menuService.remove(id);
-      await this._containerLayoutRepository.delete({ refId: id });
-      await this._containerStyleRepository.delete({ refId: id });
-      await this._typographyStyleRepository.delete({ refId: id });
-
+      await this._containerLayoutService.deleteByRefId(id);
+      await this._containerStyleService.deleteByRefId(id);
+      await this._typographyStyleService.deleteByRefId(id);
     }
 
     /* 5. */
