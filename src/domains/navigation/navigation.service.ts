@@ -365,7 +365,7 @@ export class NavigationService {
    * 1. Retrieve recursively children and related menu to delete.
    * 2. Soft delete navigation, his descendants and delete related style properties.
    * 3. Check if parent navigation has a menu and remains without children. If yes retrieve menu to delete.
-   * 4. Delete menus retrieved on step 2 & 4 and style properties.
+   * 4. Delete menus retrieved on step 2 & 4 and delete style properties.
    * 5. Delete roleNavigationPermissions associated to navigations deleted.
    * 6. Return number of navigation soft deleted.
    */

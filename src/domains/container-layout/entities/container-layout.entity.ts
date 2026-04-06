@@ -52,4 +52,7 @@ export class ContainerLayout {
 
     @Column()
 	yPos: number;
+
+    @Column()
+	zIndex: number;
 }
