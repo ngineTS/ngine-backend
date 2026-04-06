@@ -47,4 +47,7 @@ export class ContainerStyle {
 
     @Column()
     backgroundImage: string;
+
+    @Column()
+    isBackgroundTransparent: boolean;
 }
