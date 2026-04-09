@@ -8,13 +8,13 @@ export class CustomTableService {
   constructor(private _dataSource: DataSource) { }
 
   /**
-   * Get table content by table name and navigation id.
+   * Get content by table name and navigation id.
    * 
    * @param tableName The table name.
    * @param navigationId The navigation id.
    * @returns An array with content.
    */
-  async findTableContentByTableNameAndNavigationId(
+  async findContentByTableNameAndNavigationId(
     tableName: string,
     navigationId: string
   ) {

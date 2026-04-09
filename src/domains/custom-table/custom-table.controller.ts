@@ -10,13 +10,13 @@ export class CustomTableController {
   constructor(private readonly _customTableService: CustomTableService) { }
 
   @Get(':tableName/:navigationId')
-  async findTableContentByTableName(
+  async findContentByTableNameAndNavigationId(
     @Param('tableName') tableName: string,
     @Param('navigationId') navigationId: string,
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
     //await this._customTableValidatorService.validPermission(tableName, 'view', userNavigationPermissions);
-    return this._customTableService.findTableContentByTableNameAndNavigationId(tableName, navigationId);
+    return this._customTableService.findContentByTableNameAndNavigationId(tableName, navigationId);
   }
 
   @Post(':tableName')
