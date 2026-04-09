@@ -7,18 +7,16 @@ import { NavigationPermissions } from 'src/core/models/navigation-permissions.in
 @Controller('custom-table')
 export class CustomTableController {
 
-  constructor(
-    private readonly _customTableService: CustomTableService,
-    private readonly _customTableValidatorService: CustomTableValidatorService
-  ) {}
+  constructor(private readonly _customTableService: CustomTableService) { }
 
-  @Get('table/:tableName')
+  @Get(':tableName/:navigationId')
   async findTableContentByTableName(
     @Param('tableName') tableName: string,
+    @Param('navigationId') navigationId: string,
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    await this._customTableValidatorService.validPermission(tableName, 'view', userNavigationPermissions);
-    return this._customTableService.findTableContentByTableName(tableName);
+    //await this._customTableValidatorService.validPermission(tableName, 'view', userNavigationPermissions);
+    return this._customTableService.findTableContentByTableNameAndNavigationId(tableName, navigationId);
   }
 
   @Post(':tableName')
@@ -27,7 +25,7 @@ export class CustomTableController {
     @Body() payload: any,
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    await this._customTableValidatorService.validPermission(tableName, 'add', userNavigationPermissions);
+    //await this._customTableValidatorService.validPermission(tableName, 'add', userNavigationPermissions);
     return this._customTableService.addTableRow(tableName, payload);
   }
 
@@ -38,7 +36,7 @@ export class CustomTableController {
     @Body() payload: any,
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    await this._customTableValidatorService.validPermission(tableName, 'edit', userNavigationPermissions);
+    //await this._customTableValidatorService.validPermission(tableName, 'edit', userNavigationPermissions);
     return this._customTableService.updateTableRow(tableName, id, payload);
   }
 
@@ -48,7 +46,7 @@ export class CustomTableController {
     @Param('id') id: string,
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    await this._customTableValidatorService.validPermission(tableName, 'delete', userNavigationPermissions);
+    //await this._customTableValidatorService.validPermission(tableName, 'delete', userNavigationPermissions);
     return this._customTableService.deleteTableRow(tableName, id);
   }
 
