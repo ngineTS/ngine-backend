@@ -2,6 +2,9 @@ import { Injectable, CanActivate, ExecutionContext, BadRequestException, NotFoun
 import { DataSource } from 'typeorm';
 
 /**
+ * This guard is used to check if the user has the right permission to access custom table routes.
+ * The permission is checked based on the navigation id associated to the record in the custom table.
+ * The navigation id is retrieved based on the request parameters or body depending on the request method.
  */
 @Injectable()
 export class CustomTableRoleGuard implements CanActivate {
