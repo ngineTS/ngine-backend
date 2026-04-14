@@ -1,9 +1,12 @@
-import { Controller, Get, Body, Patch, Param, Delete, Post } from '@nestjs/common';
+import { Controller, Get, Body, Patch, Param, Delete, Post, UseGuards } from '@nestjs/common';
 import { CustomTableService } from './custom-table.service';
-import { CustomTableValidatorService } from './custom-table-validator.service';
 import { UserNavigationPermissions } from 'src/core/decorators/user-navigation-permissions.decorator';
 import { NavigationPermissions } from 'src/core/models/navigation-permissions.interface';
+import { CustomTableRoleGuard } from 'src/core/guards/custom-table-role.guard';
+import { CreateCustomTableDto } from './dto/create-custom-table.dto';
+import { UpdateCustomTableDto } from './dto/update-custom-table.dto';
 
+@UseGuards(CustomTableRoleGuard)
 @Controller('custom-table')
 export class CustomTableController {
 
@@ -13,19 +16,15 @@ export class CustomTableController {
   async findContentByTableNameAndNavigationId(
     @Param('tableName') tableName: string,
     @Param('navigationId') navigationId: string,
-    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    //await this._customTableValidatorService.validPermission(tableName, 'view', userNavigationPermissions);
     return this._customTableService.findContentByTableNameAndNavigationId(tableName, navigationId);
   }
 
   @Post(':tableName')
   async addTableRow(
     @Param('tableName') tableName: string, 
-    @Body() payload: any,
-    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
+    @Body() payload: CreateCustomTableDto,
   ) {
-    //await this._customTableValidatorService.validPermission(tableName, 'add', userNavigationPermissions);
     return this._customTableService.addTableRow(tableName, payload);
   }
 
@@ -33,10 +32,8 @@ export class CustomTableController {
   async updateTableRow(
     @Param('tableName') tableName: string,
     @Param('id') id: string,  
-    @Body() payload: any,
-    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
+    @Body() payload: UpdateCustomTableDto,
   ) {
-    //await this._customTableValidatorService.validPermission(tableName, 'edit', userNavigationPermissions);
     return this._customTableService.updateTableRow(tableName, id, payload);
   }
 
@@ -44,9 +41,7 @@ export class CustomTableController {
   async deleteTableRow(
     @Param('tableName') tableName: string,
     @Param('id') id: string,
-    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    //await this._customTableValidatorService.validPermission(tableName, 'delete', userNavigationPermissions);
     return this._customTableService.deleteTableRow(tableName, id);
   }
 
