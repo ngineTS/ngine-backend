@@ -50,13 +50,6 @@ export class TableVizService {
     /* 1. */
     if (updateTableVizDto.tableLabel) {
       updateTableVizDto.tableName = stringToLowerCaseWithUnderscore(updateTableVizDto.tableLabel);
-
-      if (updateTableVizDto.isEditable) {
-        await this._customTableService.renameDatabaseTable(
-          currentTableViz.tableName,
-          updateTableVizDto.tableName
-        );
-      }
     }
 
     /* 2 */

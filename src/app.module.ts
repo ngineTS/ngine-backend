@@ -16,9 +16,7 @@ import { Media } from './domains/media/entities/media.entity';
 import { FileManagementModule } from './domains/file-management/file-management.module';
 import { MediaModule } from './domains/media/media.module';
 import { TableViz } from './domains/table-viz/entities/table-viz.entity';
-import { CustomFormInput } from './domains/custom-form-input/entities/custom-form-input.entity';
 import { TableVizModule } from './domains/table-viz/table-viz.module';
-import { CustomFormInputModule } from './domains/custom-form-input/custom-form-input.module';
 import { CustomTableModule } from './domains/custom-table/custom-table.module';
 import { User } from './domains/user/entities/user.entity';
 import { PasswordRecovery } from './core/password-recovery/entities/password-recovery.entity';
@@ -78,7 +76,6 @@ import { AppSetting } from './app-setting/entities/app-setting.entity';
         Calendar,
         Media,
         TableViz,
-        CustomFormInput,
         User,
         PasswordRecovery,
         Role,
@@ -100,7 +97,6 @@ import { AppSetting } from './app-setting/entities/app-setting.entity';
     FileManagementModule,
     MediaModule,
     TableVizModule,
-    CustomFormInputModule,
     CustomTableModule,
     AuthModule,
     UserModule,
