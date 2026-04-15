@@ -42,8 +42,8 @@ import { ContainerLayoutModule } from './domains/container-layout/container-layo
 import { MenuModule } from './domains/menu/menu.module';
 import { ContainerStyleModule } from './domains/container-style/container-style.module';
 import { TypographyStyleModule } from './domains/typography-style/typography-style.module';
-import { AppSettingModule } from './app-setting/app-setting.module';
-import { AppSetting } from './app-setting/entities/app-setting.entity';
+import { AppSettingModule } from './domains/app-setting/app-setting.module';
+import { AppSetting } from './domains/app-setting/entities/app-setting.entity';
 
 
 @Module({
