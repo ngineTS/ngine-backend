@@ -11,8 +11,12 @@ export class NavigationTypeService {
   constructor(@InjectRepository(NavigationType)
               private navigationTypeRepository: Repository<NavigationType>) {}
 
-  async findAll() {
-    return await this.navigationTypeRepository.find();
+  findAll() {
+    return this.navigationTypeRepository.find();
+  }
+
+  create(createNavigationTypeDto: CreateNavigationTypeDto) {
+    return this.navigationTypeRepository.save(createNavigationTypeDto);
   }
 
 }

@@ -15,5 +15,7 @@ export class NavigationType {
     @Column()
     description: string;
 
+    @Column()
+    thumbnailImage: string;
 }
 
