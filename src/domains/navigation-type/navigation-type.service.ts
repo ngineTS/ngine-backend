@@ -8,11 +8,15 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class NavigationTypeService {
 
-  constructor(@InjectRepository(NavigationType)
-              private navigationTypeRepository: Repository<NavigationType>) {}
+  constructor(
+    @InjectRepository(NavigationType)
+    private navigationTypeRepository: Repository<NavigationType>
+  ) {}
 
   findAll() {
-    return this.navigationTypeRepository.find();
+    return this.navigationTypeRepository.find({
+      order: { displayLabel: 'ASC' }
+    });
   }
 
   create(createNavigationTypeDto: CreateNavigationTypeDto) {
