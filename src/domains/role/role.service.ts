@@ -54,13 +54,13 @@ export class RoleService {
 
   /**
    * Save Role.
-   * 
+   *
+   * 1. Transform displayLabel into name.
+   * 2. Add audit data then save role.
+   *
    * @param createRoleDto The role payload.
    * @param userId The user id from request.
    * @returns The role saved.
-   * @description
-   * 1. Transform displayLabel into name.
-   * 2. Add audit data then save role.
    */
   async create(createRoleDto: CreateRoleDto, userId: string) {
     /* 1. */
@@ -77,12 +77,12 @@ export class RoleService {
   /**
    * Update role.
    * 
+   * 1. Transform displayLabel to name.
+   * 2. Add audit data then update role.
+   * 
    * @param id The role id.
    * @param updateRoleDto The role payload.
    * @returns The update response object.
-   * @description
-   * 1. Transform displayLabel to name.
-   * 2. Add audit data then update role.
    */
   async update(id: string, updateRoleDto: UpdateRoleDto, userId: string) {
     /* 1. */
@@ -99,11 +99,11 @@ export class RoleService {
   /**
    * Remove role and his relations.
    * 
-   * @param id The role id.
-   * @description
    * 1. Add audit data then soft delete role.
    * 2. Soft delete related use roles.
    * 3. Soft delete related role navigation permissions.
+   * 
+   * @param id The role id.
    */
   async remove(id: string, userId: string) {
     let removedTotal = 0;

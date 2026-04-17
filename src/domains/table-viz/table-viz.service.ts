@@ -31,15 +31,15 @@ export class TableVizService {
   /**
    * Update table viz.
    * 
-   * @param id The table viz id.
-   * @param updateTableVizDto The table viz properties to update.
-   * @returns An UpdateResult object.
-   * @throws {NotFoundException} If table viz id not found.
-   * @description
    * 1. If `tableLabel` has changed:
    * - modify `tableName`
    * - if tableViz is a custom table (i.e. `isEditable` true) then modify database custom table name.
    * 2. Update table viz properties and return `tableName`.
+   * 
+   * @param id The table viz id.
+   * @param updateTableVizDto The table viz properties to update.
+   * @returns An UpdateResult object.
+   * @throws {NotFoundException} If table viz id not found.
    */
   async update(id: string, updateTableVizDto: UpdateTableVizDto) {
     const currentTableViz = await this._tableVizRepository.findOneBy({id});

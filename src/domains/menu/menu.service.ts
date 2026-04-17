@@ -36,14 +36,14 @@ export class MenuService {
   }
 
   /**
-   * Create navigation bar for given navigation id and add first redirect-button to it.
+   * Create navigation bar and add first redirect-button to it.
+   * 
+   * 1. Create navigation bar for given navigation id and assign style properties.
+   * 2. Create first navigation inside navigation bar and assign style properties.
    * 
    * @param navigationId The navigationId to attach the menu to.
    * @param userId The user who creates this navigation bar.
    * @throws {ForbiddenException} If user doesn't have add permission on navigation.
-   * @description
-   * 1. Create navigation bar for given navigation and assign style properties.
-   * 2. Create first navigation inside navigation bar and assign style properties.
    */
   async createNavigationBar(navigationId: string, userId: string) {
     /* 1. */
@@ -91,13 +91,14 @@ export class MenuService {
   /**
    * Update the style properties of an object.
    * 
-   * @param refId The object reference id.
-   * @param updateMenuDto The style properties.
-   * @returns The properties affected number.
    * @description
    * 1. If containerLayout property then update containerLayout entity.
    * 2. If containerStyle property then update containerStyle entity
    * 3. If typographyStyle property then update typographyStyle entity.
+   * 
+   * @param refId The object reference id.
+   * @param updateMenuDto The style properties.
+   * @returns The properties affected number.
    */
   async updateStyleProperties(refId: string, updateMenuDto: UpdateMenuDto) {
     const affectedRelations: { [prop: string]: number | undefined } = {

@@ -133,13 +133,13 @@ export class NavigationService {
   /**
    * Format user roleNavigationPermissions.
    * 
-   * @param userId the id of the user.
-   * @returns The user roleNavigationPermissions formatted.
-   * @description
    * If a user is assigned to multiple roles which share the same navigations
    * then we keep only the navigations with highest priviledge.
    * 
    * TODO: Rework to something more fluent and performant.
+   * 
+   * @param userId the id of the user.
+   * @returns The user roleNavigationPermissions formatted.
    */
   async getUserRoleNavigationPermissionsFormatted(userId: string): Promise<Array<RoleNavigationPermission>> {
     /* get user roles */
@@ -197,14 +197,14 @@ export class NavigationService {
   /**
    * Set up user navigation permission based on below rules then repeat process for children.
    * 
-   * @param navigation The navigation to add "permissionName" prop.
-   * @param userRoleNavigationPermissions The array of user roleNavigationPermissions.
-   * @param parentNavigationPermission The parent navigation permission.
-   * @description
    * - Case 1. Navigation permission found and it is higher than parent one - keep navigation permission.
    * - Case 2. Navigation permission found but parent permission is higher - navigation inherits parent navigation permission.
    * - Case 3. Navigation permission found and parent has no permission - keep navigation permission.
    * - Case 4. No navigation permission found but parent navigation permission found - navigation inherits parent navigation permission.
+   * 
+   * @param navigation The navigation to add "permissionName" prop.
+   * @param userRoleNavigationPermissions The array of user roleNavigationPermissions.
+   * @param parentNavigationPermission The parent navigation permission.
    */
   setUpUserNavigationPermission(
     navigation: Navigation,
@@ -252,13 +252,13 @@ export class NavigationService {
   /**
    * Save navigation with default style.
    * 
-   * @param createNavigationDto The navigation to save.
-   * @param userId The user id from request.
-   * @returns The navigation saved.
-   * @description
    * 1. Add audit data and save navigation.
    * 2. Assign style properties.
    * 3. If navigation is a menu button then create menu.
+   * 
+   * @param createNavigationDto The navigation to save.
+   * @param userId The user id from request.
+   * @returns The navigation saved.
    */
   async saveNavigation(
     createNavigationDto: CreateNavigationDto,
@@ -293,15 +293,15 @@ export class NavigationService {
   /**
    * Update navigation.
    * 
+   * 1. Get existing navigation from db.
+   * 2. If parent has changed and old parent has no more children then delete his menu.
+   * 3. Add audit data and update navigation.
+   * 
    * @param id The navigation id.
    * @param updateNavigationDto The navigation properties to update.
    * @param userId The user id from request.
    * @returns An UpdateResponse type object.
    * @throws {NotFoundException} If navigation id is not found in database.
-   * @description
-   * 1. Get existing navigation from db.
-   * 2. If parent has changed and old parent has no more children then delete his menu.
-   * 3. Add audit data and update navigation.
    */
   async updateNavigation(
     id: string,
@@ -358,16 +358,16 @@ export class NavigationService {
   /**
    * Delete navigation, his descendants and related dependencies.
    * 
-   * @param navigation The navigation to delete.
-   * @param userId The user id from request.
-   * @returns The Array of navigations that have been soft deleted.
-   * @description
    * 1. Retrieve recursively children and related menu to delete.
    * 2. Soft delete navigation, his descendants and delete related style properties.
    * 3. Check if parent navigation has a menu and remains without children. If yes retrieve menu to delete.
    * 4. Delete menus retrieved on step 2 & 4 and delete style properties.
    * 5. Delete roleNavigationPermissions associated to navigations deleted.
    * 6. Return number of navigation soft deleted.
+   * 
+   * @param navigation The navigation to delete.
+   * @param userId The user id from request.
+   * @returns The Array of navigations that have been soft deleted.
    */
   async removeNavigation(navigation: Navigation, userId: string) {
     /* 1. */

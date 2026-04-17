@@ -13,19 +13,21 @@ export class UserRoleService {
   ) { }
 
   /**
-   * Bulk save user roles for given user.
+   * Bulk save user roles.
+   * 
    * For each user role:
    * - if it is not part of the payload but found in db then delete it
    * - if it is part of the payload and not found in db then insert it
+   * 
+   * @description
+   * 1. Identify and store user roles to save and those to delete.
+   * 2. Add audit data and delete records.
+   * 3. Add audit data and save records.
    * 
    * @param userId The user id from request.
    * @param createUserRoleDtoArray The array of user roles payload.
    * @param createdBy The user id from the request token (used for audit).
    * @return The user roles saved.
-   * @description
-   * 1. Identify and store user roles to save and those to delete.
-   * 2. Add audit data and delete records.
-   * 3. Add audit data and save records.
    */
   async bulkSaveUserRoles(
     userId: string,

@@ -14,17 +14,19 @@ export class RoleNavigationPermissionService {
 
   /**
    * Save array of roleNavigationPermissions.
+   * 
    * For each roleNavigationPermission:
    * - if it is not part of the payload but found in db then delete it
    * - if it is part of the payload and not found in db then insert it
    * 
-   * @param createRoleNavigationPermissionDtoArray The roleNavigationPermissions to save;
-   * @param userId The userId from request.
-   * @returns The roleNavigationPermissions saved.
    * @description
    * 1. Identify and store roleNavigationPermissions to save and those to delete.
    * 2. Add audit data and delete records.
    * 3. Add audit data and save user records.
+   * 
+   * @param createRoleNavigationPermissionDtoArray The roleNavigationPermissions to save;
+   * @param userId The userId from request.
+   * @returns The roleNavigationPermissions saved.
    */
   async saveRoleNavigationArray(
     createRoleNavigationPermissionDtoArray: Array<CreateRoleNavigationPermissionDto>,

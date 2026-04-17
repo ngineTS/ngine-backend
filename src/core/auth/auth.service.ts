@@ -82,11 +82,11 @@ export class AuthService {
   /**
    * Refresh authentication token.
    * 
-   * @param req The request object.
-   * @returns The new access token.
-   * @description
    * Get and verify token from request.
    * If it is valid then generate new access token, else throw UnauthorizedException.
+   * 
+   * @param req The request object.
+   * @returns The new access token.
    */
   async refresh(req: Request) {
     const token = this.extractTokenFromHeader(req);

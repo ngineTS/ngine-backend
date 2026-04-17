@@ -29,13 +29,13 @@ export class UserService {
   /**
    * Create User.
    * 
-   * @param createUserDto The user payload.
-   * @returns Sign in response.
-   * @description
    * 1. Validate email address
    * 2. Create hash password and save user.
    * 3. If first user of the app then assign him super admin role.
    * 4. Sign in and return access token.
+   * 
+   * @param createUserDto The user payload.
+   * @returns Sign in response.
    */
   async createUser(createUserDto: CreateUserDto) {
     /* 1. */

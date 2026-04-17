@@ -13,16 +13,16 @@ export class MenuValidatorService {
   ) { }
 
   /**
-   * Valid permission to update style based on refId.
+   * Valid permission to update style.
    * 
-   * @param refId The refId (menu id or navigation id).
-   * @param userNavigationPermissions The user navigation permissions.
-   * @throws {ForbiddenException} If the user doesn't have edit permission on the navigation associated to the ref.
-   * @description
    * Check if user has edit permission for given refId.
    * If not, it's possible refId is a menu and not a navigation so we fetch the menu from table by refId.
    * If there is no menu, refId is a navigation so we throw Forbidden error.
    * If there is a menu then we compare user navigation permissions with menu navigationId.
+   * 
+   * @param refId The refId (menu id or navigation id).
+   * @param userNavigationPermissions The user navigation permissions.
+   * @throws {ForbiddenException} If the user doesn't have edit permission on the navigation associated to the ref.
    */
   async validPermissionToUpdateStyle(
     refId: string,
