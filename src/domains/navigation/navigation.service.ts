@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -32,7 +32,8 @@ export class NavigationService {
     private _menuService: MenuService,
     private _containerLayoutService: ContainerLayoutService,
     private _containerStyleService: ContainerStyleService,
-    private _typographyStyleService: TypographyStyleService
+    private _typographyStyleService: TypographyStyleService,
+    
   ) {}
 
   /**
@@ -51,6 +52,61 @@ export class NavigationService {
       relations: ['navigationType', 'parent'],
       order: { displayLabel: 'ASC' }
     });
+  }
+
+  async findTree(
+    rootId: string,
+    maxDepth: number,
+    userId: string
+  ) {
+    // Step 1: load root
+    const root = await this._navigationRepository.findOne({ where: { id: rootId } });
+    const userRoleNavigationPermissionsFormatted = await this.getUserRoleNavigationPermissionsFormatted(userId);
+
+    if (!root) {
+      throw new BadRequestException('Global navigation is missing.');
+    }
+    
+    let currentLevel = [root];
+    const allNodes = [root];
+
+    for (let depth = 0; depth < maxDepth; depth++) {
+      if (currentLevel.length === 0) break;
+
+      // ONE query per level, regardless of node count
+      const parentIds = currentLevel.map(n => n.id);
+      const nextLevel = await this._navigationRepository.find({
+        where: { parentId: In(parentIds) },
+        relations: [
+          'navigationType',
+          'containerLayout',
+          'containerStyle',
+          'typographyStyle',
+          'menu',
+          'menu.containerLayout',
+          'menu.containerStyle',
+          'menu.typographyStyle'
+        ]
+      });
+
+      if (nextLevel.length === 0) break;
+
+      // Attach children to parents in memory
+      const childrenMap = nextLevel.reduce((acc, node) => {
+        acc[node.parentId] = acc[node.parentId] || [];
+        acc[node.parentId].push(node);
+        return acc;
+      }, {});
+
+      currentLevel.forEach(parent => {
+        parent.children = childrenMap[parent.id] || [];
+      });
+
+      currentLevel = nextLevel;
+      allNodes.push(...nextLevel);
+    }
+
+    return root;
   }
 
   /**
@@ -102,6 +158,301 @@ export class NavigationService {
   }
 
   /**
+   * Load nested navigations with permissions.
+   * 
+   * Process:
+   * 1. Load root and user permissions.
+   * 2. Initialize root and load all levels.
+   * 3. Cleanup invalid nodes and setup user navigation permissions for request token.
+   * 4. Create auth token with user navigation permissions.
+   * 
+   * @param userId The user id from the request.
+   * @param userEmail The user email from the request.
+   * @param maxDepth The maximum depth to load (default 8).
+   * @returns Nested navigation tree with permissions and optional access token.
+   */
+  async loadNestedNavigations(
+    userId: string,
+    userEmail: string,
+    maxDepth: number = 8,
+  ) {
+    // 1. Load root and user permissions
+    const root = await this.loadRootNavigation();
+    const userRoleNavigationPermissionsFormatted = await this.getUserRoleNavigationPermissionsFormatted(userId);
+
+    // 2. Initialize root and load all levels
+    this.initializeRootPermissions(root, userRoleNavigationPermissionsFormatted);
+    const allLevels = await this.loadNavigationLevels(root, maxDepth, userRoleNavigationPermissionsFormatted);
+
+    // 3. Cleanup invalid nodes and collect permissions in a single pass
+    const userNavigationPermissions = this.cleanupAndCollectPermissions(allLevels);
+
+    // 4. Create auth token with user navigation permissions.
+    const payload = {
+      sub: userId,
+      userEmail: userEmail,
+      userNavigationPermissions: userNavigationPermissions
+    };
+    const accessToken = await this._authService.getAccessToken(payload);
+    
+    return { navigation: root, access_token: accessToken };
+  }
+
+  /**
+   * Load root navigation with all required relations.
+   * 
+   * @returns The root navigation entity.
+   * @throws {BadRequestException} If root navigation is not found.
+   */
+  private async loadRootNavigation(): Promise<Navigation> {
+    const rootId = '00000000-0000-0000-0000-000000000000';
+    const root = await this._navigationRepository.findOne({
+      where: { id: rootId },
+      relations: [
+        'navigationType',
+        'containerLayout',
+        'containerStyle',
+        'typographyStyle',
+        'menu',
+        'menu.containerLayout',
+        'menu.containerStyle',
+        'menu.typographyStyle'
+      ]
+    });
+
+    if (!root) {
+      throw new BadRequestException('Global navigation is missing.');
+    }
+
+    return root;
+  }
+
+  /**
+   * Initialize root navigation with empty children array and setup permissions.
+   * 
+   * @param root The root navigation node.
+   * @param userRoleNavigationPermissions User's role navigation permissions.
+   */
+  private initializeRootPermissions(
+    root: Navigation,
+    userRoleNavigationPermissions: RoleNavigationPermission[]
+  ): void {
+    root.children = [];
+    const navigationPermission = userRoleNavigationPermissions.find(
+      obj => obj.navigationId === root.id
+    )?.permission;
+
+    if (navigationPermission) {
+      root['permissionName'] = navigationPermission.name;
+    }
+  }
+
+  /**
+   * Load navigations level-by-level with on-the-fly permission setup.
+   * 
+   * Until depth or no more navigations:
+   * 1. Load next level of navigations.
+   * 2. Setup permissions on next level of navigations and build children map.
+   * 3. Assign children to current level navigations.
+   * 
+   * @param root The root navigation.
+   * @param maxDepth Maximum depth to load.
+   * @param userRoleNavigationPermissions User's role navigation permissions.
+   * @returns Array of levels containing navigations.
+   */
+  private async loadNavigationLevels(
+    root: Navigation,
+    maxDepth: number,
+    userRoleNavigationPermissions: RoleNavigationPermission[]
+  ): Promise<Navigation[][]> {
+    let currentLevel = [root];
+    const allLevels: Navigation[][] = [[root]];
+
+    for (let depth = 0; depth < maxDepth; depth++) {
+      if (currentLevel.length === 0) break;
+
+      // 1. Load next level of navigations
+      const parentIds = currentLevel.map(n => n.id);
+      const nextLevel = await this._navigationRepository.find({
+        where: { 
+          parentId: In(parentIds),
+          deletedDate: IsNull()
+        },
+        relations: [
+          'navigationType',
+          'containerLayout',
+          'containerStyle',
+          'typographyStyle',
+          'menu',
+          'menu.containerLayout',
+          'menu.containerStyle',
+          'menu.typographyStyle'
+        ]
+      });
+
+      if (nextLevel.length === 0) break;
+
+      // 2. Setup permissions on next level of navigations and build children map
+      const childrenMap = this.buildChildrenMapWithPermissions(
+        nextLevel,
+        currentLevel,
+        userRoleNavigationPermissions
+      );
+
+      // 3. Assign children to current level navigations
+      currentLevel.forEach(parent => {
+        parent.children = childrenMap[parent.id] || [];
+      });
+
+      currentLevel = nextLevel;
+      allLevels.push(currentLevel);
+    }
+
+    return allLevels;
+  }
+
+  /**
+   * Build children map with permission setup.
+   * 
+   * 1. Get parent's permission for inheritance.
+   * 2. Setup permission for this navigation following the 4 permission cases.
+   * 
+   * @param nextLevel Nodes of the current level to process.
+   * @param currentLevel Parent nodes of the next level.
+   * @param userRoleNavigationPermissions User's role navigation permissions.
+   * @returns Map of parent IDs to their children.
+   */
+  private buildChildrenMapWithPermissions(
+    nextLevel: Navigation[],
+    currentLevel: Navigation[],
+    userRoleNavigationPermissions: RoleNavigationPermission[]
+  ): Record<string, Navigation[]> {
+    return nextLevel.reduce((acc, node) => {
+      node.children = [];
+
+      // 1. Get parent's permission for inheritance
+      const parent = currentLevel.find(p => p.id === node.parentId);
+      const parentPermission = parent?.['permissionName'];
+
+      // 2. Setup permission for this node
+      this.setupNodePermissions(node, parentPermission, userRoleNavigationPermissions);
+
+      acc[node.parentId] = acc[node.parentId] || [];
+      acc[node.parentId].push(node);
+
+      return acc;
+    }, {});
+  }
+
+  /**
+   * Setup permission for a single node following the 4 permission inheritance cases.
+   * 
+   * Cases:
+   * - Case 1: Node permission higher than parent → keep node permission
+   * - Case 2: Node permission lower than parent → inherit parent permission
+   * - Case 3: Node has permission, parent doesn't → keep node permission
+   * - Case 4: Node has no permission, parent does → inherit parent permission
+   * 
+   * @param node The navigation node to setup permissions for.
+   * @param parentPermission The parent's permission name (if any).
+   * @param userRoleNavigationPermissions User's role navigation permissions.
+   */
+  private setupNodePermissions(
+    node: Navigation,
+    parentPermission: string | undefined,
+    userRoleNavigationPermissions: RoleNavigationPermission[]
+  ): void {
+    let nodePermission = userRoleNavigationPermissions.find(
+      obj => obj.navigationId === node.id
+    )?.permission;
+
+    if (nodePermission) {
+      const parentPermissionObj = parentPermission
+        ? userRoleNavigationPermissions.find(rnp => rnp.permission.name === parentPermission)?.permission
+        : undefined;
+
+      if (parentPermissionObj) {
+        // Case 1: Node has permission and it's higher than parent
+        if (nodePermission.priority < parentPermissionObj.priority) {
+          node['permissionName'] = nodePermission.name;
+        }
+        // Case 2: Node has permission but parent permission is higher
+        else {
+          node['permissionName'] = parentPermissionObj.name;
+          nodePermission = parentPermissionObj;
+        }
+      }
+      // Case 3: Node has permission and parent has none
+      else {
+        node['permissionName'] = nodePermission.name;
+      }
+    }
+    // Case 4: Node has no permission but parent does
+    else {
+      if (parentPermission) {
+        node['permissionName'] = parentPermission;
+      }
+    }
+  }
+
+  /**
+   * Iteratively cleanup invalid navigations and collect permissions in a single bottom-up pass.
+   * 
+   * Removes nodes that have neither valid permissions nor valid children.
+   * Collects all valid nodes with permissions for token payload.
+   * 
+   * @param allLevels All navigation levels.
+   * @returns Array of navigation permissions for valid nodes.
+   */
+  private cleanupAndCollectPermissions(allLevels: Navigation[][]): NavigationPermissions {
+    const userNavigationPermissions: NavigationPermissions = [];
+
+    const isNodeValid = (node: Navigation): boolean => {
+      const hasValidPermission = node['permissionName'] &&
+        (!node.isDisabled || node['permissionName'].includes('add'));
+      const hasValidChildren = node.children && node.children.length > 0;
+      return hasValidPermission || hasValidChildren;
+    };
+
+    // Bottom-up pass: cleanup and collect permissions
+    for (let i = allLevels.length - 1; i > 0; i--) {
+      const level = allLevels[i];
+      for (let j = level.length - 1; j >= 0; j--) {
+        const node = level[j];
+        if (!isNodeValid(node)) {
+          // Remove from parent's children
+          const parentLevel = allLevels[i - 1];
+          const parent = parentLevel.find(p => p.id === node.parentId);
+          if (parent) {
+            parent.children = parent.children.filter(c => c.id !== node.id);
+          }
+          level.splice(j, 1);
+        }
+        // Collect valid nodes with permissions on-the-fly
+        else if (node['permissionName']) {
+          userNavigationPermissions.push({
+            navigationId: node.id,
+            permissionName: node['permissionName'],
+            navigationTypeName: node.navigationType.name
+          });
+        }
+      }
+    }
+
+    // Also collect root if it has permissions
+    const root = allLevels[0][0];
+    if (root && root['permissionName']) {
+      userNavigationPermissions.push({
+        navigationId: root.id,
+        permissionName: root['permissionName'],
+        navigationTypeName: root.navigationType.name
+      });
+    }
+
+    return userNavigationPermissions;
+  }
+
+  /**
    * Generate navigation relations until given depth.
    * 
    * @param depth The number of nested levels.
@@ -109,7 +460,7 @@ export class NavigationService {
    * @param order The existing TypeORM order property.
    * @param base The relation base.
    */
-  generateRelationsAndOrder(
+  private generateRelationsAndOrder(
     depth: number, 
     relations: Set<string>,
     base: string = ''
