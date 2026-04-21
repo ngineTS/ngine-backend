@@ -69,7 +69,7 @@ export class NavigationService {
   async loadNestedNavigations(
     userId: string,
     userEmail: string,
-    maxDepth: number = 8,
+    maxDepth: number
   ) {
     // 1. Load root and user permissions
     const root = await this.loadRootNavigation();
