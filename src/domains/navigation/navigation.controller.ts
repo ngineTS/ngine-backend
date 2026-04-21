@@ -39,7 +39,7 @@ export class NavigationController {
     @UserId() userId: string,
     @UserEmail() UserEmail: string,
   ) {
-    return this._navigationService.loadNestedNavigations(userId, UserEmail, 8);
+    return this._navigationService.loadNestedNavigations(userId, UserEmail, 12);
   }
 
   @Get('flat')

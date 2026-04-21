@@ -194,6 +194,7 @@ export class NavigationService {
       );
 
       currentLevel.forEach(parent => {
+        parent['level'] = depth;
         parent.children = childrenMap[parent.id] || [];
       });
 
