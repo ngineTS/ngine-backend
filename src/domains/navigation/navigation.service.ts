@@ -105,9 +105,6 @@ export class NavigationService {
       where: { id: rootId },
       relations: [
         'navigationType',
-        'containerLayout',
-        'containerStyle',
-        'typographyStyle',
         'menu',
         'menu.containerLayout',
         'menu.containerStyle',
