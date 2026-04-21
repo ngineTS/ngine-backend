@@ -3,10 +3,9 @@ import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Navigation } from './entities/navigation.entity';
-import { FindOptionsWhere, In, IsNull, Repository } from 'typeorm';
+import { In, IsNull, Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
-import { Permission } from '../permission/entities/permission.entity';
 import { AuthService } from 'src/core/auth/auth.service';
 import { MenuService } from '../menu/menu.service';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
@@ -33,11 +32,10 @@ export class NavigationService {
     private _containerLayoutService: ContainerLayoutService,
     private _containerStyleService: ContainerStyleService,
     private _typographyStyleService: TypographyStyleService,
-    
   ) {}
 
   /**
-   * Find all flat navigations with their navigationType filtered by user permission.
+   * Find all flat navigations with their navigationType, filtered by user permission.
    * 
    * @param userNavigationPermissions The user navigation permissions from request.
    * @returns The array of navigations.
@@ -150,7 +148,6 @@ export class NavigationService {
    * Until depth or no more navigations:
    * 1. Load next level of navigations.
    * 2. Setup permissions on next level of navigations and build children map.
-   * 3. Assign children to current level navigations.
    * 
    * @param root The root navigation.
    * @param maxDepth Maximum depth to load.
@@ -196,7 +193,6 @@ export class NavigationService {
         userRoleNavigationPermissions
       );
 
-      // 3. Assign children to current level navigations
       currentLevel.forEach(parent => {
         parent.children = childrenMap[parent.id] || [];
       });
@@ -413,60 +409,6 @@ export class NavigationService {
     return userRoleNavigationPermissionsFormatted;
   }
 
-  /**
-   * Set up user navigation permission based on below rules then repeat process for children.
-   * 
-   * - Case 1. Navigation permission found and it is higher than parent one - keep navigation permission.
-   * - Case 2. Navigation permission found but parent permission is higher - navigation inherits parent navigation permission.
-   * - Case 3. Navigation permission found and parent has no permission - keep navigation permission.
-   * - Case 4. No navigation permission found but parent navigation permission found - navigation inherits parent navigation permission.
-   * 
-   * @param navigation The navigation to add "permissionName" prop.
-   * @param userRoleNavigationPermissions The array of user roleNavigationPermissions.
-   * @param parentNavigationPermission The parent navigation permission.
-   */
-  setUpUserNavigationPermission(
-    navigation: Navigation,
-    userRoleNavigationPermissions: RoleNavigationPermission[],
-    parentNavigationPermission?: Permission
-  ) {
-    /* get current navigation permission */
-    let navigationPermission = userRoleNavigationPermissions.find(obj => obj.navigationId === navigation.id)?.permission;
-    
-    if (navigationPermission) {
-      if (parentNavigationPermission) {
-        /* Case 1 */
-        if (navigationPermission.priority < parentNavigationPermission.priority) {
-          navigation['permissionName'] = navigationPermission.name;
-        }
-        /* Case 2 */
-        else {
-          navigation['permissionName'] = parentNavigationPermission.name;
-          navigationPermission = parentNavigationPermission;
-        }
-      }
-      /* Case 3 */
-      else {
-        navigation['permissionName'] = navigationPermission.name;
-      }
-    }
-    /* Case 4 */
-    else {
-      if (parentNavigationPermission) {
-        navigation['permissionName'] = parentNavigationPermission?.name;
-        navigationPermission = parentNavigationPermission;
-      }
-    }
-
-    /* repeat process to children */
-    for (let child of navigation.children) { 
-      this.setUpUserNavigationPermission(
-        child,
-        userRoleNavigationPermissions,
-        navigationPermission
-      );
-    } 
-  }
 
   /**
    * Save navigation with default style.
