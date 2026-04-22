@@ -13,7 +13,7 @@ export class CustomTableController {
   constructor(private readonly _customTableService: CustomTableService) { }
 
   @Get(':tableName/:navigationId')
-  async findContentByTableNameAndNavigationId(
+  findContentByTableNameAndNavigationId(
     @Param('tableName') tableName: string,
     @Param('navigationId') navigationId: string,
   ) {
@@ -21,7 +21,7 @@ export class CustomTableController {
   }
 
   @Post(':tableName')
-  async addTableRow(
+  addTableRow(
     @Param('tableName') tableName: string, 
     @Body() payload: CreateCustomTableDto,
   ) {
@@ -29,7 +29,7 @@ export class CustomTableController {
   }
 
   @Patch(':tableName/:id')
-  async updateTableRow(
+  updateTableRow(
     @Param('tableName') tableName: string,
     @Param('id') id: string,  
     @Body() payload: UpdateCustomTableDto,
@@ -38,7 +38,7 @@ export class CustomTableController {
   }
 
   @Delete(':tableName/:id')
-  async deleteTableRow(
+  deleteTableRow(
     @Param('tableName') tableName: string,
     @Param('id') id: string,
   ) {

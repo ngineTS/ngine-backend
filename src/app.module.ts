@@ -69,7 +69,7 @@ import { AppSetting } from './domains/app-setting/entities/app-setting.entity';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       schema: process.env.DB_SCHEMA,
-      entities: [   
+      entities: [
         Navigation,
         NavigationType,
         QuillEditor,
