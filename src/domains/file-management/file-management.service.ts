@@ -67,9 +67,7 @@ export class FileManagementService {
    * @returns The file stream.
    */
   getFile(fileName: string, res: Response) {
-    console.log('FILE NAME', fileName);
     const filePath = path.join(this.uploadDir, fileName);
-    console.log('FILE PATH', filePath);
 
     if (!fs.existsSync(filePath)) {
       throw new NotFoundException(`File not found: ${fileName}`);
