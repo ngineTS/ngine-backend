@@ -1,20 +1,27 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, StreamableFile } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import path = require('path');
 import { MediaService } from '../media/media.service';
 import { CreateMediaDto } from '../media/dto/create-media.dto';
+import * as fs from 'fs';
+import * as mime from 'mime-types';
+import { Response } from 'express';
+
 
 @Injectable()
 export class FileManagementService {
 
-  constructor(private mediaService: MediaService){}  
+  constructor(private mediaService: MediaService) { }
+  
+  private readonly uploadDir = './uploads';
 
-  s3 = new AWS.S3({
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  });
-
+  onModuleInit() {
+    if (!fs.existsSync(this.uploadDir)) {
+      fs.mkdirSync(this.uploadDir, { recursive: true });
+    }
+  }
+  
   /**
    * Upload file and save media record with file key.
    * 
@@ -27,15 +34,16 @@ export class FileManagementService {
     const { originalname } = file;
 
     try {
-      const s3Response = await this.s3FileUpload(
-        file.buffer,
-        process.env.AWS_S3_BUCKET_NAME,
-        originalname,
-        file.mimetype,
-      );
+      const fileName =
+        path.parse(originalname).name +
+        uuidv4() +
+        path.parse(originalname).ext;
+
+      const filePath = path.join(this.uploadDir, fileName);
+      fs.writeFileSync(filePath, file.buffer);
 
       const media: CreateMediaDto = {
-        name: s3Response.Key,
+        name: fileName,
         displayName: originalname,
         type: file.mimetype,
         createdBy: userId,
@@ -52,51 +60,33 @@ export class FileManagementService {
   }
 
   /**
-   * Upload file to S3 bucket.
+   * Get file stream.
    * 
-   * @param file The file to upload.
-   * @param bucket The bucket name.
-   * @param name The original file name.
-   * @param mimetype The file mime type.
-   * @returns Upload response from S3 API.
+   * @param fileName The file name
+   * @param res The express response.
+   * @returns The file stream.
    */
-  async s3FileUpload(file, bucket, name, mimetype) {
-    const fileName: string = path.parse(name).name + uuidv4() + path.parse(name).ext
-    const params = {
-      Bucket: bucket,
-      Key: fileName,
-      Body: file,
-      ContentType: mimetype
+  getFile(fileName: string, res: Response) {
+    console.log('FILE NAME', fileName);
+    const filePath = path.join(this.uploadDir, fileName);
+    console.log('FILE PATH', filePath);
+
+    if (!fs.existsSync(filePath)) {
+      throw new NotFoundException(`File not found: ${fileName}`);
     }
 
-    return await this.s3.upload(params).promise();
+    const mimeType = mime.lookup(fileName) || 'application/octet-stream';
+    res.set({
+      'Content-Type': mimeType,
+      'Content-Disposition': `inline; filename="${fileName}"`,
+    });
+
+    const stream = fs.createReadStream(filePath);
+    return new StreamableFile(stream);
   }
 
   /**
-   * Get S3 temporary file url (duration: 1 hour).
-   * 
-   * @param fileName The file key.
-   * @returns The temporary file url.
-   * @throws {BadRequestException} If operation failed.
-   */
-  getFile(fileName: string){
-    try {
-      const params = {
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: fileName,
-        Expires: 3600,
-      };
-      const url = this.s3.getSignedUrl('getObject', params);
-
-      return JSON.stringify(url);
-    } 
-    catch (error) {
-      throw new BadRequestException(error);
-    }
-  }
-
-  /**
-   * Delete file from S3 bucket and soft delete media record.
+   * Delete file and soft delete media record.
    * 
    * @param fileName The file key.
    * @param userId The user id from request token (used for audit).
@@ -105,12 +95,12 @@ export class FileManagementService {
    */
   async deleteFile(fileName: string, userId){
     try {
-      const params = {
-        Bucket: process.env.AWS_S3_BUCKET_NAME!,
-        Key: fileName,
+      const filePath = path.join(this.uploadDir, fileName);
+
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
       }
-  
-      await this.s3.deleteObject(params).promise();
+
       await this.mediaService.softDelete(fileName, userId);
       return JSON.stringify('deleted');
     } 

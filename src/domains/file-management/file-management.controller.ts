@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Param, Delete, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Param, Delete, UseInterceptors, UploadedFile, Res } from '@nestjs/common';
 import { FileManagementService } from './file-management.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UserId } from 'src/core/decorators/user.decorator';
 import { FileUploadValidatorService } from './file-upload-validator';
+import { Response } from 'express';
+
 
 @Controller('file-management')
 export class FileManagementController {
@@ -24,8 +26,11 @@ export class FileManagementController {
   }
  
   @Get(':fileName')
-  getFile(@Param('fileName') fileName: string) {
-    return this.fileManagementService.getFile(fileName);
+  getFile(
+    @Param('fileName') fileName: string,
+    @Res({ passthrough: true }) res: Response
+  ) {
+    return this.fileManagementService.getFile(fileName, res);
   }
 
   @Delete(':fileName')
