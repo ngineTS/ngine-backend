@@ -54,7 +54,7 @@ import { AppSetting } from './domains/app-setting/entities/app-setting.entity';
     }),
     MailerModule.forRoot({
       transport: {
-        service: 'gmail',
+        service: process.env.EMAIL_SERVICE,
         auth: {
           user: process.env.EMAIL_ADDRESS,
           pass: process.env.EMAIL_PASSWORD,
