@@ -116,6 +116,8 @@ export class NavigationService {
       throw new BadRequestException('Global navigation is missing.');
     }
 
+    root['level'] = 0;
+
     return root;
   }
 
