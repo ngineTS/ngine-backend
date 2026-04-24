@@ -189,7 +189,8 @@ export class NavigationService {
       const childrenMap = this.buildChildrenMapWithPermissions(
         nextLevel,
         currentLevel,
-        userRoleNavigationPermissions
+        userRoleNavigationPermissions,
+        depth
       );
 
       currentLevel.forEach(parent => {
@@ -218,11 +219,12 @@ export class NavigationService {
   private buildChildrenMapWithPermissions(
     nextLevel: Navigation[],
     currentLevel: Navigation[],
-    userRoleNavigationPermissions: RoleNavigationPermission[]
+    userRoleNavigationPermissions: RoleNavigationPermission[],
+    depth
   ): Record<string, Navigation[]> {
     return nextLevel.reduce((acc, node) => {
       node.children = [];
-
+      node['level'] = depth + 1;
       // 1. Get parent's permission for inheritance
       const parent = currentLevel.find(p => p.id === node.parentId);
       const parentPermission = parent?.['permissionName'];
