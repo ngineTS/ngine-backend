@@ -6,7 +6,7 @@ export class NavigationType {
     @PrimaryGeneratedColumn()
     id: string;
 
-    @Column()
+    @Column({ unique: true })
     name: string;
 
     @Column()
