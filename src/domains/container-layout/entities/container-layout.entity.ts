@@ -52,7 +52,6 @@ export class ContainerLayout {
         precision: 5,
         scale: 2
     })
-    @Column()
 	xPos: number;
 
     @Column({
@@ -60,7 +59,6 @@ export class ContainerLayout {
         precision: 5,
         scale: 2
     })
-    @Column()
 	yPos: number;
 
     @Column()
