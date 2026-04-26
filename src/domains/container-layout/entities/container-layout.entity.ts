@@ -47,9 +47,19 @@ export class ContainerLayout {
     @Column()
 	paddingLeft: number;
 
+    @Column({
+        type: 'numeric',
+        precision: 5,
+        scale: 2
+    })
     @Column()
 	xPos: number;
 
+    @Column({
+        type: 'numeric',
+        precision: 5,
+        scale: 2
+    })
     @Column()
 	yPos: number;
 
