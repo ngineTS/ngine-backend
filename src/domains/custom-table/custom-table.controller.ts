@@ -1,7 +1,5 @@
-import { Controller, Get, Body, Patch, Param, Delete, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Body, Patch, Param, Delete, Post, UseGuards, Query } from '@nestjs/common';
 import { CustomTableService } from './custom-table.service';
-import { UserNavigationPermissions } from 'src/core/decorators/user-navigation-permissions.decorator';
-import { NavigationPermissions } from 'src/core/models/navigation-permissions.interface';
 import { CustomTableRoleGuard } from 'src/core/guards/custom-table-role.guard';
 import { CreateCustomTableDto } from './dto/create-custom-table.dto';
 import { UpdateCustomTableDto } from './dto/update-custom-table.dto';
@@ -16,8 +14,12 @@ export class CustomTableController {
   findContentByTableNameAndNavigationId(
     @Param('tableName') tableName: string,
     @Param('navigationId') navigationId: string,
+    @Query('orderBy') orderBy: string,
+    @Query('order') order: 'ASC' | 'DESC',
   ) {
-    return this._customTableService.findContentByTableNameAndNavigationId(tableName, navigationId);
+    return this._customTableService.findContentByTableNameAndNavigationId(
+      tableName, navigationId, orderBy, order
+    );
   }
 
   @Post(':tableName')

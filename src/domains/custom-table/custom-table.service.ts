@@ -16,8 +16,19 @@ export class CustomTableService {
    */
   async findContentByTableNameAndNavigationId(
     tableName: string,
-    navigationId: string
+    navigationId: string,
+    orderBy: string | undefined,
+    order: 'ASC' | 'DESC' | undefined
   ) {
+    if (orderBy && order) {
+      return this._dataSource.createQueryBuilder()
+      .select('*')
+      .from(`custom_table.${tableName}`, 't')
+      .where('t."navigationId" = :navigationId', { navigationId })
+      .orderBy(`"${orderBy}"`, order)
+      .execute();
+    }
+
     return this._dataSource.createQueryBuilder()
       .select('*')
       .from(`custom_table.${tableName}`, 't')
