@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateNavigationTypeDto {
 
@@ -14,7 +14,7 @@ export class CreateNavigationTypeDto {
     @IsString()
     description: string;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
-    thumbnailImage: string;
+    thumbnailImage?: string;
 }
