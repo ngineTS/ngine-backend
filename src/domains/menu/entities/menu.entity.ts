@@ -11,6 +11,9 @@ export class Menu {
     @Column()
     navigationId: string;
 
+    @Column()
+    isVertical: boolean;
+
     @OneToOne(() => ContainerLayout, containerLayout => containerLayout)
     @JoinColumn({ name: 'id', referencedColumnName: 'refId' })
     containerLayout: ContainerLayout;

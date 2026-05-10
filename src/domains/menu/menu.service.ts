@@ -45,9 +45,15 @@ export class MenuService {
    * @param userId The user who creates this navigation bar.
    * @throws {ForbiddenException} If user doesn't have add permission on navigation.
    */
-  async createNavigationBar(navigationId: string, userId: string) {
+  async createNavigationBar(
+    navigationId: string,
+    userId: string,
+    navigationBarType: 'vertical' | 'horizontal' = 'horizontal') {
     /* 1. */
-    const menuSaved = await this._menuRepository.save({ navigationId: navigationId });
+    const menuSaved = await this._menuRepository.save({
+      navigationId: navigationId,
+      isVertical: navigationBarType === 'vertical'
+    });
     await this._containerLayoutService.createObjectContainerLayout({ refId: menuSaved.id, width: 100, height: 75 });
     await this._containerStyleService.createObjectContainerStyle(menuSaved.id);
 

@@ -14,14 +14,15 @@ export class MenuController {
     private readonly _menuValidatorService: MenuValidatorService, 
   ) {}
 
-  @Get('create-navigation-bar/:navigationId')
+  @Get('create-navigation-bar/:navigationId/:navigationBarType')
   createNavigationBar(
     @Param('navigationId', new ParseUUIDPipe()) navigationId: string,
+    @Param('navigationBarType') navigationBarType: 'vertical' | 'horizontal',
     @UserId() userId: string,
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
     this._menuValidatorService.validPermissionToCreateNavigationBar(navigationId, userNavigationPermissions);
-    return this._menuService.createNavigationBar(navigationId, userId);
+    return this._menuService.createNavigationBar(navigationId, userId, navigationBarType);
   }
 
   @Patch(':refId')
