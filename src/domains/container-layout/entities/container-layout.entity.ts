@@ -63,4 +63,7 @@ export class ContainerLayout {
 
     @Column()
 	zIndex: number;
+
+    @Column()
+    heightFitContent: boolean;
 }
