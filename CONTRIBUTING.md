@@ -3,10 +3,10 @@
 Thank you for considering contributing to ngine-backend! We welcome contributions from everyone. Below are some guidelines to help you get started.
 
 ## Reporting Bugs
-If you find a bug, please report it by opening an issue on our GitHub Issues page. Include as much detail as possible to help us understand and reproduce the issue.
+If you find a bug, please report it by opening an issue on our [GitHub Issues page](https://github.com/ngineTS/ngine-backend/issues). Include as much detail as possible to help us understand and reproduce the issue.
 
 ## Suggesting Enhancements
-We welcome suggestions for new features or improvements. Please open an issue on our GitHub Issues page and describe your idea in detail.
+We welcome suggestions for new features or improvements. Please open an issue on our [GitHub Issues page](https://github.com/ngineTS/ngine-backend/issues) and describe your idea in detail.
 
 ## How to Contribute
 
