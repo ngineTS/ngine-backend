@@ -73,11 +73,11 @@ export class TableVizService {
   /**
    * Find all table names under given schema.
    * 
-   * @param schema The db schema (default ngine).
+   * @param schema The db schema (default env schema).
    * @returns The promise of table names array.
    * @throws {BadRequestException} If operation failed.
    */
-  async findTableNames(schema: string = 'ngine'): Promise<Array<string>> {
+  async findTableNames(schema: string = `${process.env.DB_SCHEMA}`): Promise<Array<string>> {
     try {
       const result: Array<any> = await this._dataSource.query(
         `SELECT table_name 
@@ -104,7 +104,7 @@ export class TableVizService {
     try {
       return await this._dataSource.createQueryBuilder()
         .select('*')
-        .from(`ngine.${tableName}`, 't')
+        .from(`${process.env.DB_SCHEMA}.${tableName}`, 't')
         .execute();
     }
     catch (error) {

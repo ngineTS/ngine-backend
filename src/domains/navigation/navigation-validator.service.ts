@@ -238,11 +238,11 @@ export class NavigationValidatorService {
       `
       WITH RECURSIVE descendants AS (
         SELECT id
-        FROM ngine.navigation
+        FROM ${process.env.DB_SCHEMA}.navigation
         WHERE "parentId" = $1
         UNION ALL
         SELECT n.id
-        FROM ngine.navigation n
+        FROM ${process.env.DB_SCHEMA}.navigation n
         JOIN descendants d ON n."parentId" = d.id
       )
       SELECT 1
