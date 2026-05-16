@@ -56,5 +56,20 @@ pids
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-
-/uploads
+#files uploaded
+uploads/*
+!uploads/analytic.png
+!uploads/calendar.png
+!uploads/table-viz.png
+!uploads/dialog-button.png
+!uploads/external-link-button.png
+!uploads/media-default.png
+!uploads/media-library.png
+!uploads/menu-button.png
+!uploads/quill-editor.png
+!uploads/redirect-button.png
+!uploads/role-management.png
+!uploads/sign-container.png
+!uploads/user-management.png
+!uploads/simple-shape.png
+!uploads/card-list.png

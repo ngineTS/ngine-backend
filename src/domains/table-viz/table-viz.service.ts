@@ -1,0 +1,115 @@
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { CreateTableVizDto } from './dto/create-table-viz.dto';
+import { UpdateTableVizDto } from './dto/update-table-viz.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { TableViz } from './entities/table-viz.entity';
+import { stringToLowerCaseWithUnderscore } from 'src/core/utils/string-transfo-util';
+import { CustomTableService } from '../custom-table/custom-table.service';
+
+@Injectable()
+export class TableVizService {
+
+  constructor(
+    @InjectRepository(TableViz)
+    private _tableVizRepository: Repository<TableViz>,
+    private _dataSource: DataSource,
+    private _customTableService: CustomTableService
+  ) { }
+
+  /**
+   * Save table viz.
+   * 
+   * @param createTableVizDto Table viz payload.
+   * @returns The table viz object saved.
+   */
+  async create(createTableVizDto: CreateTableVizDto) {
+    createTableVizDto.tableName = stringToLowerCaseWithUnderscore(createTableVizDto.tableLabel);
+    return await this._tableVizRepository.save(createTableVizDto);
+  }
+
+  /**
+   * Update table viz.
+   * 
+   * 1. If `tableLabel` has changed:
+   * - modify `tableName`
+   * - if tableViz is a custom table (i.e. `isEditable` true) then modify database custom table name.
+   * 2. Update table viz properties and return `tableName`.
+   * 
+   * @param id The table viz id.
+   * @param updateTableVizDto The table viz properties to update.
+   * @returns An UpdateResult object.
+   * @throws {NotFoundException} If table viz id not found.
+   */
+  async update(id: string, updateTableVizDto: UpdateTableVizDto) {
+    const currentTableViz = await this._tableVizRepository.findOneBy({id});
+    if (!currentTableViz) {
+      throw new NotFoundException(`Table viz id ${id} not found.`);
+    }
+    
+    /* 1. */
+    if (updateTableVizDto.tableLabel) {
+      updateTableVizDto.tableName = stringToLowerCaseWithUnderscore(updateTableVizDto.tableLabel);
+    }
+
+    /* 2 */
+    await this._tableVizRepository.update(id, updateTableVizDto);
+    return JSON.stringify(updateTableVizDto.tableName ?? currentTableViz.tableName);
+  }
+
+  /**
+   * Retrieve table viz by navigation id.
+   * 
+   * @param navigationId The navigation id.
+   * @returns The table viz and relations.
+   */
+  async findByNavigationId(navigationId) {
+    return await this._tableVizRepository.findOne({ 
+      where: { navigationId },
+      relations: ['customFormInputs']
+    })
+  }
+
+  /**
+   * Find all table names under given schema.
+   * 
+   * @param schema The db schema (default env schema).
+   * @returns The promise of table names array.
+   * @throws {BadRequestException} If operation failed.
+   */
+  async findTableNames(schema: string = `${process.env.DB_SCHEMA}`): Promise<Array<string>> {
+    try {
+      const result: Array<any> = await this._dataSource.query(
+        `SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = $1 
+        ORDER BY table_name;`,
+        [schema],
+      );
+      return result.map((row: { table_name: string }) => row.table_name);
+    }
+    catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
+  /**
+   * Get all record for given table.
+   * 
+   * @param tableName The table name.
+   * @returns The table content.
+   * @throws {BadRequestException} If operation failed.
+   */
+  async findTableContentByTableName(tableName: string) {
+    try {
+      return await this._dataSource.createQueryBuilder()
+        .select('*')
+        .from(`${process.env.DB_SCHEMA}.${tableName}`, 't')
+        .execute();
+    }
+    catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
+}
