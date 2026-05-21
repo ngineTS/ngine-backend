@@ -7,7 +7,7 @@ import { NavigationTypeNameArray, Permission } from 'src/core/decorators/role.de
 import { RolesGuard } from 'src/core/guards/role.guard';
 import { RoleValidatorService } from './role-validator.service';
 
-@NavigationTypeNameArray(['role-management'])
+@NavigationTypeNameArray(['role-management', 'user-management'])
 @Controller('role')
 export class RoleController {
 
