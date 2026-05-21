@@ -38,7 +38,6 @@ export class FileUploadValidatorService {
   async scanFile(file: Express.Multer.File) {
     const clamscan = await new NodeClam().init();
     const { isInfected } = await clamscan.scanBuffer(file.buffer);
-    console.log('INFECT', isInfected);
 
     if (isInfected) {
       throw new BadRequestException('File is infected');
