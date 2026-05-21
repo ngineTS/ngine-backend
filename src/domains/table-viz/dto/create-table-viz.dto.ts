@@ -11,9 +11,6 @@ export class CreateTableVizDto {
 
     @IsNotEmpty()
     @IsString()
-    @Matches(/^[A-Za-z ]+$/, {
-      message: 'Module name must contain only letters.',
-    })
     tableLabel: string;
 
     @IsNotEmpty()

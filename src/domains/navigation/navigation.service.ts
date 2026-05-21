@@ -304,7 +304,7 @@ export class NavigationService {
 
     const isNodeValid = (node: Navigation): boolean => {
       const hasValidPermission = node['permissionName'];
-      const isViewOnlyAndDisabled = !node['permissionName'].includes('add') && node.isDisabled;
+      const isViewOnlyAndDisabled = !node['permissionName']?.includes('add') && node.isDisabled;
       const hasValidChildren = node.children && node.children.length > 0;
       return (hasValidPermission || hasValidChildren) && !isViewOnlyAndDisabled;
     };
