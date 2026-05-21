@@ -66,7 +66,6 @@ export class TableVizService {
   async findByNavigationId(navigationId) {
     return await this._tableVizRepository.findOne({ 
       where: { navigationId },
-      relations: ['customFormInputs']
     })
   }
 
