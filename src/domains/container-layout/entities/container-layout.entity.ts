@@ -11,14 +11,14 @@ export class ContainerLayout {
 
     @Column({
         type: 'numeric',
-        precision: 5,
+        precision: 6,
         scale: 2
     })
 	width: number;
 
     @Column({
         type: 'numeric',
-        precision: 5,
+        precision: 6,
         scale: 2
     })
 	height: number;
@@ -49,14 +49,14 @@ export class ContainerLayout {
 
     @Column({
         type: 'numeric',
-        precision: 5,
+        precision: 6,
         scale: 2
     })
 	xPos: number;
 
     @Column({
         type: 'numeric',
-        precision: 5,
+        precision: 6,
         scale: 2
     })
 	yPos: number;
