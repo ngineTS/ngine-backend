@@ -6,3 +6,5 @@ The backend repository of the application. Built with NestJS. For more informati
 1. Scaffold the backend project with the following command: `npx ngine-backend <your-project-name>`.
 
 2. Install the dependencies: `npm install`.
+
+3. Run the project: `npm run start`.
