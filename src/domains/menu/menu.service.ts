@@ -29,10 +29,22 @@ export class MenuService {
    * Create menu for given navigation id.
    * 
    * @param navigationId The navigation id we want to associate a menu to.
+   * @param isVertical The menu orientation.
    * @returns The created menu.
    */
-  async createMenu(navigationId: string): Promise<Menu> {
-    return await this._menuRepository.save({ navigationId: navigationId });
+  createMenu(navigationId: string, isVertical = false): Promise<Menu> {
+    return this._menuRepository.save({ navigationId: navigationId, isVertical: isVertical });
+  }
+
+  /**
+   * Update menu orientation.
+   *
+   * @param id The menu id.
+   * @param isVertical The wished orientation.
+   * @returns The UpdateResult response.
+   */
+  updateMenu(id: string, isVertical: boolean) {
+    return this._menuRepository.update(id, { isVertical: isVertical });
   }
 
   /**
@@ -55,7 +67,7 @@ export class MenuService {
       isVertical: navigationBarType === 'vertical'
     });
     await this._containerLayoutService.createObjectContainerLayout({ refId: menuSaved.id, width: 100, height: 75 });
-    await this._containerStyleService.createObjectContainerStyle(menuSaved.id);
+    await this._containerStyleService.createObjectDefaultContainerStyle(menuSaved.id);
 
     /* 2. */
     const redirectButtonNavigationType = await this._navigationTypeRepository.findOne({
@@ -76,8 +88,8 @@ export class MenuService {
     }
     const firstAutoCreatedChildSaved = await this._navigationRepository.save(firstAutoCreatedChild);
     await this._containerLayoutService.createObjectContainerLayout({ refId: firstAutoCreatedChildSaved.id });
-    await this._containerStyleService.createObjectContainerStyle(firstAutoCreatedChildSaved.id);
-    await this._typographyStyleService.createObjectTypographyStyle(firstAutoCreatedChildSaved.id);
+    await this._containerStyleService.createObjectDefaultContainerStyle(firstAutoCreatedChildSaved.id);
+    await this._typographyStyleService.createObjectDefaultTypographyStyle(firstAutoCreatedChildSaved.id);
     
     return JSON.stringify('Navigation bar successfully created.');
   }

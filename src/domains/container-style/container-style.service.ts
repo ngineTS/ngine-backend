@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ContainerStyle } from './entities/container-style.entity';
 import { Repository } from 'typeorm';
 import { UpdateContainerStyleDto } from './dto/update-container-style.dto';
+import { CreateContainerStyleDto } from './dto/create-container-style.dto';
 
 @Injectable()
 export class ContainerStyleService {
@@ -11,6 +12,16 @@ export class ContainerStyleService {
     @InjectRepository(ContainerStyle)
     private _containerStyleRepository: Repository<ContainerStyle>
   ) { }
+
+  /**
+   * Create container style.
+   * 
+   * @param createContainerStyleDto The container style properties.
+   * @returns The container style saved.
+   */
+  createObjectContainerStyle(createContainerStyleDto: CreateContainerStyleDto) {
+    return this._containerStyleRepository.save(createContainerStyleDto);
+  }
 
   /**
    * Get default container style.
@@ -24,13 +35,13 @@ export class ContainerStyleService {
   }
 
   /**
-   * Create object containr style based on default value.
+   * Create object container style based on default value.
    * 
    * @param refId The object id.
    * @returns The container style saved.
    * @throws {NotFoundException} If default container style not found.
    */
-  async createObjectContainerStyle(refId: string) {
+  async createObjectDefaultContainerStyle(refId: string) {
     const defaultContainerStyle = await this.geDefaultContainerStyle();
 
     if (!defaultContainerStyle) {

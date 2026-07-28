@@ -17,7 +17,7 @@ export class ContainerLayoutService {
    * Create container layout.
    * 
    * @param createContainerLayoutDto The container layout properties.
-   * @returns The containe rlayout saved.
+   * @returns The container layout saved.
    */
   createObjectContainerLayout(createContainerLayoutDto: CreateContainerLayoutDto) {
     return this._containerLayoutRepository.save(createContainerLayoutDto);

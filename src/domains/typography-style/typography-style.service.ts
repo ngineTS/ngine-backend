@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TypographyStyle } from './entities/typography-style.entity';
 import { Repository } from 'typeorm';
 import { UpdateTypographyStyleDto } from './dto/update-typography-style.dto';
+import { CreateTypographyStyleDto } from './dto/create-typography-style.dto';
 
 @Injectable()
 export class TypographyStyleService {
@@ -11,13 +12,23 @@ export class TypographyStyleService {
     @InjectRepository(TypographyStyle)
     private _typographyStyleRepository: Repository<TypographyStyle>
   ) { }
+
+  /**
+   * Create typography style.
+   * 
+   * @param createTypographyStyleDto The typography style properties.
+   * @returns The typography style saved.
+   */
+  createObjectTypographyStyle(createTypographyStyleDto: CreateTypographyStyleDto) {
+    return this._typographyStyleRepository.save(createTypographyStyleDto);
+  }
   
   /**
    * Get default typography style.
    * 
    * @returns The default typography style.
    */
-  geDefaultTypographyStyle() {
+  getDefaultTypographyStyle() {
     return this._typographyStyleRepository.findOne({
       where: { refId: '00000000-0000-0000-0000-000000000000' }
     });
@@ -30,8 +41,8 @@ export class TypographyStyleService {
    * @returns The typography style saved.
    * @throws {NotFoundException} If default typography style not found.
    */
-  async createObjectTypographyStyle(refId: string) {
-    const defaultTypographyStyle = await this.geDefaultTypographyStyle();
+  async createObjectDefaultTypographyStyle(refId: string) {
+    const defaultTypographyStyle = await this.getDefaultTypographyStyle();
 
     if (!defaultTypographyStyle) {
       throw new NotFoundException('Default container style not found.');

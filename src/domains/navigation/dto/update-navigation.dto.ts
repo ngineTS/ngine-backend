@@ -5,7 +5,7 @@ export class UpdateNavigationDto {
     @ValidateIf(obj => obj.displayLabel || obj.navigationTypeId)
     @IsNotEmpty()
     @IsUUID()
-    parentId?: string;
+    parentGroupId?: string;
 
     @IsOptional()
     @IsString()
