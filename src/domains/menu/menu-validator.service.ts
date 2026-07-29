@@ -53,11 +53,11 @@ export class MenuValidatorService {
    * @throws {ForbiddenException} If user doesn't have 'add' access on navigation.
    */
   validPermissionToCreateNavigationBar(
-    navigationId: string,
+    navigationGroupId: string,
     userNavigationPermissions: NavigationPermissions
   ) {
     if (
-      !userNavigationPermissions.find(obj => obj.navigationId === navigationId)
+      !userNavigationPermissions.find(obj => obj.navigationId === navigationGroupId)
         ?.permissionName.includes('add')
     ) {
       throw new ForbiddenException();

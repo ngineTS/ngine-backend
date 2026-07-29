@@ -12,6 +12,7 @@ import { MenuValidatorService } from './menu-validator.service';
 import { ContainerLayoutService } from '../container-layout/container-layout.service';
 import { ContainerStyleService } from '../container-style/container-style.service';
 import { TypographyStyleService } from '../typography-style/typography-style.service';
+import { NavigationService } from '../navigation/navigation.service';
 
 @Module({
   imports:[
@@ -30,7 +31,8 @@ import { TypographyStyleService } from '../typography-style/typography-style.ser
     MenuValidatorService,
     ContainerLayoutService,
     ContainerStyleService,
-    TypographyStyleService
+    TypographyStyleService,
+    NavigationService
   ],
 })
 export class MenuModule {}

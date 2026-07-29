@@ -746,4 +746,12 @@ export class NavigationService {
     }
   }
 
+  async markDirty(navigationId: string, relations: Array<string>) {
+    await this._navigationRepository.update(
+      navigationId,
+      {
+        unpublishedChanges: () => `array_cat("unpublishedChanges", '{${relations.join(',')}}')`,
+      },
+    );
+  }
 }

@@ -17,14 +17,16 @@ export class MenuController {
   @Get('create-navigation-bar/:navigationId/:navigationBarType')
   createNavigationBar(
     @Param('navigationId', new ParseUUIDPipe()) navigationId: string,
+    @Param('navigationGroupId', new ParseUUIDPipe()) navigationGroupId: string,
     @Param('navigationBarType') navigationBarType: 'vertical' | 'horizontal',
     @UserId() userId: string,
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    this._menuValidatorService.validPermissionToCreateNavigationBar(navigationId, userNavigationPermissions);
-    return this._menuService.createNavigationBar(navigationId, userId, navigationBarType);
+    this._menuValidatorService.validPermissionToCreateNavigationBar(navigationGroupId, userNavigationPermissions);
+    return this._menuService.createNavigationBar(navigationId, navigationGroupId, userId, navigationBarType);
   }
 
+   // /!\ This API is also used to modify navigation style properties, not only menu ones.
   @Patch(':refId')
   async updateStyleProperties(
     @Param('refId') refId: string,

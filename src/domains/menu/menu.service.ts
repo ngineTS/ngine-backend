@@ -8,6 +8,9 @@ import { NavigationType } from '../navigation-type/entities/navigation-type.enti
 import { ContainerStyleService } from '../container-style/container-style.service';
 import { ContainerLayoutService } from '../container-layout/container-layout.service';
 import { TypographyStyleService } from '../typography-style/typography-style.service';
+import { NavigationService } from '../navigation/navigation.service';
+import { v4 as uuidv4 } from 'uuid';
+
 
 @Injectable()
 export class MenuService {
@@ -22,6 +25,7 @@ export class MenuService {
     private _containerLayoutService: ContainerLayoutService,
     private _containerStyleService: ContainerStyleService,
     private _typographyStyleService: TypographyStyleService,
+    private _navigationService: NavigationService
   ) {}
 
 
@@ -50,7 +54,7 @@ export class MenuService {
   /**
    * Create navigation bar and add first redirect-button to it.
    * 
-   * 1. Create navigation bar for given navigation id and assign style properties.
+   * 1. Create navigation bar for given navigation id, assign style properties and mark navigation as dirty.
    * 2. Create first navigation inside navigation bar and assign style properties.
    * 
    * @param navigationId The navigationId to attach the menu to.
@@ -59,6 +63,7 @@ export class MenuService {
    */
   async createNavigationBar(
     navigationId: string,
+    navigationGroupId: string,
     userId: string,
     navigationBarType: 'vertical' | 'horizontal' = 'horizontal') {
     /* 1. */
@@ -68,13 +73,17 @@ export class MenuService {
     });
     await this._containerLayoutService.createObjectContainerLayout({ refId: menuSaved.id, width: 100, height: 75 });
     await this._containerStyleService.createObjectDefaultContainerStyle(menuSaved.id);
+    await this._navigationService.markDirty(navigationId, ['menu.containerLayout', 'menu.containerStyle']);
 
     /* 2. */
     const redirectButtonNavigationType = await this._navigationTypeRepository.findOne({
       where: { name: 'redirect-button' }
     });
-    const firstAutoCreatedChild: any = {
-      parentId: navigationId,
+    const firstAutoCreatedChild: Partial<Navigation> = {
+      groupId: uuidv4(),
+      parentGroupId: navigationGroupId,
+      isDraft: true,
+      unpublishedChanges: ['all'],
       name: 'sub-1',
       displayLabel: 'Sub 1',
       description: 'First navigation',
@@ -90,7 +99,7 @@ export class MenuService {
     await this._containerLayoutService.createObjectContainerLayout({ refId: firstAutoCreatedChildSaved.id });
     await this._containerStyleService.createObjectDefaultContainerStyle(firstAutoCreatedChildSaved.id);
     await this._typographyStyleService.createObjectDefaultTypographyStyle(firstAutoCreatedChildSaved.id);
-    
+
     return JSON.stringify('Navigation bar successfully created.');
   }
 
@@ -133,7 +142,7 @@ export class MenuService {
       );
 
       if (updateContainerLayoutResponse.affected === 0) {
-        throw new NotFoundException('No container layout associated tho this menu id has been found.')
+        throw new NotFoundException('No container layout associated tho this menu id has been found.');
       }
 
       affectedRelations.affectedContainerLayout = updateContainerLayoutResponse.affected;
@@ -147,7 +156,7 @@ export class MenuService {
       );
 
       if (updateContainerStyleResponse.affected === 0) {
-        throw new NotFoundException('No container style associated tho this menu id has been found.')
+        throw new NotFoundException('No container style associated tho this menu id has been found.');
       }
 
       affectedRelations.affectedContainerStyle = updateContainerStyleResponse.affected;
@@ -161,12 +170,13 @@ export class MenuService {
       );
 
       if (updateTypographyStyleResponse.affected === 0) {
-        throw new NotFoundException('No typography style associated tho this menu id has been found.')
+        throw new NotFoundException('No typography style associated tho this menu id has been found.');
       }
 
       affectedRelations.affectedTypographyStyle = updateTypographyStyleResponse.affected;
     }
 
+    await this.markNavigationDirty(refId, ['containerLayout', 'containerStyle', 'typographyStyle']);
     return affectedRelations;
   }
 
@@ -183,6 +193,32 @@ export class MenuService {
     }
 
     return deleteResponse;
+  }
+
+  /**
+   * Mark navigation as dirty.
+   * 
+   * If reference is a menu then mark menu relation as dirty.
+   * If reference is a navigation then mark relation as dirty.
+   * 
+   * @param refId The reference (menu id or navigation id).
+   * @param relation The style relation.
+   */
+  async markNavigationDirty(
+    refId: string,
+    relations: Array<'containerLayout' | 'containerStyle' | 'typographyStyle'>
+  ) {
+    const associatedMenu = await this._menuRepository.findOne({
+      where: { id: refId }
+    });
+
+    if (!associatedMenu) {
+      await this._navigationService.markDirty(refId, relations);
+    }
+    else {
+      const menuRelations = relations.map(relation => `menu.${relation}`);
+      await this._navigationService.markDirty(associatedMenu.navigationId, menuRelations);
+    }
   }
 
 }
