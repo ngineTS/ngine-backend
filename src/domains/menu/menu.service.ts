@@ -73,7 +73,7 @@ export class MenuService {
     });
     await this._containerLayoutService.createObjectContainerLayout({ refId: menuSaved.id, width: 100, height: 75 });
     await this._containerStyleService.createObjectDefaultContainerStyle(menuSaved.id);
-    await this._navigationService.markDirty(navigationId, ['menu.containerLayout', 'menu.containerStyle']);
+    await this._navigationService.markDirty(navigationId, ['menu', 'menu.containerLayout', 'menu.containerStyle']);
 
     /* 2. */
     const redirectButtonNavigationType = await this._navigationTypeRepository.findOne({
