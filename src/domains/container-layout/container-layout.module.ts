@@ -5,9 +5,10 @@ import { ContainerLayout } from './entities/container-layout.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { containerLayoutValidatorService } from './container-layout-validator.service';
 import { NavigationService } from '../navigation/navigation.service';
+import { Navigation } from '../navigation/entities/navigation.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ContainerLayout])],
+  imports: [TypeOrmModule.forFeature([ContainerLayout, Navigation])],
   controllers: [ContainerLayoutController],
   providers: [ContainerLayoutService, containerLayoutValidatorService, NavigationService],
 })

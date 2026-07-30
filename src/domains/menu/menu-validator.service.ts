@@ -69,8 +69,10 @@ export class MenuValidatorService {
    * 
    * @param navigationId The navigation id.
    * @param userNavigationPermissions The user navigation permissions.
+   * @returns The navigation entity associated to the navigation id.
    * @throws {NotFoundException} If navigation is not found.
    * @throws {ForbiddenException} If user doesn't have 'add' access on navigation.
+   * @this {ForbiddenException} If navigation is a 'publish' record.
    */
   async validPermissionToCreateNavigationBar(
     navigationId: string,
