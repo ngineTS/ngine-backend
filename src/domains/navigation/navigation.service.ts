@@ -41,12 +41,16 @@ export class NavigationService {
    * @returns The array of navigations.
    */
   async findAllNavigations(userNavigationPermissions: NavigationPermissions) {
-    const userNavigationIds = userNavigationPermissions.map<string>(
-      userNavigationPermission => userNavigationPermission.navigationId
+    const userNavigationGroupIds = userNavigationPermissions.map<string>(
+      userNavigationPermission => userNavigationPermission.navigationGroupId
     );
 
     return await this._navigationRepository.find({
-      where: { id: In(userNavigationIds) },
+      where: { 
+        id: In(userNavigationGroupIds),
+        isDraft: true,
+        deletedDate: IsNull()
+      },
       relations: ['navigationType', 'parent'],
       order: { displayLabel: 'ASC' }
     });
