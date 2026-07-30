@@ -34,7 +34,7 @@ export class MenuValidatorService {
     const navigation = await this._navigationRepository.findOneBy({ id: refId });
 
     //if ref is a menu
-    if(!navigation) {
+    if (!navigation) {
       const menu = await this._menuRepository.findOneBy({ id: refId });
       const navigationAssociatedToMenu = await this._navigationRepository.findOneBy({ id: menu?.navigationId });
 
@@ -55,7 +55,7 @@ export class MenuValidatorService {
         throw new ForbiddenException(`'Publish' record cannot be edited.`);
       }
 
-      if(
+      if (
         !userNavigationPermissions.find(obj => obj.navigationGroupId === navigation.groupId)
           ?.permissionName.includes('edit')
       ) { 
