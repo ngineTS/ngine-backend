@@ -29,6 +29,7 @@ export class NavigationValidatorService {
     createNavigationDto: CreateNavigationDto,
     userNavigationPermissions: NavigationPermissions
   ) {
+    //TODO: Valid if parent is not 'publish' record. Would be good without fetching from db for perf reasons...
     if (
       !userNavigationPermissions.find(obj => 
         obj.navigationGroupId === createNavigationDto.parentGroupId && obj.permissionName.includes('add')
@@ -58,6 +59,10 @@ export class NavigationValidatorService {
     });
     if (!dbNavigation) {
       throw new NotFoundException(`Navigation with id ${id} doesn't exist.`);
+    }
+
+    if (!dbNavigation.isDraft) {
+      throw new ForbiddenException(`'Publish' record cannot be edited.`);
     }
 
     if (
