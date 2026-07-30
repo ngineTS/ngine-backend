@@ -13,7 +13,7 @@ export class RoleNavigationPermission {
     roleId: string;
 
     @Column()
-    navigationId: string;
+    navigationGroupId: string;
 
     @Column()
     permissionId: string;
