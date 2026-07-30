@@ -623,12 +623,12 @@ export class NavigationService {
    * 
    * CASE 1 - Only draft navigation exists:
    * - copy draft record and save it as published record
-   * - copy style and menu relations of draft record and assign them to published record
+   * - copy style and menu relations of draft record and create relations of published record
    * - update draft record to mention no changes is pending to be published
    * 
    * CASE 2 - Draft and publish navigations exist:
    * - copy draft record properties into published record
-   * - copy unpublishedChanges relations into published record
+   * - copy unpublishedChanges relations into relations of published record
    * - update draft record to mention no changes is pending to be published
    * 
    * @param navigationGroupId The navigation group id.
@@ -698,6 +698,7 @@ export class NavigationService {
       await this._navigationRepository.update(navigations[0].id, { unpublishedChanges: [] });
     }
 
+    /* CASE 2 */
     else {
       const navigationPublishedRecord = navigations.find(obj => obj.isDraft === false)!;
       const navigationDraftRecord = navigations.find(obj => obj.isDraft === true)!;
@@ -750,6 +751,12 @@ export class NavigationService {
     }
   }
 
+  /**
+   * Inform that navigation has changed pending to be published.
+   * 
+   * @param navigationId The navigation to mark as dirty.
+   * @param relations The list of relations that have changed.
+   */
   async markDirty(navigationId: string, relations: Array<string>) {
     await this._navigationRepository.update(
       navigationId,
