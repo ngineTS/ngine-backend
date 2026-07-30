@@ -54,26 +54,26 @@ export class MenuService {
   /**
    * Create navigation bar and add first redirect-button to it.
    * 
-   * 1. Create navigation bar for given navigation id, assign style properties and mark navigation as dirty.
-   * 2. Create first navigation inside navigation bar and assign style properties.
+   * 1. Create navigation bar for given navigation, assign style properties and mark navigation as dirty.
+   * 3. Create first navigation inside navigation bar and assign style properties.
    * 
-   * @param navigationId The navigationId to attach the menu to.
+   * @param navigation The navigation to associate the navigation bar to.
    * @param userId The user who creates this navigation bar.
    * @throws {ForbiddenException} If user doesn't have add permission on navigation.
    */
   async createNavigationBar(
-    navigationId: string,
-    navigationGroupId: string,
+    navigation: Navigation,
     userId: string,
-    navigationBarType: 'vertical' | 'horizontal' = 'horizontal') {
+    navigationBarType: 'vertical' | 'horizontal' = 'horizontal'
+  ) {
     /* 1. */
     const menuSaved = await this._menuRepository.save({
-      navigationId: navigationId,
+      navigationId: navigation.id,
       isVertical: navigationBarType === 'vertical'
     });
     await this._containerLayoutService.createObjectContainerLayout({ refId: menuSaved.id, width: 100, height: 75 });
     await this._containerStyleService.createObjectDefaultContainerStyle(menuSaved.id);
-    await this._navigationService.markDirty(navigationId, ['menu', 'menu.containerLayout', 'menu.containerStyle']);
+    await this._navigationService.markDirty(navigation.id, ['menu', 'menu.containerLayout', 'menu.containerStyle']);
 
     /* 2. */
     const redirectButtonNavigationType = await this._navigationTypeRepository.findOne({
@@ -81,7 +81,7 @@ export class MenuService {
     });
     const firstAutoCreatedChild: Partial<Navigation> = {
       groupId: uuidv4(),
-      parentGroupId: navigationGroupId,
+      parentGroupId: navigation.groupId,
       isDraft: true,
       unpublishedChanges: ['all'],
       name: 'sub-1',
