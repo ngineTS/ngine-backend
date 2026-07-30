@@ -29,7 +29,6 @@ export class NavigationValidatorService {
     createNavigationDto: CreateNavigationDto,
     userNavigationPermissions: NavigationPermissions
   ) {
-    //TODO: Valid if parent is not 'publish' record. Would be good without fetching from db for perf reasons...
     if (
       !userNavigationPermissions.find(obj => 
         obj.navigationGroupId === createNavigationDto.parentGroupId && obj.permissionName.includes('add')
