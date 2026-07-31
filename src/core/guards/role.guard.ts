@@ -45,7 +45,7 @@ export class RolesGuard implements CanActivate {
       case "view":
         /* if we look for a specific navigation id */
         if (params.navigationId) {
-          if (user.userNavigationPermissions?.find(obj => obj.navigationId === params.navigationId)) {
+          if (user.userNavigationPermissions?.find(obj => obj.navigationGroupId === params.navigationId)) {
             return true;
           }
           else {
@@ -59,7 +59,7 @@ export class RolesGuard implements CanActivate {
             throw new NotFoundException(`Id ${params.id} not found.`);
           }
           if (data.navigationId) {
-            if (user.userNavigationPermissions.find(obj => obj.navigationId === data.navigationId)) {
+            if (user.userNavigationPermissions.find(obj => obj.navigationGroupId === data.navigationId)) {
               return true;
             }
             else {
@@ -67,7 +67,7 @@ export class RolesGuard implements CanActivate {
             }
           }
         }
-        /* if table not indexed by navigationId then check for navigation type only */
+        /* if table not aggregated by navigationId then check for navigation type only */
         if (user.userNavigationPermissions.find(obj => navigationTypeNameArray.includes(obj.navigationTypeName))) {
           return true;
         }
@@ -85,7 +85,7 @@ export class RolesGuard implements CanActivate {
           if (data.navigationId) {
             if (
               user.userNavigationPermissions
-                .find(obj => obj.navigationId === data.navigationId)
+                .find(obj => obj.navigationGroupId === data.navigationId)
                 ?.permissionName?.includes('edit')
             ) {
               return true;
@@ -95,7 +95,7 @@ export class RolesGuard implements CanActivate {
             }
           }
         }
-        /* if table not indexed by navigationId then check for navigationType only */
+        /* if table not aggregated by navigationId then check for navigationType only */
         if (
           user.userNavigationPermissions
             .find(obj => navigationTypeNameArray.includes(obj.navigationTypeName))?.permissionName
@@ -112,7 +112,7 @@ export class RolesGuard implements CanActivate {
         if (body?.navigationId) {
           if (
             user.userNavigationPermissions
-              .find(obj => obj.navigationId === body.navigationId)?.permissionName
+              .find(obj => obj.navigationGroupId === body.navigationId)?.permissionName
               ?.includes('add')
           ) {
             return true;
@@ -132,7 +132,7 @@ export class RolesGuard implements CanActivate {
           if (data.navigationId) {
             if (
               user.userNavigationPermissions
-                ?.find(obj => obj.navigationId === data.navigationId)?.permissionName
+                ?.find(obj => obj.navigationGroupId === data.navigationId)?.permissionName
                 ?.includes('delete')
             ) {
               return true;
@@ -146,7 +146,7 @@ export class RolesGuard implements CanActivate {
         if (body?.navigationId) {
           if (
             user.userNavigationPermissions
-              .find(obj => obj.navigationId === body.navigationId)?.permissionName
+              .find(obj => obj.navigationGroupId === body.navigationId)?.permissionName
               ?.includes('delete')
           ) {
             return true;
@@ -155,7 +155,7 @@ export class RolesGuard implements CanActivate {
             return false;
           }
         }
-        /* if table not indexed by navigationId then check for navigationType only */
+        /* if table not aggregated by navigationId then check for navigationType only */
         if (
           user.userNavigationPermissions
             .find(obj =>  navigationTypeNameArray.includes(obj.navigationTypeName))?.permissionName
