@@ -47,7 +47,7 @@ export class NavigationService {
 
     return await this._navigationRepository.find({
       where: { 
-        id: In(userNavigationGroupIds),
+        groupId: In(userNavigationGroupIds),
         isDraft: true,
         deletedDate: IsNull()
       },
