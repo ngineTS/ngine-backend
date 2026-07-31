@@ -45,7 +45,7 @@ export class NavigationValidatorService {
    * @param userNavigationPermissions The user navigation permissions from the request.
    * @param updateNavigationDto The navigation properties to update.
    * @throws {ForbiddenException} If user doesn't have 'edit' permission on navigation.
-   * @throws {ForbiddenException} If parentId is in the request and user doesn't have 'add' permisson on it.
+   * @throws {ForbiddenException} If parentGroupId is in the request and user doesn't have 'add' permisson on it.
    * @throws {NotFoundException} If navigation id is not found in database.
    */
   async validEditPermission(

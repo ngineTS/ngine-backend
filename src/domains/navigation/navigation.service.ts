@@ -60,7 +60,7 @@ export class NavigationService {
    * Load nested navigations with permissions.
    * 
    * Process:
-   * 1. Load root and user permissions.
+   * 1. Load user navigation permissions.
    * 2. Initialize root and load all levels.
    * 3. Cleanup invalid nodes and setup user navigation permissions for request token.
    * 4. Create auth token with user navigation permissions.
@@ -75,12 +75,11 @@ export class NavigationService {
     userEmail: string,
     maxDepth: number
   ) {
-    // 1. Load root and user permissions
-    const root = await this.loadRootNavigation();
+    // 1. Load root user permissions
     const userRoleNavigationPermissionsFormatted = await this.getUserRoleNavigationPermissionsFormatted(userId);
 
     // 2. Initialize root and load all levels
-    this.initializeRootPermissions(root, userRoleNavigationPermissionsFormatted);
+    const root = await this.loadRootNavigation(userRoleNavigationPermissionsFormatted);
     const allLevels = await this.loadNavigationLevels(root, maxDepth, userRoleNavigationPermissionsFormatted);
 
     // 3. Cleanup invalid nodes and collect permissions in a single pass
@@ -100,11 +99,24 @@ export class NavigationService {
   /**
    * Load root navigation with all required relations.
    * 
+   * If user has edit permission on root then load 'draft' root record else load 'publish' root record.
+   * 
    * @returns The root navigation entity.
    * @throws {BadRequestException} If root navigation is not found.
    */
-  private async loadRootNavigation(): Promise<Navigation> {
-    const rootId = '00000000-0000-0000-0000-000000000000';
+  private async loadRootNavigation(
+    userRoleNavigationPermissions: RoleNavigationPermission[]
+  ): Promise<Navigation> {
+    const rootGroupId = '00000000-0000-0000-0000-000000000000';
+    const rootPublishRecordId = '00000000-0000-0000-0000-000000000000';
+    const rootDraftRecordId = '11111111-1111-1111-1111-111111111111';
+
+    const rootPermission = userRoleNavigationPermissions.find(
+      obj => obj.navigationGroupId === rootGroupId
+    )?.permission;
+
+    const rootId = rootPermission?.name.includes('edit') ? rootDraftRecordId : rootPublishRecordId;
+    
     const root = await this._navigationRepository.findOne({
       where: { id: rootId },
       relations: [
@@ -120,29 +132,13 @@ export class NavigationService {
       throw new BadRequestException('Global navigation is missing.');
     }
 
+    if (rootPermission) {
+      root['permissionName'] = rootPermission.name;
+    }
     root['level'] = 0;
+    root.children = [];
 
     return root;
-  }
-
-  /**
-   * Initialize root navigation with empty children array and setup permissions.
-   * 
-   * @param root The root navigation node.
-   * @param userRoleNavigationPermissions User's role navigation permissions.
-   */
-  private initializeRootPermissions(
-    root: Navigation,
-    userRoleNavigationPermissions: RoleNavigationPermission[]
-  ): void {
-    root.children = [];
-    const navigationPermission = userRoleNavigationPermissions.find(
-      obj => obj.navigationId === root.id
-    )?.permission;
-
-    if (navigationPermission) {
-      root['permissionName'] = navigationPermission.name;
-    }
   }
 
   /**
@@ -169,10 +165,10 @@ export class NavigationService {
       if (currentLevel.length === 0) break;
 
       // 1. Load next level of navigations
-      const parentIds = currentLevel.map(n => n.id);
+      const parentGroupIds = currentLevel.map(n => n.parentGroupId);
       const nextLevel = await this._navigationRepository.find({
         where: { 
-          parentId: In(parentIds),
+          parentGroupId: In(parentGroupIds),
           deletedDate: IsNull()
         },
         relations: [
@@ -214,6 +210,7 @@ export class NavigationService {
    * 
    * 1. Get parent's permission for inheritance.
    * 2. Setup permission for this navigation following the 4 permission cases.
+   * 3. if view permission keep 'publish' record only, if edit permission keep 'draft' record only.
    * 
    * @param nextLevel Nodes of the current level to process.
    * @param currentLevel Parent nodes of the next level.
@@ -229,22 +226,29 @@ export class NavigationService {
     return nextLevel.reduce((acc, node) => {
       node.children = [];
       node['level'] = depth + 1;
-      // 1. Get parent's permission for inheritance
-      const parent = currentLevel.find(p => p.id === node.parentId);
+      // 1. Get parent's permission for inheritance 
+      const parent = currentLevel.find(p => p.groupId === node.parentGroupId);
       const parentPermission = parent?.['permissionName'];
 
       // 2. Setup permission for this node
       this.setupNodePermissions(node, parentPermission, userRoleNavigationPermissions);
 
-      acc[node.parentId] = acc[node.parentId] || [];
-      acc[node.parentId].push(node);
+      acc[node.parentGroupId] = acc[node.parentGroupId] || [];
+
+      //3. Keep only 'draft' or 'publish' record
+      if (
+        (node['permissionName'].includes('edit') && node.isDraft) ||
+        (!node['permissionName'].includes('edit') && !node.isDraft)
+      ) {
+        acc[node.parentGroupId].push(node);
+      }
 
       return acc;
     }, {});
   }
 
   /**
-   * Setup permission for a single node following the 4 permission inheritance cases.
+   * Assign permission name to a single node following the 4 permission inheritance cases.
    * 
    * Cases:
    * - Case 1: Node permission higher than parent → keep node permission
@@ -262,7 +266,7 @@ export class NavigationService {
     userRoleNavigationPermissions: RoleNavigationPermission[]
   ): void {
     let nodePermission = userRoleNavigationPermissions.find(
-      obj => obj.navigationId === node.id
+      obj => obj.navigationGroupId === node.groupId
     )?.permission;
 
     if (nodePermission) {
@@ -321,7 +325,7 @@ export class NavigationService {
         if (!isNodeValid(node)) {
           // Remove from parent's children
           const parentLevel = allLevels[i - 1];
-          const parent = parentLevel.find(p => p.id === node.parentId);
+          const parent = parentLevel.find(p => p.groupId === node.parentGroupId);
           if (parent) {
             parent.children = parent.children.filter(c => c.id !== node.id);
           }
@@ -330,7 +334,7 @@ export class NavigationService {
         // Collect valid nodes with permissions on-the-fly
         else if (node['permissionName']) {
           userNavigationPermissions.push({
-            navigationId: node.id,
+            navigationGroupId: node.groupId,
             permissionName: node['permissionName'],
             navigationTypeName: node.navigationType.name
           });
@@ -342,7 +346,7 @@ export class NavigationService {
     const root = allLevels[0][0];
     if (root && root['permissionName']) {
       userNavigationPermissions.push({
-        navigationId: root.id,
+        navigationGroupId: root.groupId,
         permissionName: root['permissionName'],
         navigationTypeName: root.navigationType.name
       });
@@ -360,7 +364,7 @@ export class NavigationService {
    * TODO: Rework to something more fluent and performant.
    * 
    * @param userId the id of the user.
-   * @returns The user roleNavigationPermissions formatted.
+   * @returns The distinct role navigation permissions associated to the user.
    */
   async getUserRoleNavigationPermissionsFormatted(userId: string): Promise<Array<RoleNavigationPermission>> {
     /* get user roles */
@@ -394,7 +398,7 @@ export class NavigationService {
     })
     /* group roleNavigationPermissions by navigationId */
     const userRoleNavigationPermissionsByNavigationId = userRoleNavigationPermissions.reduce((acc, item) => {
-      (acc[item.navigationId] ||= []).push(item);
+      (acc[item.navigationGroupId] ||= []).push(item);
       return acc;
     }, {});
     /* if multiple roleNavigationPermissions by navigationId then keep only the one with highest permission */

@@ -24,7 +24,7 @@ export class UpdateNavigationDto {
     @IsBoolean()
     isDisabled?: boolean;
 
-    @ValidateIf(obj => obj.parentId)
+    @ValidateIf(obj => obj.parentGroupId)
     @IsNotEmpty()
     @IsUUID()
     navigationTypeId?: string;
