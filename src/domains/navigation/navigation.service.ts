@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -28,7 +28,9 @@ export class NavigationService {
     @InjectRepository(RoleNavigationPermission)
     private _roleNavigationPermissionRepository: Repository<RoleNavigationPermission>,
     private _authService: AuthService,
+    @Inject(forwardRef(() => MenuService))
     private _menuService: MenuService,
+    @Inject(forwardRef(() => ContainerLayoutService))
     private _containerLayoutService: ContainerLayoutService,
     private _containerStyleService: ContainerStyleService,
     private _typographyStyleService: TypographyStyleService,

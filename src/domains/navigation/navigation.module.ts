@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { NavigationService } from './navigation.service';
 import { NavigationController } from './navigation.controller';
 import { Navigation } from './entities/navigation.entity';
@@ -21,6 +21,8 @@ import { MenuValidatorService } from '../menu/menu-validator.service';
 import { ContainerLayoutService } from '../container-layout/container-layout.service';
 import { ContainerStyleService } from '../container-style/container-style.service';
 import { TypographyStyleService } from '../typography-style/typography-style.service';
+import { MenuModule } from '../menu/menu.module';
+import { ContainerLayoutModule } from '../container-layout/container-layout.module';
 
 @Module({
   imports:[
@@ -35,7 +37,9 @@ import { TypographyStyleService } from '../typography-style/typography-style.ser
       ContainerLayout,
       ContainerStyle,
       TypographyStyle
-    ])
+    ]),
+    forwardRef(() => MenuModule),
+    forwardRef(() => ContainerLayoutModule)    
   ],
   controllers: [NavigationController],
   providers: [
@@ -44,11 +48,10 @@ import { TypographyStyleService } from '../typography-style/typography-style.ser
     RoleService,
     RoleValidatorService,
     AuthService,
-    MenuService,
     MenuValidatorService,
-    ContainerLayoutService,
     ContainerStyleService,
     TypographyStyleService
-  ]
+  ],
+  exports: [NavigationService]
 })
 export class NavigationModule {}

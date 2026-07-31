@@ -1,4 +1,4 @@
-import { Body, Controller, Param, ParseUUIDPipe, Patch } from '@nestjs/common';
+import { Body, Controller, forwardRef, Inject, Param, ParseUUIDPipe, Patch } from '@nestjs/common';
 import { ContainerLayoutService } from './container-layout.service';
 import { UpdateContainerLayoutDto } from './dto/update-container-layout.dto';
 import { containerLayoutValidatorService } from './container-layout-validator.service';
@@ -12,7 +12,8 @@ export class ContainerLayoutController {
   constructor(
     private readonly _containerLayoutService: ContainerLayoutService,
     private readonly _containerLayoutValidatorService: containerLayoutValidatorService,
-    private readonly _navigationService: NavigationService
+    @Inject(forwardRef(() => NavigationService))
+    private _navigationService: NavigationService
   ) {}
 
   @Patch(':id')
