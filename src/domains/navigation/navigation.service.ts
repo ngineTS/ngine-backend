@@ -551,26 +551,40 @@ export class NavigationService {
    */
   async removeNavigation(navigation: Navigation, userId: string) {
     /* 1. */
-    const navigationsIds: Array<string> = [];
+    const navigationGroupIds: Array<string> = [];
     const navigationRecordsToDelete: Array<Pick<Navigation, 'id' | 'deletedBy' | 'deletedDate'>> = [];
     const menuIdsToDelete: Array<string> = [];
+
     /* declare method to retrieve navigations and menus to delete */
     const getDeepNavigationIds = async (navigation: Navigation) => {
-      navigationsIds.push(navigation.id);
-      navigationRecordsToDelete.push({
-        id: navigation.id,
-        deletedBy: userId,
-        deletedDate: new Date()
-      })
-      const menu = await this._menuService.findOneByNavigationId(navigation.id);
-      if (menu) {
-        menuIdsToDelete.push(menu.id);
-      }
-      if (navigation.children) {
-        for (const nav of navigation.children) {
-            await getDeepNavigationIds(nav);
+
+      // get 'draft' and 'publish' record for given navigation group id and store group id.
+      const draftAndPublishNavigations = await this._navigationRepository.find({
+        take: 2,
+        where: { groupId: navigation.groupId }
+      });
+      navigationGroupIds.push(navigation.groupId);
+
+      // store nav and menu records to delete for 'draft' and 'publish' record
+      for (const nav of draftAndPublishNavigations) {
+        navigationRecordsToDelete.push({
+          id: nav.id,
+          deletedBy: userId,
+          deletedDate: new Date()
+        });
+
+        const menu = await this._menuService.findOneByNavigationId(nav.id);
+        if (menu) {
+          menuIdsToDelete.push(menu.id);
         }
-      }
+
+        //apply process for children
+        if (nav.children) {
+          for (const child of nav.children) {
+              await getDeepNavigationIds(child);
+          }
+        }
+      };
     } 
     /* call method */
     await getDeepNavigationIds(navigation);
@@ -586,7 +600,7 @@ export class NavigationService {
     /* 3. */
     const parentNavigation = await this._navigationRepository.findOne({
       where: { 
-        id: navigation.parentId,
+        id: navigation.parentGroupId,
         deletedDate: IsNull(),
       },
       relations: ['children', 'menu']
@@ -609,7 +623,7 @@ export class NavigationService {
 
     /* 5. */
     const roleNavigationsPermissions = await this._roleNavigationPermissionRepository.find({
-      where: { navigationId: In(navigationsIds) }
+      where: { navigationGroupId: In(navigationGroupIds) }
     })
     for (let roleNavigationsPermission of roleNavigationsPermissions) {
       roleNavigationsPermission.deletedBy = userId;
