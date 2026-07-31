@@ -167,7 +167,7 @@ export class NavigationService {
       if (currentLevel.length === 0) break;
 
       // 1. Load next level of navigations
-      const parentGroupIds = currentLevel.map(n => n.parentGroupId);
+      const parentGroupIds = currentLevel.map(n => n.groupId);
       const nextLevel = await this._navigationRepository.find({
         where: { 
           parentGroupId: In(parentGroupIds),
@@ -197,7 +197,7 @@ export class NavigationService {
 
       currentLevel.forEach(parent => {
         parent['level'] = depth;
-        parent.children = childrenMap[parent.id] || [];
+        parent.children = childrenMap[parent.groupId] || [];
       });
 
       currentLevel = nextLevel;
@@ -650,6 +650,8 @@ export class NavigationService {
    * - copy draft record properties into published record
    * - copy unpublishedChanges relations into relations of published record
    * - update draft record to mention no changes is pending to be published
+   * 
+   * If navigation has a menu, then we publish automatically his menu and relations.
    * 
    * @param navigationGroupId The navigation group id.
    * @param userId The user id of the request.

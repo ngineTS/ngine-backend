@@ -256,7 +256,7 @@ export class NavigationValidatorService {
       )
       SELECT 1
       FROM descendants
-      WHERE id = $2
+      WHERE "groupId" = $2
       LIMIT 1
       `,
       [navigationGroupId, parentGroupId],
