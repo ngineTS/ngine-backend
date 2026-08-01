@@ -74,7 +74,7 @@ export class MenuService {
     });
     await this._containerLayoutService.createObjectContainerLayout({ refId: menuSaved.id, width: 100, height: 75 });
     await this._containerStyleService.createObjectDefaultContainerStyle(menuSaved.id);
-    await this._navigationService.markDirty(navigation.id, ['menu', 'menu.containerLayout', 'menu.containerStyle']);
+    await this._navigationService.markDirty(navigation, ['menu', 'menu.containerLayout', 'menu.containerStyle']);
 
     /* 2. */
     const redirectButtonNavigationType = await this._navigationTypeRepository.findOne({
@@ -124,11 +124,16 @@ export class MenuService {
    * 2. If containerStyle property then update containerStyle entity
    * 3. If typographyStyle property then update typographyStyle entity.
    * 
+   * @param navigation The navigation associated to the ref.
    * @param refId The object reference id.
    * @param updateMenuDto The style properties.
    * @returns The properties affected number.
    */
-  async updateStyleProperties(refId: string, updateMenuDto: UpdateMenuDto) {
+  async updateStyleProperties(
+    navigation: Navigation,
+    refId: string,
+    updateMenuDto: UpdateMenuDto
+  ) {
     const affectedRelations: { [prop: string]: number | undefined } = {
       affectedContainerLayout: 0,
       affectedContainerStyle: 0,
@@ -177,7 +182,7 @@ export class MenuService {
       affectedRelations.affectedTypographyStyle = updateTypographyStyleResponse.affected;
     }
 
-    await this.markNavigationDirty(refId, ['containerLayout', 'containerStyle', 'typographyStyle']);
+    await this.markNavigationDirty(navigation, refId, ['containerLayout', 'containerStyle', 'typographyStyle']);
     return affectedRelations;
   }
 
@@ -202,24 +207,22 @@ export class MenuService {
    * If reference is a menu then mark menu relation as dirty.
    * If reference is a navigation then mark relation as dirty.
    * 
+   * @param navigation The navigation associated to the ref.
    * @param refId The reference (menu id or navigation id).
    * @param relation The style relation.
    */
   async markNavigationDirty(
+    navigation: Navigation,
     refId: string,
     relations: Array<'containerLayout' | 'containerStyle' | 'typographyStyle'>
   ) {
-    const associatedMenu = await this._menuRepository.findOne({
-      where: { id: refId }
-    });
+    let relationsFormatted: Array<string> = relations;
+    
+    if (refId !== navigation.id) {
+      relationsFormatted = relations.map(relation => `menu.${relation}`);
+    }
 
-    if (!associatedMenu) {
-      await this._navigationService.markDirty(refId, relations);
-    }
-    else {
-      const menuRelations = relations.map(relation => `menu.${relation}`);
-      await this._navigationService.markDirty(associatedMenu.navigationId, menuRelations);
-    }
+    await this._navigationService.markDirty(navigation, relationsFormatted);
   }
 
 }

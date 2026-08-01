@@ -22,9 +22,9 @@ export class ContainerLayoutController {
     @Body() updateContainerLayoutDto: UpdateContainerLayoutDto,
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    const navigationId = await this._containerLayoutValidatorService.validPermission(id, userNavigationPermissions);
+    const navigation = await this._containerLayoutValidatorService.validPermission(id, userNavigationPermissions);
     const updateResult = await this._containerLayoutService.update(id, updateContainerLayoutDto);
-    await this._navigationService.markDirty(navigationId, ['containerLayout']);
+    await this._navigationService.markDirty(navigation, ['containerLayout']);
     return updateResult;
   }
 }

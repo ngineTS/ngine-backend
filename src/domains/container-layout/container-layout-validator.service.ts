@@ -28,7 +28,7 @@ export class containerLayoutValidatorService {
   async validPermission(
     containerLayoutId: string,
     userNavigationPermissions: NavigationPermissions
-  ): Promise<string> {
+  ): Promise<Navigation> {
     const containerLayout = await this._containerLayoutRepository.findOneBy({ id: containerLayoutId });
 
     if (!containerLayout) {
@@ -52,6 +52,6 @@ export class containerLayoutValidatorService {
       throw new ForbiddenException();
     }
 
-    return containerLayout.refId;
+    return navigation;
   }
 }

@@ -32,7 +32,7 @@ export class MenuController {
     @Body() updateMenuDto: UpdateMenuDto,
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    await this._menuValidatorService.validPermissionToUpdateStyle(refId, userNavigationPermissions);
-    return this._menuService.updateStyleProperties(refId, updateMenuDto);
+    const navigation = await this._menuValidatorService.validPermissionToUpdateStyle(refId, userNavigationPermissions);
+    return this._menuService.updateStyleProperties(navigation, refId, updateMenuDto);
   }
 }

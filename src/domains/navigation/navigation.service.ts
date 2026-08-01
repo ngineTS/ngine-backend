@@ -493,9 +493,9 @@ export class NavigationService {
       throw new NotFoundException();
     }
 
-    /* 2 */
+    /* 2 */ 
     const setOfKeys = new Set(dbNavigation.unpublishedChanges);
-    Object.keys(updateNavigationDto).forEach(key => setOfKeys.add(key));
+    setOfKeys.add('navigation');
     updateNavigationDto['unpublishedChanges'] = [...setOfKeys];
     
     /* 3. */
@@ -774,17 +774,24 @@ export class NavigationService {
   }
 
   /**
-   * Inform that navigation has changed pending to be published.
+   * Mark navigation as dirty by adding relations to 'unpublishedChanges' array.
    * 
-   * @param navigationId The navigation to mark as dirty.
+   * 1. Add relations to 'unpublishedChanges' keeping uniqueness.
+   * 2. Update navigation with new 'unpublishedChanges' array.
+   * 
+   * @param navigation The navigation to mark as dirty.
    * @param relations The list of relations that have changed.
    */
-  async markDirty(navigationId: string, relations: Array<string>) {
+  async markDirty(navigation: Navigation, relations: Array<string>) {
+
+    /* 1. */
+    const setOfFields = new Set(navigation.unpublishedChanges);
+    relations.forEach(relation => setOfFields.add(relation));
+
+    /* 2. */
     await this._navigationRepository.update(
-      navigationId,
-      {
-        unpublishedChanges: () => `array_cat("unpublishedChanges", '{${relations.join(',')}}')`,
-      },
+      navigation.id,
+      { unpublishedChanges: [...setOfFields] },
     );
   }
 }

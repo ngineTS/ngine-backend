@@ -24,19 +24,25 @@ export class MenuValidatorService {
    * 
    * @param refId The ref id (menu id or navigation id).
    * @param userNavigationPermissions The user navigation permissions.
+   * @returns The navigation associated to the ref id.
+   * @throws {NotFoundException} If ref is not found.
    * @throws {ForbiddenException} If navigation associated to the ref is a 'publish' record.
    * @throws {ForbiddenException} If user doesn't have edit permission on the navigation associated to the ref.
    */
   async validPermissionToUpdateStyle(
     refId: string,
     userNavigationPermissions: NavigationPermissions
-  ) {
+  ): Promise<Navigation> {
     const navigation = await this._navigationRepository.findOneBy({ id: refId });
 
     //if ref is a menu
     if (!navigation) {
       const menu = await this._menuRepository.findOneBy({ id: refId });
       const navigationAssociatedToMenu = await this._navigationRepository.findOneBy({ id: menu?.navigationId });
+
+      if (!navigationAssociatedToMenu) {
+        throw new NotFoundException(`Navigation associated to menu with id ${refId} has not been found.`);
+      }
 
       if (!navigationAssociatedToMenu?.isDraft) {
         throw new ForbiddenException(`'Publish' record cannot be edited.`);
@@ -48,6 +54,8 @@ export class MenuValidatorService {
       ) {
         throw new ForbiddenException();
       }
+
+      return navigationAssociatedToMenu;
     }
     //if ref is a navigation
     else {
@@ -61,6 +69,8 @@ export class MenuValidatorService {
       ) { 
         throw new ForbiddenException();
       }
+
+      return navigation;
     }
   }
 
