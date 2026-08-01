@@ -783,7 +783,6 @@ export class NavigationService {
    * @param relations The list of relations that have changed.
    */
   async markDirty(navigation: Navigation, relations: Array<string>) {
-
     /* 1. */
     const setOfFields = new Set(navigation.unpublishedChanges);
     relations.forEach(relation => setOfFields.add(relation));
