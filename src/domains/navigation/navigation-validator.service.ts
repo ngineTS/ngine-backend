@@ -267,4 +267,25 @@ export class NavigationValidatorService {
     }
   }
 
+  /**
+   * Valid permission to publish navigation.
+   * 
+   * User must have 'edit' permission on the navigation to publish it.
+   * 
+   * @param navigationGroupId The navigation group id to publish.
+   * @param userNavigationPermissions The user's navigation permissions.
+   */
+  validPublishPermission(
+    navigationGroupId: string,
+    userNavigationPermissions: NavigationPermissions
+  ) {
+    if (
+      !userNavigationPermissions.find(obj => 
+        obj.navigationGroupId === navigationGroupId && obj.permissionName.includes('edit')
+      )
+    ) {
+      throw new ForbiddenException();
+    }
+  }
+
 }

@@ -90,4 +90,16 @@ export class NavigationController {
     return this._navigationService.removeNavigation(navigation, userId);
   }
 
+  @Get('publish/:navigationGroupId')
+  async publishNavigation(
+    @Param('navigationGroupId') navigationGroupId: string,
+    @UserId() userId: string,
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
+  ) {
+    this._navigationValidatorService.validPublishPermission(
+      navigationGroupId,
+      userNavigationPermissions
+    );
+    return this._navigationService.publishNavigation(navigationGroupId, userId);
+  }
 }

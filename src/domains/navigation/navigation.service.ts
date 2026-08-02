@@ -768,9 +768,10 @@ export class NavigationService {
       navigationPropertiesToUpdate.updatedBy = userId;
       navigationPropertiesToUpdate.updatedDate = new Date();
       await this._navigationRepository.update(navigationPublishedRecord.id, navigationPropertiesToUpdate);
-      
       await this._navigationRepository.update(navigationDraftRecord.id, { unpublishedChanges: []});
     }
+
+    return { message: 'Navigation published successfully.' };
   }
 
   /**
