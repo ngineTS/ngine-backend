@@ -73,11 +73,11 @@ export class Navigation {
     navigationType: NavigationType;
 
     @OneToMany(() => Navigation, navigation => navigation.parent)
-    @JoinColumn({name: 'id', referencedColumnName: 'parentGroupId'})
+    @JoinColumn({name: 'groupId', referencedColumnName: 'parentGroupId'})
     children: Navigation[];
 
     @ManyToOne(() => Navigation, navigation => navigation.children)
-    @JoinColumn({name: 'parentGroupId', referencedColumnName: 'id' })
+    @JoinColumn({name: 'parentGroupId', referencedColumnName: 'groupId' })
     parent: Navigation;
 
     @OneToOne(() => Menu, menu => menu)

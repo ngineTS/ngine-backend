@@ -80,6 +80,8 @@ export class NavigationValidatorService {
         throw new ForbiddenException();
       }
     }
+
+    return dbNavigation;
   }
 
   /**
@@ -133,7 +135,7 @@ export class NavigationValidatorService {
    * Valid navigation business rules.
    * 
    * @param navigationDto The navigation to insert or update.
-   * @param navigationId The navigation id (optional).
+   * @param dbNavigation The navigation from database (optional).
    * @throws {NotFoundException} If `navigationDto.parentGroupId` is not found in the database.
    * @throws {NotFoundException} If `navigationDto.navigationTypeId` is not found in the database.
    * @throws {BadRequestException} If `navigationDto` type is a button and parent is not a menu or a redirect-button.
@@ -145,7 +147,7 @@ export class NavigationValidatorService {
    */
   async validNavigationDto(
     navigationDto: UpdateNavigationDto,
-    navigationId?: string
+    dbNavigation?: Navigation
   ) {
     if (navigationDto.parentGroupId) {
       let parentNavigation = await this._navigationRepository.findOne({
@@ -207,19 +209,13 @@ export class NavigationValidatorService {
       
       if (navigationDto.displayLabel) {
         navigationDto['name'] = navigationDto.displayLabel?.toLowerCase()?.replace(/ /g, "-");
-        
-        const sisterNavigations = parentNavigation.children.filter(child => child.id !== navigationId);
+        const sisterNavigations = parentNavigation.children.filter(child => child.groupId !== dbNavigation?.groupId);
         if (sisterNavigations?.find(navigation => navigation.name ===  navigationDto['name'])) {
           throw new BadRequestException('A sister navigation has already this name.');
         }
       }
 
-      if (navigationId) {
-        const dbNavigation = await this._navigationRepository.findOneBy({ id: navigationId });
-        if (!dbNavigation) {
-          throw new NotFoundException(`Navigation with id ${navigationId} is not found.`);
-        }
-
+      if (dbNavigation) {
         if (dbNavigation.groupId === navigationDto.parentGroupId) {
           throw new BadRequestException('Parent cannot be same navigation');
         }

@@ -772,8 +772,6 @@ export class NavigationService {
         id, isDraft, createdDate, createdBy, menu, containerLayout, containerStyle, typographyStyle,
         ...navigationPropertiesToUpdate 
       } = navigationDraftRecord!;
-      console.log('NAVIGATINO DRAFT', navigationDraftRecord);
-      console.log('NAVIGATINO DRAFT PROPERTIES', navigationPropertiesToUpdate);
 
       navigationPropertiesToUpdate.unpublishedChanges = [];
       navigationPropertiesToUpdate.updatedBy = userId;

@@ -54,12 +54,12 @@ export class NavigationController {
     @UserId() userId: string,
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    await this._navigationValidatorService.validEditPermission(
+    const dbNavigation = await this._navigationValidatorService.validEditPermission(
       id,
       updateNavigationDto,
       userNavigationPermissions
     );
-    await this._navigationValidatorService.validNavigationDto(updateNavigationDto, id);
+    await this._navigationValidatorService.validNavigationDto(updateNavigationDto, dbNavigation);
     return this._navigationService.updateNavigation(id, updateNavigationDto, userId);
   }
 
