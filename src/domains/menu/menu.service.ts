@@ -219,7 +219,7 @@ export class MenuService {
     let relationsFormatted: Array<string> = relations;
     
     if (refId !== navigation.id) {
-      relationsFormatted = relations.map(relation => `menu.${relation}`);
+      relationsFormatted = ['menu'];
     }
 
     await this._navigationService.markDirty(navigation, relationsFormatted);

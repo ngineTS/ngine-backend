@@ -440,11 +440,18 @@ export class NavigationService {
     /* 1 */
     createNavigationDto['isDraft'] = true;
     createNavigationDto['groupId'] = uuidv4();
-    createNavigationDto['unpublishedChanges'] = ['all'];
+    createNavigationDto['unpublishedChanges'] = ['navigation'];
     createNavigationDto['createdBy'] = userId;
     createNavigationDto['createdDate'] = new Date();
     createNavigationDto['updatedBy'] = userId;
     createNavigationDto['updatedDate'] = new Date();
+
+    const menuButtonNavigationType = await this._navigationTypeRepository.findOne({
+      where: { name: 'menu-button' }
+    });
+    if (createNavigationDto.navigationTypeId === menuButtonNavigationType!.id) {
+      createNavigationDto['unpublishedChanges'].push('menu');
+    }
     const navigationSaved = await this._navigationRepository.save(createNavigationDto);
 
     /* 2. */
@@ -453,9 +460,6 @@ export class NavigationService {
     await this._typographyStyleService.createObjectDefaultTypographyStyle(navigationSaved.id);
 
     /* 3. */
-    const menuButtonNavigationType = await this._navigationTypeRepository.findOne({
-      where: { name: 'menu-button' }
-    });
     if (navigationSaved.navigationTypeId === menuButtonNavigationType!.id) {
       const menuSaved = await this._menuService.createMenu(navigationSaved.id);
       await this._containerLayoutService.createObjectContainerLayout({ refId: menuSaved.id });
@@ -681,11 +685,13 @@ export class NavigationService {
 
     /* CASE 1 */
     if (navigations.length === 1) {
-      let { id: _, ...navigationPublishedRecord } = navigations[0];
+      let { id: _, containerLayout, containerStyle, typographyStyle, menu, ...navigationPublishedRecord } = navigations[0];
       navigationPublishedRecord.isDraft = false;
       navigationPublishedRecord.unpublishedChanges = [];
-      navigationPublishedRecord.updatedBy = userId;
-      navigationPublishedRecord.updatedDate = new Date();
+      navigationPublishedRecord.createdBy = userId;
+      navigationPublishedRecord.createdDate = new Date();
+      navigationPublishedRecord.updatedBy = navigationPublishedRecord.createdBy;
+      navigationPublishedRecord.updatedDate = navigationPublishedRecord.createdDate;
       const navigationPublishedRecordId = (await this._navigationRepository.save(navigationPublishedRecord)).id;
       
       let { id: __, ...containerLayoutPublishRecord } = navigations[0].containerLayout;
@@ -711,10 +717,6 @@ export class NavigationService {
         let { id: __, ...menuContainerStylePublishRecord } = navigations[0].menu.containerStyle;
         menuContainerStylePublishRecord.refId = menuPublishedRecordId;
         await this._containerStyleService.createObjectContainerStyle(menuContainerStylePublishRecord);
-
-        let { id: ___, ...menuTypographyStylePublishRecord } = navigations[0].menu.typographyStyle;
-        menuTypographyStylePublishRecord.refId = menuPublishedRecordId;
-        await this._typographyStyleService.createObjectTypographyStyle(menuTypographyStylePublishRecord);
       }
 
       await this._navigationRepository.update(navigations[0].id, { unpublishedChanges: [] });
@@ -741,29 +743,38 @@ export class NavigationService {
           await this._typographyStyleService.updateByRefId(navigationPublishedRecord.id, typographyStylePropertiesToUpdate);
         }
 
-        if (navigationPublishedRecord.menu && navigationDraftRecord.menu) {
-          if (relation === 'menu') {
-            await this._menuService.updateMenu(navigationPublishedRecord.menu.id, navigationDraftRecord.menu.isVertical);
-          }
+          if (relation === 'menu' && navigationDraftRecord.menu) {
+            // if no menu for publish record, we have to create it
+            if (!navigationPublishedRecord.menu) {
+              const menuPublishedRecordId = (await this._menuService.createMenu(navigationPublishedRecord.id, navigationDraftRecord.menu.isVertical)).id;
 
-          if (relation === 'menu.containerLayout') {
-            const { id, refId, ...containerLayoutPropertiesToUpdate} = navigationDraftRecord.menu.containerLayout;
-            await this._containerLayoutService.updateByRefId(navigationPublishedRecord.menu.id, containerLayoutPropertiesToUpdate);
-          }
+              let { id: _, ...menuContainerLayoutPublishRecord } = navigationDraftRecord.menu.containerLayout;
+              menuContainerLayoutPublishRecord.refId = menuPublishedRecordId;
+              await this._containerLayoutService.createObjectContainerLayout(menuContainerLayoutPublishRecord);
 
-          if (relation === 'menu.containerStyle') {
-            const { id, refId, ...containerStylePropertiesToUpdate} = navigationDraftRecord.menu.containerStyle;
-            await this._containerLayoutService.updateByRefId(navigationPublishedRecord.menu.id, containerStylePropertiesToUpdate);
-          }
+              let { id: __, ...menuContainerStylePublishRecord } = navigationDraftRecord.menu.containerStyle;
+              menuContainerStylePublishRecord.refId = menuPublishedRecordId;
+              await this._containerStyleService.createObjectContainerStyle(menuContainerStylePublishRecord);
+            }
+            // if menu exists for publish record, we have to update it
+            else {
+              const { id: _, refId: _r, ...containerLayoutPropertiesToUpdate} = navigationDraftRecord.menu.containerLayout;
+              await this._containerLayoutService.updateByRefId(navigationPublishedRecord.menu.id, containerLayoutPropertiesToUpdate);
 
-          if (relation === 'menu.typographyStyle') {
-            const { id, refId, ...typographyStylePropertiesToUpdate} = navigationDraftRecord.menu.typographyStyle;
-            await this._containerLayoutService.updateByRefId(navigationPublishedRecord.menu.id, typographyStylePropertiesToUpdate);
+              const { id: __, refId: _r2, ...containerStylePropertiesToUpdate} = navigationDraftRecord.menu.containerStyle;
+              await this._containerStyleService.updateByRefId(navigationPublishedRecord.menu.id, containerStylePropertiesToUpdate);
+            }
           }
         }
-      }
+      
 
-      let { id, isDraft, ...navigationPropertiesToUpdate } = navigationDraftRecord!;
+      let {
+        id, isDraft, createdDate, createdBy, menu, containerLayout, containerStyle, typographyStyle,
+        ...navigationPropertiesToUpdate 
+      } = navigationDraftRecord!;
+      console.log('NAVIGATINO DRAFT', navigationDraftRecord);
+      console.log('NAVIGATINO DRAFT PROPERTIES', navigationPropertiesToUpdate);
+
       navigationPropertiesToUpdate.unpublishedChanges = [];
       navigationPropertiesToUpdate.updatedBy = userId;
       navigationPropertiesToUpdate.updatedDate = new Date();
