@@ -25,7 +25,7 @@ export class MenuController {
     return this._menuService.createNavigationBar(navigation, userId, navigationBarType);
   }
 
-   // /!\ This API is also used to modify navigation style properties, not only menu ones.
+  // /!\ This API is also used to modify navigation style properties, not only menu ones.
   @Patch(':refId')
   async updateStyleProperties(
     @Param('refId') refId: string,
@@ -35,4 +35,16 @@ export class MenuController {
     const navigation = await this._menuValidatorService.validPermissionToUpdateStyle(refId, userNavigationPermissions);
     return this._menuService.updateStyleProperties(navigation, refId, updateMenuDto);
   }
+
+  @Patch('default/:refId')
+  async updateDefaultStyleProperties(
+    @Param('refId') refId: string,
+    @Body() updateDefaultStyleDto: UpdateMenuDto,
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
+  ) {
+    await this._menuValidatorService.validPermissionToUpdateDefaultStyle(userNavigationPermissions);
+    return this._menuService.updateDefaultStyleProperties(refId, updateDefaultStyleDto);
+  }
+
+
 }

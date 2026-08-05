@@ -107,4 +107,20 @@ export class MenuValidatorService {
     return navigation;
   }
 
+  /**
+   * Valid permission to update default style.
+   * 
+   * User must have global edit permission to edit default style of the application.
+   * 
+   * @param userNavigationPermissions The user navigation permissions.
+   */
+  async validPermissionToUpdateDefaultStyle(userNavigationPermissions: NavigationPermissions) {
+    if (
+      !userNavigationPermissions.find(obj => obj.navigationGroupId === '00000000-0000-0000-0000-000000000000')
+        ?.permissionName.includes('edit')
+    ) {
+      throw new ForbiddenException();
+    }
+  }
+
 }

@@ -225,4 +225,44 @@ export class MenuService {
     await this._navigationService.markDirty(navigation, relationsFormatted);
   }
 
+  /**
+   * Update default container style and typography style.
+   */
+  async updateDefaultStyleProperties(defaultRefId: string, updateDefaultStyleDto: UpdateMenuDto) {
+    const affectedRelations: { [prop: string]: number | undefined } = {
+      affectedContainerLayout: 0,
+      affectedContainerStyle: 0,
+      affectedTypographyStyle: 0
+    }
+
+    if (updateDefaultStyleDto['containerStyle']) {
+      const updateContainerStyleResponse = await this._containerStyleService.updateByRefId(
+        defaultRefId, 
+        updateDefaultStyleDto['containerStyle']
+      );
+
+      if (updateContainerStyleResponse.affected === 0) {
+        throw new NotFoundException('No container style associated tho this menu id has been found.');
+      }
+
+      affectedRelations.affectedContainerStyle = updateContainerStyleResponse.affected;
+    }
+
+    if (updateDefaultStyleDto['typographyStyle']) {
+      const updateTypographyStyleResponse = await this._typographyStyleService.updateByRefId(
+        defaultRefId, 
+        updateDefaultStyleDto['typographyStyle']
+      );
+
+      if (updateTypographyStyleResponse.affected === 0) {
+        throw new NotFoundException('No typography style associated tho this menu id has been found.');
+      }
+
+      affectedRelations.affectedTypographyStyle = updateTypographyStyleResponse.affected;
+    }
+
+    return affectedRelations;
+  }
+
+
 }
