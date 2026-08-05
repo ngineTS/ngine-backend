@@ -440,7 +440,7 @@ export class NavigationService {
     /* 1 */
     createNavigationDto['isDraft'] = true;
     createNavigationDto['groupId'] = uuidv4();
-    createNavigationDto['unpublishedChanges'] = ['navigation'];
+    createNavigationDto['unpublishedChanges'] = ['all'];
     createNavigationDto['createdBy'] = userId;
     createNavigationDto['createdDate'] = new Date();
     createNavigationDto['updatedBy'] = userId;
@@ -606,7 +606,7 @@ export class NavigationService {
     /* 3. */
     const parentNavigation = await this._navigationRepository.findOne({
       where: { 
-        id: navigation.parentGroupId,
+        groupId: navigation.parentGroupId,
         deletedDate: IsNull(),
       },
       relations: ['children', 'menu']
@@ -662,26 +662,7 @@ export class NavigationService {
    * @throws {NotFoundException} If no navigation found for this group id.
    */
   async publishNavigation(navigationGroupId: string, userId: string) {
-    const navigations = await this._navigationRepository.find({
-      relations: [
-        'containerLayout',
-        'containerStyle',
-        'typographyStyle',
-        'menu',
-        'menu.containerLayout',
-        'menu.containerStyle',
-        'menu.typographyStyle'
-      ],
-      take: 2, //only 2 navigations by groupId so improve query performance
-      where: {
-        groupId: navigationGroupId,
-        deletedDate: IsNull()
-      }
-    });
-
-    if (navigations.length === 0) {
-      throw new NotFoundException(`No navigations found for groupId: ${navigationGroupId}`);
-    }
+    const navigations = await this.getNavigationsByGroupId(navigationGroupId);
 
     /* CASE 1 */
     if (navigations.length === 1) {
@@ -743,30 +724,29 @@ export class NavigationService {
           await this._typographyStyleService.updateByRefId(navigationPublishedRecord.id, typographyStylePropertiesToUpdate);
         }
 
-          if (relation === 'menu' && navigationDraftRecord.menu) {
-            // if no menu for publish record, we have to create it
-            if (!navigationPublishedRecord.menu) {
-              const menuPublishedRecordId = (await this._menuService.createMenu(navigationPublishedRecord.id, navigationDraftRecord.menu.isVertical)).id;
+        if (relation === 'menu' && navigationDraftRecord.menu) {
+          // if no menu for publish record, we have to create it
+          if (!navigationPublishedRecord.menu) {
+            const menuPublishedRecordId = (await this._menuService.createMenu(navigationPublishedRecord.id, navigationDraftRecord.menu.isVertical)).id;
 
-              let { id: _, ...menuContainerLayoutPublishRecord } = navigationDraftRecord.menu.containerLayout;
-              menuContainerLayoutPublishRecord.refId = menuPublishedRecordId;
-              await this._containerLayoutService.createObjectContainerLayout(menuContainerLayoutPublishRecord);
+            let { id: _, ...menuContainerLayoutPublishRecord } = navigationDraftRecord.menu.containerLayout;
+            menuContainerLayoutPublishRecord.refId = menuPublishedRecordId;
+            await this._containerLayoutService.createObjectContainerLayout(menuContainerLayoutPublishRecord);
 
-              let { id: __, ...menuContainerStylePublishRecord } = navigationDraftRecord.menu.containerStyle;
-              menuContainerStylePublishRecord.refId = menuPublishedRecordId;
-              await this._containerStyleService.createObjectContainerStyle(menuContainerStylePublishRecord);
-            }
-            // if menu exists for publish record, we have to update it
-            else {
-              const { id: _, refId: _r, ...containerLayoutPropertiesToUpdate} = navigationDraftRecord.menu.containerLayout;
-              await this._containerLayoutService.updateByRefId(navigationPublishedRecord.menu.id, containerLayoutPropertiesToUpdate);
+            let { id: __, ...menuContainerStylePublishRecord } = navigationDraftRecord.menu.containerStyle;
+            menuContainerStylePublishRecord.refId = menuPublishedRecordId;
+            await this._containerStyleService.createObjectContainerStyle(menuContainerStylePublishRecord);
+          }
+          // if menu exists for publish record, we have to update it
+          else {
+            const { id: _, refId: _r, ...containerLayoutPropertiesToUpdate } = navigationDraftRecord.menu.containerLayout;
+            await this._containerLayoutService.updateByRefId(navigationPublishedRecord.menu.id, containerLayoutPropertiesToUpdate);
 
-              const { id: __, refId: _r2, ...containerStylePropertiesToUpdate} = navigationDraftRecord.menu.containerStyle;
-              await this._containerStyleService.updateByRefId(navigationPublishedRecord.menu.id, containerStylePropertiesToUpdate);
-            }
+            const { id: __, refId: _r2, ...containerStylePropertiesToUpdate } = navigationDraftRecord.menu.containerStyle;
+            await this._containerStyleService.updateByRefId(navigationPublishedRecord.menu.id, containerStylePropertiesToUpdate);
           }
         }
-      
+      }
 
       let {
         id, isDraft, createdDate, createdBy, menu, containerLayout, containerStyle, typographyStyle,
@@ -802,5 +782,112 @@ export class NavigationService {
       navigation.id,
       { unpublishedChanges: [...setOfFields] },
     );
+  }
+
+  /**
+   * Retrieve navigations by their group id.
+   *  
+   * @param navigationGroupId The navigation group id.
+   * @returns A promise of an array of 1 or 2 navigations.
+   * @throws {NotFoundException} If no navigations found for this group id.
+   */
+  async getNavigationsByGroupId(navigationGroupId: string) {
+    const navigations = await this._navigationRepository.find({
+      relations: [
+        'containerLayout',
+        'containerStyle',
+        'typographyStyle',
+        'menu',
+        'menu.containerLayout',
+        'menu.containerStyle',
+        'menu.typographyStyle',
+      ],
+      take: 2, //only 2 navigations by groupId so improve query performance
+      where: {
+        groupId: navigationGroupId,
+        deletedDate: IsNull()
+      }
+    });
+
+    if (navigations.length === 0) {
+      throw new NotFoundException(`No navigations found for groupId: ${navigationGroupId}`);
+    }
+
+    return navigations;
+  }
+
+
+  /**
+   * Cancel navigation changes.
+   * 
+   * Items that haven't been published yet cannot be cancelled.
+   * 
+   * @param navigationGroupId The navigation group id.
+   * @param userId The user id from request.
+   * @return A promise of the draft navigation where changes have been cancelled.
+   * @throws {BadRequestException} if draft record or published record is not found.
+   */
+  async cancelNavigationChanges(
+    navigationGroupId: string,
+    userId: string
+  ): Promise<Navigation | null> {
+    const navigations = await this.getNavigationsByGroupId(navigationGroupId);
+    const navigationPublishedRecord = navigations.find(obj => obj.isDraft === false);
+    const navigationDraftRecord = navigations.find(obj => obj.isDraft === true);
+
+    if (!navigationDraftRecord) {
+      throw new BadRequestException('Navigation draft record not found.');
+    }
+
+    if (!navigationPublishedRecord) {
+      throw new BadRequestException('An item which has never been published cannot be canceled. You have to delete it.');
+    }
+
+    for (let relation of navigationDraftRecord!.unpublishedChanges) {
+      if (relation === 'containerLayout') {
+        const { id, refId, ...containerLayoutPropertiesToUpdate} = navigationPublishedRecord.containerLayout;
+        await this._containerLayoutService.updateByRefId(navigationDraftRecord.id, containerLayoutPropertiesToUpdate);
+      }
+
+      if (relation === 'containerStyle') {
+        const { id, refId, ...containerStylePropertiesToUpdate} = navigationPublishedRecord.containerStyle;
+        await this._containerStyleService.updateByRefId(navigationDraftRecord.id, containerStylePropertiesToUpdate);
+      }
+
+      if (relation === 'typographyStyle') {
+        const { id, refId, ...typographyStylePropertiesToUpdate} = navigationPublishedRecord.typographyStyle;
+        await this._typographyStyleService.updateByRefId(navigationDraftRecord.id, typographyStylePropertiesToUpdate);
+      }
+
+      if (relation === 'menu' && navigationDraftRecord.menu && navigationPublishedRecord.menu) {
+        const { id: _, refId: _r, ...containerLayoutPropertiesToUpdate } = navigationPublishedRecord.menu.containerLayout;
+        await this._containerLayoutService.updateByRefId(navigationDraftRecord.menu.id, containerLayoutPropertiesToUpdate);
+
+        const { id: __, refId: _r2, ...containerStylePropertiesToUpdate } = navigationPublishedRecord.menu.containerStyle;
+        await this._containerStyleService.updateByRefId(navigationDraftRecord.menu.id, containerStylePropertiesToUpdate);
+      }
+    }
+
+    let {
+      id, isDraft, createdDate, createdBy, menu, containerLayout, containerStyle, typographyStyle,
+      ...navigationPropertiesToUpdate 
+    } = navigationPublishedRecord;
+
+    navigationPropertiesToUpdate.unpublishedChanges = [];
+    navigationPropertiesToUpdate.updatedBy = userId;
+    navigationPropertiesToUpdate.updatedDate = new Date();
+    await this._navigationRepository.update(navigationDraftRecord.id, navigationPropertiesToUpdate);
+
+    return this._navigationRepository.findOne({
+      where: { id: navigationDraftRecord.id },
+      relations: [
+        'containerLayout',
+        'containerStyle',
+        'typographyStyle',
+        'menu',
+        'menu.containerLayout',
+        'menu.containerStyle'
+      ]
+    });    
   }
 }
