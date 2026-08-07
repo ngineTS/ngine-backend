@@ -26,7 +26,7 @@ export class FileManagementController {
     return this.fileManagementService.uploadFile(file, userId);
   }
  
-  @SkipThrottle({ short: true })
+  @SkipThrottle({ short: true, medium: true, long: true })
   @Get(':fileName')
   getFile(
     @Param('fileName') fileName: string,

@@ -103,7 +103,7 @@ import { APP_GUARD } from '@nestjs/core';
       {
         name: 'medium',
         ttl: 10000, // 10 seconds
-        limit: 20,
+        limit: 25,
       },
       {
         name: 'long',
