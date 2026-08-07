@@ -98,7 +98,7 @@ import { APP_GUARD } from '@nestjs/core';
       {
         name: 'short',
         ttl: 1000, // 1 second
-        limit: 3,  // 3 requests per second
+        limit: 5,  // 5 requests per second
       },
       {
         name: 'medium',
