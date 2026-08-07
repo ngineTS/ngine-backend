@@ -661,7 +661,10 @@ export class NavigationService {
    * @param userId The user id of the request.
    * @throws {NotFoundException} If no navigation found for this group id.
    */
-  async publishNavigation(navigationGroupId: string, userId: string) {
+  async publishNavigation(
+    navigationGroupId: string,
+    userId: string
+  ): Promise<{ message: string; }> {
     const navigations = await this.getNavigationsByGroupId(navigationGroupId);
 
     /* CASE 1 */

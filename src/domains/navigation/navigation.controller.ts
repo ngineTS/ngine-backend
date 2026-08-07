@@ -103,6 +103,24 @@ export class NavigationController {
     return this._navigationService.publishNavigation(navigationGroupId, userId);
   }
 
+  @Post('publish-all')
+  async publishAllNavigations(
+    @Body() navigationGroupIds: Array<string>,
+    @UserId() userId: string,
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
+  ) {
+    for (const groupId of navigationGroupIds) {
+      this._navigationValidatorService.validPublishPermission(
+        groupId,
+        userNavigationPermissions
+      );
+
+      this._navigationService.publishNavigation(groupId, userId);
+    }
+
+    return { message: 'Navigations published succesfully.'}
+  }
+
   @Get('cancel/:navigationGroupId')
   async cancelNavigationChanges(
     @Param('navigationGroupId') navigationGroupId: string,
