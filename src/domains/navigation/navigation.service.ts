@@ -529,16 +529,32 @@ export class NavigationService {
    * Update Array of navigations.
    * 
    * @param navigations The array of navigations.
-   * @param userId: The user id from request.
+   * @param userId The user id from request.
    * @returns The array of navigations saved.
    */
-  async updateNavigations(navigations: Array<Navigation>, userId: string) {
-    navigations.forEach(navigation => {
-      navigation["updatedBy"] = userId;
-      navigation["updatedDate"] = new Date();
-    });
-    
-    return await this._navigationRepository.save(navigations);
+  async updateNavigations(
+    navigations: Array<{
+      groupId: string;
+      order: number;
+    }>,
+    userId: string,
+  ): Promise<{ message: string }> {
+    await Promise.all(
+      navigations.map(async (navigation) => {
+        const navigationToUpdate = {
+          ...navigation,
+          updatedBy: userId,
+          updatedDate: new Date(),
+        };
+
+        this._navigationRepository.update(
+          { groupId: navigation.groupId },
+          navigationToUpdate,
+        );
+      }),
+    );
+
+    return { message: 'Navigations updated successfully.' };
   }
 
   /**
@@ -556,7 +572,7 @@ export class NavigationService {
    * @returns The Array of navigations that have been soft deleted.
    */
   async removeNavigation(navigation: Navigation, userId: string) {
-    /* 1. */
+    /* 1. Retrieve recursively children and related menu to delete.*/
     const navigationGroupIds: Array<string> = [];
     const navigationRecordsToDelete: Array<Pick<Navigation, 'id' | 'deletedBy' | 'deletedDate'>> = [];
     const menuIdsToDelete: Array<string> = [];
@@ -567,6 +583,7 @@ export class NavigationService {
       // get 'draft' and 'publish' record for given navigation group id and store group id.
       const draftAndPublishNavigations = await this._navigationRepository.find({
         take: 2,
+        relations: ['menu'],
         where: { groupId: navigation.groupId }
       });
       navigationGroupIds.push(navigation.groupId);
@@ -579,9 +596,8 @@ export class NavigationService {
           deletedDate: new Date()
         });
 
-        const menu = await this._menuService.findOneByNavigationId(nav.id);
-        if (menu) {
-          menuIdsToDelete.push(menu.id);
+        if (nav.menu) {
+          menuIdsToDelete.push(nav.menu.id);
         }
 
         //apply process for children
@@ -595,7 +611,7 @@ export class NavigationService {
     /* call method */
     await getDeepNavigationIds(navigation);
 
-    /* 2. */
+    /* 2. Soft delete navigations, descendants and delete related style properties. */
     const navigationsSoftDeleted = await this._navigationRepository.save(navigationRecordsToDelete);
     for (const navigation of navigationRecordsToDelete) {
       await this._containerLayoutService.deleteByRefId(navigation.id);
@@ -603,23 +619,28 @@ export class NavigationService {
       await this._typographyStyleService.deleteByRefId(navigation.id);
     }
     
-    /* 3. */
-    const parentNavigation = await this._navigationRepository.findOne({
+    /* 3. Check if parent navigation has a menu and remains without children. If yes retrieve menu to delete. */
+    const parentNavigationDraftAndPublishRecords = await this._navigationRepository.find({
+      take: 2,
       where: { 
         groupId: navigation.parentGroupId,
         deletedDate: IsNull(),
       },
       relations: ['children', 'menu']
     });
+
     if (
-      parentNavigation
-      && parentNavigation.children?.filter(obj => !obj.deletedDate).length === 0
-      && parentNavigation.menu
+      parentNavigationDraftAndPublishRecords
+      && parentNavigationDraftAndPublishRecords[0].children.filter(obj => !obj.deletedDate).length === 0
     ) {
-      menuIdsToDelete.push(parentNavigation.menu.id);
+      for (const parentNavigation of parentNavigationDraftAndPublishRecords) {
+        if (parentNavigation.menu) {
+          menuIdsToDelete.push(parentNavigation.menu.id);
+        }
+      }
     }
 
-    /* 4. */
+    /* 4. Delete menus retrieved on step 2 & 4 and delete style properties. */
     for (const id of menuIdsToDelete) {
       await this._menuService.remove(id);
       await this._containerLayoutService.deleteByRefId(id);
@@ -627,7 +648,7 @@ export class NavigationService {
       await this._typographyStyleService.deleteByRefId(id);
     }
 
-    /* 5. */
+    /* 5. Delete roleNavigationPermissions associated to navigations deleted. */
     const roleNavigationsPermissions = await this._roleNavigationPermissionRepository.find({
       where: { navigationGroupId: In(navigationGroupIds) }
     })
@@ -637,7 +658,7 @@ export class NavigationService {
     }
     await this._roleNavigationPermissionRepository.save(roleNavigationsPermissions);
     
-    /* 6. */ 
+    /* 6. Return number of navigation soft deleted. */
     return { affected: navigationsSoftDeleted.length }
   }
 
