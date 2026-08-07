@@ -4,6 +4,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { UserId } from 'src/core/decorators/user.decorator';
 import { FileUploadValidatorService } from './file-upload-validator';
 import { Response } from 'express';
+import { SkipThrottle } from '@nestjs/throttler';
 
 
 @Controller('file-management')
@@ -25,6 +26,7 @@ export class FileManagementController {
     return this.fileManagementService.uploadFile(file, userId);
   }
  
+  @SkipThrottle({ short: true })
   @Get(':fileName')
   getFile(
     @Param('fileName') fileName: string,
