@@ -44,6 +44,9 @@ import { ContainerStyleModule } from './domains/container-style/container-style.
 import { TypographyStyleModule } from './domains/typography-style/typography-style.module';
 import { AppSettingModule } from './domains/app-setting/app-setting.module';
 import { AppSetting } from './domains/app-setting/entities/app-setting.entity';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+
 
 
 @Module({
@@ -91,6 +94,23 @@ import { AppSetting } from './domains/app-setting/entities/app-setting.entity';
         AppSetting
       ]
     }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000, // 1 second
+        limit: 3,  // 3 requests per second
+      },
+      {
+        name: 'medium',
+        ttl: 10000, // 10 seconds
+        limit: 20,
+      },
+      {
+        name: 'long',
+        ttl: 60000, // 1 minute
+        limit: 100,
+      },
+    ]),
     NavigationModule,
     NavigationTypeModule,
     QuillEditorModule,
@@ -114,6 +134,12 @@ import { AppSetting } from './domains/app-setting/entities/app-setting.entity';
     AppSettingModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+     {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
