@@ -842,9 +842,12 @@ export class NavigationService {
 
 
   /**
-   * Cancel navigation changes.
+   * Cancel navigation changes and return it.
    * 
-   * Items that haven't been published yet cannot be cancelled.
+   * 1. Get navigation draft and published versions from database.
+   * 2. Update draft navigation relations (style and menu) with published ones.
+   * 3. Update draft navigation properties with published ones.
+   * 4. Return draft navigation updated.
    * 
    * @param navigationGroupId The navigation group id.
    * @param userId The user id from request.
@@ -855,18 +858,18 @@ export class NavigationService {
     navigationGroupId: string,
     userId: string
   ): Promise<Navigation | null> {
+    /* 1. */
     const navigations = await this.getNavigationsByGroupId(navigationGroupId);
     const navigationPublishedRecord = navigations.find(obj => obj.isDraft === false);
     const navigationDraftRecord = navigations.find(obj => obj.isDraft === true);
-
     if (!navigationDraftRecord) {
       throw new BadRequestException('Navigation draft record not found.');
     }
-
     if (!navigationPublishedRecord) {
       throw new BadRequestException('An item which has never been published cannot be canceled. You have to delete it.');
     }
 
+    /* 2. */
     for (let relation of navigationDraftRecord!.unpublishedChanges) {
       if (relation === 'containerLayout') {
         const { id, refId, ...containerLayoutPropertiesToUpdate} = navigationPublishedRecord.containerLayout;
@@ -892,16 +895,17 @@ export class NavigationService {
       }
     }
 
+    /* 3. */
     let {
       id, isDraft, createdDate, createdBy, menu, containerLayout, containerStyle, typographyStyle,
       ...navigationPropertiesToUpdate 
     } = navigationPublishedRecord;
-
     navigationPropertiesToUpdate.unpublishedChanges = [];
     navigationPropertiesToUpdate.updatedBy = userId;
     navigationPropertiesToUpdate.updatedDate = new Date();
     await this._navigationRepository.update(navigationDraftRecord.id, navigationPropertiesToUpdate);
 
+    /* 4. */
     return this._navigationRepository.findOne({
       where: { id: navigationDraftRecord.id },
       relations: [
