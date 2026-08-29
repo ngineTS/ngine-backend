@@ -69,7 +69,7 @@ export class NavigationService {
    * 
    * @param userId The user id from the request.
    * @param userEmail The user email from the request.
-   * @param maxDepth The maximum depth to load (default 8).
+   * @param maxDepth The maximum depth to load.
    * @returns Nested navigation tree with permissions and optional access token.
    */
   async loadNestedNavigations(
@@ -82,10 +82,10 @@ export class NavigationService {
 
     // 2. Initialize root and load all levels
     const root = await this.loadRootNavigation(userRoleNavigationPermissionsFormatted);
-    const allLevels = await this.loadNavigationLevels(root, maxDepth, userRoleNavigationPermissionsFormatted);
+    await this.loadNavigationLevels(root, maxDepth, userRoleNavigationPermissionsFormatted);
 
     // 3. Cleanup invalid nodes and collect permissions in a single pass
-    const userNavigationPermissions = this.cleanupAndCollectPermissions(allLevels);
+    const userNavigationPermissions = this.cleanupAndCollectPermissions(root);
 
     // 4. Create auth token with user navigation permissions.
     const payload = {
@@ -153,15 +153,13 @@ export class NavigationService {
    * @param root The root navigation.
    * @param maxDepth Maximum depth to load.
    * @param userRoleNavigationPermissions User's role navigation permissions.
-   * @returns Array of levels containing navigations.
    */
   private async loadNavigationLevels(
     root: Navigation,
     maxDepth: number,
     userRoleNavigationPermissions: RoleNavigationPermission[]
-  ): Promise<Navigation[][]> {
+  ) {
     let currentLevel = [root];
-    const allLevels: Navigation[][] = [[root]];
 
     for (let depth = 0; depth < maxDepth; depth++) {
       if (currentLevel.length === 0) break;
@@ -187,7 +185,7 @@ export class NavigationService {
 
       if (nextLevel.length === 0) break;
 
-      // 2. Setup permissions on next level of navigations and build children map
+      // 2. Setup permissions on next level of navigations and build Record<parentId, children>.
       const childrenMap = this.buildChildrenMapWithPermissions(
         nextLevel,
         currentLevel,
@@ -201,10 +199,7 @@ export class NavigationService {
       });
 
       currentLevel = nextLevel;
-      allLevels.push(currentLevel);
     }
-
-    return allLevels;
   }
 
   /**
@@ -212,7 +207,7 @@ export class NavigationService {
    * 
    * 1. Get parent's permission for inheritance.
    * 2. Setup permission for this navigation following the 4 permission cases.
-   * 3. if view permission keep 'publish' record only, if edit permission keep 'draft' record only.
+   * 3. if view permission then keep 'publish' record only, if edit permission then keep 'draft' record only.
    * 
    * @param nextLevel Nodes of the current level to process.
    * @param currentLevel Parent nodes of the next level.
@@ -239,8 +234,8 @@ export class NavigationService {
 
       //3. Keep only 'draft' or 'publish' record
       if (
-        (node['permissionName'].includes('edit') && node.isDraft) ||
-        (!node['permissionName'].includes('edit') && !node.isDraft)
+        (node['permissionName']?.includes('edit') && node.isDraft) ||
+        (!node['permissionName']?.includes('edit') && !node.isDraft)
       ) {
         acc[node.parentGroupId].push(node);
       }
@@ -303,56 +298,43 @@ export class NavigationService {
   /**
    * Iteratively cleanup invalid navigations and collect permissions in a single bottom-up pass.
    * 
-   * Removes nodes that have neither valid permissions nor valid children.
+   * Removes nodes that have no valid permissions an no children with valid `permissions.
    * Collects all valid nodes with permissions for token payload.
    * 
-   * @param allLevels All navigation levels.
+   * @param root The root navigation.
    * @returns Array of navigation permissions for valid nodes.
    */
-  private cleanupAndCollectPermissions(allLevels: Navigation[][]): NavigationPermissions {
+  private cleanupAndCollectPermissions(root: Navigation): NavigationPermissions {
     const userNavigationPermissions: NavigationPermissions = [];
 
-    const isNodeValid = (node: Navigation): boolean => {
-      const hasValidPermission = node['permissionName'];
-      const isViewOnlyAndDisabled = !node['permissionName']?.includes('add') && node.isDisabled;
-      const hasValidChildren = node.children && node.children.length > 0;
-      return (hasValidPermission || hasValidChildren) && !isViewOnlyAndDisabled;
+    const isViewOnlyAndDisabled = (node: Navigation): boolean => {
+      return !node['permissionName']?.includes('add') && node.isDisabled;
     };
 
-    // Bottom-up pass: cleanup and collect permissions
-    for (let i = allLevels.length - 1; i > 0; i--) {
-      const level = allLevels[i];
-      for (let j = level.length - 1; j >= 0; j--) {
-        const node = level[j];
-        if (!isNodeValid(node)) {
-          // Remove from parent's children
-          const parentLevel = allLevels[i - 1];
-          const parent = parentLevel.find(p => p.groupId === node.parentGroupId);
-          if (parent) {
-            parent.children = parent.children.filter(c => c.id !== node.id);
-          }
-          level.splice(j, 1);
-        }
-        // Collect valid nodes with permissions on-the-fly
-        else if (node['permissionName']) {
-          userNavigationPermissions.push({
-            navigationGroupId: node.groupId,
-            permissionName: node['permissionName'],
-            navigationTypeName: node.navigationType.name
-          });
-        }
-      }
-    }
+    // Post-order prune: keep node if it has a valid permission or any descendant does.
+    const prune = (node: Navigation): boolean => {
+      if (!node) return false;
+      if (!node.children) node.children = [];
 
-    // Also collect root if it has permissions
-    const root = allLevels[0][0];
-    if (root && root['permissionName']) {
-      userNavigationPermissions.push({
-        navigationGroupId: root.groupId,
-        permissionName: root['permissionName'],
-        navigationTypeName: root.navigationType.name
-      });
-    }
+      // Recurse into children first
+      node.children = node.children.filter(child => prune(child));
+
+      const hasOwnValidPermission = !!node['permissionName'] && !isViewOnlyAndDisabled(node);
+
+      // Collect permission only if it's a valid permission (not view-only disabled)
+      if (hasOwnValidPermission) {
+        userNavigationPermissions.push({
+          navigationGroupId: node.groupId,
+          permissionName: node['permissionName'],
+          navigationTypeName: node.navigationType?.name
+        });
+      }
+
+      // Node is kept if it has a valid permission or any child was kept
+      return hasOwnValidPermission || node.children.length > 0;
+    };
+
+    prune(root);
 
     return userNavigationPermissions;
   }
