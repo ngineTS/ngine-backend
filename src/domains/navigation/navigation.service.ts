@@ -148,7 +148,8 @@ export class NavigationService {
    * 
    * Until depth or no more navigations:
    * 1. Load next level of navigations.
-   * 2. Setup permissions on next level of navigations and build children map.
+   * 2. Setup permissions on next level of navigations.
+   * 3. Assign next level as children of current level navigations.
    * 
    * @param root The root navigation.
    * @param maxDepth Maximum depth to load.
@@ -185,7 +186,7 @@ export class NavigationService {
 
       if (nextLevel.length === 0) break;
 
-      // 2. Setup permissions on next level of navigations and build Record<parentId, children>.
+      // 2. Setup permissions on next level of navigations and build Record<parentGroupId, children>.
       const childrenMap = this.buildChildrenMapWithPermissions(
         nextLevel,
         currentLevel,
@@ -193,6 +194,7 @@ export class NavigationService {
         depth
       );
 
+      // 3. Assign next level to children of current level navigations.
       currentLevel.forEach(parent => {
         parent['level'] = depth;
         parent.children = childrenMap[parent.groupId] || [];
@@ -209,8 +211,8 @@ export class NavigationService {
    * 2. Setup permission for this navigation following the 4 permission cases.
    * 3. if view permission then keep 'publish' record only, if edit permission then keep 'draft' record only.
    * 
-   * @param nextLevel Nodes of the current level to process.
-   * @param currentLevel Parent nodes of the next level.
+   * @param nextLevel Nodes to process.
+   * @param currentLevel Parent nodes. Needed to get parent permissions.
    * @param userRoleNavigationPermissions User's role navigation permissions.
    * @returns Map of parent IDs to their children.
    */
@@ -296,9 +298,9 @@ export class NavigationService {
   }
 
   /**
-   * Iteratively cleanup invalid navigations and collect permissions in a single bottom-up pass.
+   * Iteratively cleanup invalid navigations and collect permissions at the same time.
    * 
-   * Removes nodes that have no valid permissions an no children with valid `permissions.
+   * Removes nodes that have no valid permissions an no children with valid permissions.
    * Collects all valid nodes with permissions for token payload.
    * 
    * @param root The root navigation.
@@ -319,9 +321,8 @@ export class NavigationService {
       // Recurse into children first
       node.children = node.children.filter(child => prune(child));
 
-      const hasOwnValidPermission = !!node['permissionName'] && !isViewOnlyAndDisabled(node);
-
       // Collect permission only if it's a valid permission (not view-only disabled)
+      const hasOwnValidPermission = !!node['permissionName'] && !isViewOnlyAndDisabled(node);
       if (hasOwnValidPermission) {
         userNavigationPermissions.push({
           navigationGroupId: node.groupId,
