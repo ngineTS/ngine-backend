@@ -22,7 +22,7 @@ export class CustomTableValidatorService {
    */
   async validPermission(
     tableName: string,
-    action: 'view' | 'add' | 'edit' | 'delete',
+    action: 'view' | 'edit' | 'delete',
     userNavigationPermissions: NavigationPermissions
   ) {
     if (action !== 'view') {

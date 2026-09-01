@@ -310,7 +310,7 @@ export class NavigationService {
     const userNavigationPermissions: NavigationPermissions = [];
 
     const isViewOnlyAndDisabled = (node: Navigation): boolean => {
-      return !node['permissionName']?.includes('add') && node.isDisabled;
+      return !node['permissionName']?.includes('edit') && node.isDisabled;
     };
 
     // Post-order prune: keep node if it has a valid permission or any descendant does.

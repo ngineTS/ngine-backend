@@ -60,7 +60,6 @@ export class MenuService {
    * 
    * @param navigation The navigation to associate the navigation bar to.
    * @param userId The user who creates this navigation bar.
-   * @throws {ForbiddenException} If user doesn't have add permission on navigation.
    */
   async createNavigationBar(
     navigation: Navigation,

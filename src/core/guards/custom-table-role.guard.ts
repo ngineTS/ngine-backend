@@ -34,7 +34,7 @@ export class CustomTableRoleGuard implements CanActivate {
         if (
           user.userNavigationPermissions
             .find(obj => obj.navigationGroupId === body.navigationId)?.permissionName
-            ?.includes('add')
+            ?.includes('edit')
         ) {
           return true;
         }

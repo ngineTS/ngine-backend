@@ -81,7 +81,7 @@ export class MenuValidatorService {
    * @param userNavigationPermissions The user navigation permissions.
    * @returns The navigation entity associated to the navigation id.
    * @throws {NotFoundException} If navigation is not found.
-   * @throws {ForbiddenException} If user doesn't have 'add' access on navigation.
+   * @throws {ForbiddenException} If user doesn't have 'edit' access on navigation.
    * @this {ForbiddenException} If navigation is a 'publish' record.
    */
   async validPermissionToCreateNavigationBar(
@@ -99,7 +99,7 @@ export class MenuValidatorService {
 
     if (
       !userNavigationPermissions.find(obj => obj.navigationGroupId === navigation.groupId)
-        ?.permissionName.includes('add')
+        ?.permissionName.includes('edit')
     ) {
       throw new ForbiddenException();
     }

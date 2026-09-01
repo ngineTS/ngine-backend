@@ -23,7 +23,7 @@ export class NavigationValidatorService {
    * 
    * @param createNavigationDto The navigation.
    * @param userNavigationPermissions The user navigation permission from request.
-   * @throws {ForbiddenException} If user doesn't have 'add' permission on parent.
+   * @throws {ForbiddenException} If user doesn't have 'edit' permission on parent.
    */
   validAddPermission(
     createNavigationDto: CreateNavigationDto,
@@ -31,7 +31,7 @@ export class NavigationValidatorService {
   ) {
     if (
       !userNavigationPermissions.find(obj => 
-        obj.navigationGroupId === createNavigationDto.parentGroupId && obj.permissionName.includes('add')
+        obj.navigationGroupId === createNavigationDto.parentGroupId && obj.permissionName.includes('edit')
       )
     ) {
       throw new ForbiddenException();
@@ -45,7 +45,7 @@ export class NavigationValidatorService {
    * @param userNavigationPermissions The user navigation permissions from the request.
    * @param updateNavigationDto The navigation properties to update.
    * @throws {ForbiddenException} If user doesn't have 'edit' permission on navigation.
-   * @throws {ForbiddenException} If parentGroupId is in the request and user doesn't have 'add' permisson on it.
+   * @throws {ForbiddenException} If parentGroupId is in the request and user doesn't have 'edit' permisson on it.
    * @throws {NotFoundException} If navigation id is not found in database.
    */
   async validEditPermission(
@@ -73,9 +73,9 @@ export class NavigationValidatorService {
     }
 
     if ('parentGroupId' in updateNavigationDto && updateNavigationDto.parentGroupId !== dbNavigation.parentGroupId) {
-      if(
+      if (
         !userNavigationPermissions.find(obj => 
-        obj.navigationGroupId === updateNavigationDto.parentGroupId && obj.permissionName.includes('add')
+        obj.navigationGroupId === updateNavigationDto.parentGroupId && obj.permissionName.includes('edit')
       )) {
         throw new ForbiddenException();
       }

@@ -9,7 +9,7 @@ import { DataSource } from 'typeorm';
  * 
  * This role requires the following parameters:
  * - The feature (ex: Calendar. It has to match entity name.)
- * - The permission (or action): view, add, edit or delete
+ * - The permission (or action): view, edit or delete
  * - The navigation or navigation id (if possible)
  * - The navigation type name
  * 
@@ -113,7 +113,7 @@ export class RolesGuard implements CanActivate {
           if (
             user.userNavigationPermissions
               .find(obj => obj.navigationGroupId === body.navigationId)?.permissionName
-              ?.includes('add')
+              ?.includes('edit')
           ) {
             return true;
           }
