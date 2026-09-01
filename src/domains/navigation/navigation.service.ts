@@ -609,11 +609,12 @@ export class NavigationService {
         groupId: navigation.parentGroupId,
         deletedDate: IsNull(),
       },
-      relations: ['children', 'menu']
+      relations: ['children', 'menu', 'navigationType']
     });
 
     if (
       parentNavigationDraftAndPublishRecords
+      && parentNavigationDraftAndPublishRecords[0].navigationType.name !== 'menu-button'
       && parentNavigationDraftAndPublishRecords[0].children.filter(obj => !obj.deletedDate).length === 0
     ) {
       for (const parentNavigation of parentNavigationDraftAndPublishRecords) {
