@@ -22,7 +22,10 @@ export class CustomTableRoleGuard implements CanActivate {
     switch (method) {
 
       case "GET":
-        if (user.userNavigationPermissions?.find(obj => obj.navigationId === params.navigationId)) {
+        if (
+          user.userNavigationPermissions
+            .find(obj => obj.navigationGroupId === params.navigationId)
+        ) {
           return true;
         }
         return false;
@@ -30,8 +33,8 @@ export class CustomTableRoleGuard implements CanActivate {
       case 'POST':
         if (
           user.userNavigationPermissions
-            .find(obj => obj.navigationId === body.navigationId)?.permissionName
-            ?.includes('add')
+            .find(obj => obj.navigationGroupId === body.navigationId)?.permissionName
+            ?.includes('edit')
         ) {
           return true;
         }
@@ -41,7 +44,7 @@ export class CustomTableRoleGuard implements CanActivate {
         const navigationIdPatchCase = await this.findNavigationIdByTableNameAndId(params.tableName, params.id);
         if (
           user.userNavigationPermissions
-            .find(obj => obj.navigationId === navigationIdPatchCase)?.permissionName
+            .find(obj => obj.navigationGroupId === navigationIdPatchCase)?.permissionName
             ?.includes('edit')
         ) {
           return true;
@@ -52,7 +55,7 @@ export class CustomTableRoleGuard implements CanActivate {
         const navigationIdDeleteCase = await this.findNavigationIdByTableNameAndId(params.tableName, params.id);
         if (
           user.userNavigationPermissions
-            .find(obj => obj.navigationId === navigationIdDeleteCase)?.permissionName
+            .find(obj => obj.navigationGroupId === navigationIdDeleteCase)?.permissionName
             ?.includes('delete')
         ) {
           return true;

@@ -22,7 +22,7 @@ export class CustomTableValidatorService {
    */
   async validPermission(
     tableName: string,
-    action: 'view' | 'add' | 'edit' | 'delete',
+    action: 'view' | 'edit' | 'delete',
     userNavigationPermissions: NavigationPermissions
   ) {
     if (action !== 'view') {
@@ -30,13 +30,13 @@ export class CustomTableValidatorService {
         .filter(obj => obj.permissionName.includes(action));
     }
 
-    const navigationIdsRelatedToAction = userNavigationPermissions
-      .map<string>(obj => obj.navigationId);
+    const navigationGroupIdsRelatedToAction = userNavigationPermissions
+      .map<string>(obj => obj.navigationGroupId);
 
     const tableVizRecord = await this._tableVizRepository.findOne({
       where: {
         tableName: tableName,
-        navigationId: In(navigationIdsRelatedToAction)
+        navigationId: In(navigationGroupIdsRelatedToAction)
       }
     });
 

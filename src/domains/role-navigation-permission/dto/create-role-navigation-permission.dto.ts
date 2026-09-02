@@ -8,7 +8,7 @@ export class CreateRoleNavigationPermissionDto {
 
     @IsNotEmpty()
     @IsUUID()
-    navigationId: string;
+    navigationGroupId: string;
 
     @IsNotEmpty()
     @IsUUID()

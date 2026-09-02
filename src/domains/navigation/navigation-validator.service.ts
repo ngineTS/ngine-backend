@@ -23,7 +23,7 @@ export class NavigationValidatorService {
    * 
    * @param createNavigationDto The navigation.
    * @param userNavigationPermissions The user navigation permission from request.
-   * @throws {ForbiddenException} If user doesn't have 'add' permission on parent.
+   * @throws {ForbiddenException} If user doesn't have 'edit' permission on parent.
    */
   validAddPermission(
     createNavigationDto: CreateNavigationDto,
@@ -31,7 +31,7 @@ export class NavigationValidatorService {
   ) {
     if (
       !userNavigationPermissions.find(obj => 
-        obj.navigationId === createNavigationDto.parentId && obj.permissionName.includes('add')
+        obj.navigationGroupId === createNavigationDto.parentGroupId && obj.permissionName.includes('edit')
       )
     ) {
       throw new ForbiddenException();
@@ -45,7 +45,7 @@ export class NavigationValidatorService {
    * @param userNavigationPermissions The user navigation permissions from the request.
    * @param updateNavigationDto The navigation properties to update.
    * @throws {ForbiddenException} If user doesn't have 'edit' permission on navigation.
-   * @throws {ForbiddenException} If parentId is in the request and user doesn't have 'add' permisson on it.
+   * @throws {ForbiddenException} If parentGroupId is in the request and user doesn't have 'edit' permisson on it.
    * @throws {NotFoundException} If navigation id is not found in database.
    */
   async validEditPermission(
@@ -53,29 +53,35 @@ export class NavigationValidatorService {
     updateNavigationDto: UpdateNavigationDto,
     userNavigationPermissions: NavigationPermissions
   ) {
+    const dbNavigation = await this._navigationRepository.findOne({
+      where: { id: id }
+    });
+    if (!dbNavigation) {
+      throw new NotFoundException(`Navigation with id ${id} doesn't exist.`);
+    }
+
+    if (!dbNavigation.isDraft) {
+      throw new ForbiddenException(`'Publish' record cannot be edited.`);
+    }
+
     if (
       !userNavigationPermissions.find(
-        obj => obj.navigationId === id && obj.permissionName.includes('edit')
+        obj => obj.navigationGroupId === dbNavigation.groupId && obj.permissionName.includes('edit')
       )
     ) {
       throw new ForbiddenException();
     }
 
-    const dbNavigation = await this._navigationRepository.findOne({
-      where: { id: id }
-    });
-    if (!dbNavigation) {
-      throw new NotFoundException();
-    }
-
-    if ('parentId' in updateNavigationDto && updateNavigationDto.parentId !== dbNavigation.parentId) {
-      if(
+    if ('parentGroupId' in updateNavigationDto && updateNavigationDto.parentGroupId !== dbNavigation.parentGroupId) {
+      if (
         !userNavigationPermissions.find(obj => 
-        obj.navigationId === updateNavigationDto.parentId && obj.permissionName.includes('add')
+        obj.navigationGroupId === updateNavigationDto.parentGroupId && obj.permissionName.includes('edit')
       )) {
         throw new ForbiddenException();
       }
     }
+
+    return dbNavigation;
   }
 
   /**
@@ -92,7 +98,7 @@ export class NavigationValidatorService {
     navigations.forEach(navigation => {
       if (
         !userNavigationPermissions.find(obj =>
-          obj.navigationId === navigation.id && obj.permissionName.includes('edit')
+          obj.navigationGroupId === navigation.groupId && obj.permissionName.includes('edit')
         )
       ) {
         throw new ForbiddenException();
@@ -114,7 +120,7 @@ export class NavigationValidatorService {
   ) {
     if (
       !userNavigationPermissions.find(obj => 
-        obj.navigationId === navigation.id && obj.permissionName.includes('delete')
+        obj.navigationGroupId === navigation.groupId && obj.permissionName.includes('delete')
       )
     ) {
       throw new ForbiddenException();
@@ -129,24 +135,24 @@ export class NavigationValidatorService {
    * Valid navigation business rules.
    * 
    * @param navigationDto The navigation to insert or update.
-   * @param navigationId The navigation id (optional).
-   * @throws {NotFoundException} If `navigationDto.parentId` is not found in the database.
+   * @param dbNavigation The navigation from database (optional).
+   * @throws {NotFoundException} If `navigationDto.parentGroupId` is not found in the database.
    * @throws {NotFoundException} If `navigationDto.navigationTypeId` is not found in the database.
    * @throws {BadRequestException} If `navigationDto` type is a button and parent is not a menu or a redirect-button.
    * @throws {BadRequestException} If `navigationDto` type is a component and parent is not a dialog-button or a redirect-button without nav bar.
    * @throws {BadRequestException} If `navigationDto.name` is already used by sister navigations.
-   * @throws {BadRequestException} If `navigationDto.parentId` is equal to `navigationId`.
+   * @throws {BadRequestException} If `navigationDto.parentGroupId` is equal to `navigationGroupId`.
    * @throws {BadRequestException} If `navigationDto` parent is found in the descendants of navigation to update.
    * @throws {BadRequestException} If `navigationDto.showIconOnly` is true and `navigationDto.icon` is empty.
    */
   async validNavigationDto(
     navigationDto: UpdateNavigationDto,
-    navigationId?: string
+    dbNavigation?: Navigation
   ) {
-    if(navigationDto.parentId) {
+    if (navigationDto.parentGroupId) {
       let parentNavigation = await this._navigationRepository.findOne({
-        where: { 
-          id: navigationDto.parentId,
+        where: {
+          groupId: navigationDto.parentGroupId,
           deletedDate: IsNull(),
         },
         relations: [
@@ -157,7 +163,7 @@ export class NavigationValidatorService {
       });
     
       if (!parentNavigation) {
-        throw new NotFoundException(`Parent ${navigationDto.parentId} doesn't exist.`)
+        throw new NotFoundException(`Parent with group id ${navigationDto.parentGroupId} doesn't exist.`)
       }
       parentNavigation.children = parentNavigation.children.filter(child => !child.deletedDate);
 
@@ -203,19 +209,18 @@ export class NavigationValidatorService {
       
       if (navigationDto.displayLabel) {
         navigationDto['name'] = navigationDto.displayLabel?.toLowerCase()?.replace(/ /g, "-");
-        
-        const sisterNavigations = parentNavigation.children.filter(child => child.id !== navigationId);
+        const sisterNavigations = parentNavigation.children.filter(child => child.groupId !== dbNavigation?.groupId);
         if (sisterNavigations?.find(navigation => navigation.name ===  navigationDto['name'])) {
           throw new BadRequestException('A sister navigation has already this name.');
         }
       }
 
-      if (navigationId) {
-        if (navigationId === navigationDto.parentId) {
+      if (dbNavigation) {
+        if (dbNavigation.groupId === navigationDto.parentGroupId) {
           throw new BadRequestException('Parent cannot be same navigation');
         }
 
-        await this.checkIfIsADescendant(navigationId, navigationDto.parentId);
+        await this.checkIfIsADescendant(dbNavigation.groupId, navigationDto.parentGroupId);
       }
 
       if (navigationDto.showIconOnly && !navigationDto.icon) {
@@ -229,32 +234,53 @@ export class NavigationValidatorService {
   /**
    * Check if given navigation is in descendants of other navigation.
    * 
-   * @param navigationId The navigation with descendants.
-   * @param parentId The navigation to check.
+   * @param navigationGroupId The navigation with descendants.
+   * @param parentGroupId The navigation to check.
    */
-  async checkIfIsADescendant(navigationId: string, parentId: string) {
+  async checkIfIsADescendant(navigationGroupId: string, parentGroupId: string) {
 
     const rows = await this._navigationRepository.query(
       `
       WITH RECURSIVE descendants AS (
-        SELECT id
+        SELECT "groupId"
         FROM ${process.env.DB_SCHEMA}.navigation
-        WHERE "parentId" = $1
+        WHERE "parentGroupId" = $1
         UNION ALL
-        SELECT n.id
+        SELECT n."groupId"
         FROM ${process.env.DB_SCHEMA}.navigation n
-        JOIN descendants d ON n."parentId" = d.id
+        JOIN descendants d ON n."parentGroupId" = d."groupId"
       )
       SELECT 1
       FROM descendants
-      WHERE id = $2
+      WHERE "groupId" = $2
       LIMIT 1
       `,
-      [navigationId, parentId],
+      [navigationGroupId, parentGroupId],
     );
 
     if (rows.length) {
       throw new BadRequestException('Parent cannot be a descendant');
+    }
+  }
+
+  /**
+   * Valid permission to publish navigation.
+   * 
+   * User must have 'edit' permission on the navigation to publish it.
+   * 
+   * @param navigationGroupId The navigation group id to publish.
+   * @param userNavigationPermissions The user's navigation permissions.
+   */
+  validPublishPermission(
+    navigationGroupId: string,
+    userNavigationPermissions: NavigationPermissions
+  ) {
+    if (
+      !userNavigationPermissions.find(obj => 
+        obj.navigationGroupId === navigationGroupId && obj.permissionName.includes('edit')
+      )
+    ) {
+      throw new ForbiddenException();
     }
   }
 

@@ -54,12 +54,12 @@ export class NavigationController {
     @UserId() userId: string,
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    await this._navigationValidatorService.validEditPermission(
+    const dbNavigation = await this._navigationValidatorService.validEditPermission(
       id,
       updateNavigationDto,
       userNavigationPermissions
     );
-    await this._navigationValidatorService.validNavigationDto(updateNavigationDto, id);
+    await this._navigationValidatorService.validNavigationDto(updateNavigationDto, dbNavigation);
     return this._navigationService.updateNavigation(id, updateNavigationDto, userId);
   }
 
@@ -90,4 +90,47 @@ export class NavigationController {
     return this._navigationService.removeNavigation(navigation, userId);
   }
 
+  @Get('publish/:navigationGroupId')
+  async publishNavigation(
+    @Param('navigationGroupId') navigationGroupId: string,
+    @UserId() userId: string,
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
+  ) {
+    this._navigationValidatorService.validPublishPermission(
+      navigationGroupId,
+      userNavigationPermissions
+    );
+    return this._navigationService.publishNavigation(navigationGroupId, userId);
+  }
+
+  @Post('publish-all')
+  async publishAllNavigations(
+    @Body() navigationGroupIds: Array<string>,
+    @UserId() userId: string,
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
+  ) {
+    for (const groupId of navigationGroupIds) {
+      this._navigationValidatorService.validPublishPermission(
+        groupId,
+        userNavigationPermissions
+      );
+
+      this._navigationService.publishNavigation(groupId, userId);
+    }
+
+    return { message: 'Navigations published succesfully.'}
+  }
+
+  @Get('cancel/:navigationGroupId')
+  async cancelNavigationChanges(
+    @Param('navigationGroupId') navigationGroupId: string,
+    @UserId() userId: string,
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
+  ) {
+    this._navigationValidatorService.validPublishPermission(
+      navigationGroupId,
+      userNavigationPermissions
+    );
+    return this._navigationService.cancelNavigationChanges(navigationGroupId, userId);
+  }
 }

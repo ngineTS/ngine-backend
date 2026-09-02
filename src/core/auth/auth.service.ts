@@ -121,7 +121,7 @@ export class AuthService {
       sub: string, 
       userEmail: string
       userNavigationPermissions: Array<{
-        navigationId: string;
+        navigationGroupId: string;
         permissionName: string;
       }>
     }
