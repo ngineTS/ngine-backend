@@ -27,9 +27,10 @@ export class NavigationController {
       createNavigationDto,
       userNavigationPermissions
     );
-    await this._navigationValidatorService.validNavigationDto(createNavigationDto);
+    const parentNavigation = await this._navigationValidatorService.validNavigationDto(createNavigationDto);
     return this._navigationService.saveNavigation(
       createNavigationDto,
+      parentNavigation!,
       userId,
     );
   }

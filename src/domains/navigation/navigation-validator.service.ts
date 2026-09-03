@@ -149,8 +149,9 @@ export class NavigationValidatorService {
     navigationDto: UpdateNavigationDto,
     dbNavigation?: Navigation
   ) {
+    let parentNavigation: Navigation | null = null;
     if (navigationDto.parentGroupId) {
-      let parentNavigation = await this._navigationRepository.findOne({
+      parentNavigation = await this._navigationRepository.findOne({
         where: {
           groupId: navigationDto.parentGroupId,
           deletedDate: IsNull(),
@@ -229,6 +230,8 @@ export class NavigationValidatorService {
       
       //TODO: Valid and external link input based on on nav type
     }
+
+    return parentNavigation;
   }
 
   /**

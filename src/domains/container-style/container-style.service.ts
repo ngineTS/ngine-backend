@@ -37,11 +37,14 @@ export class ContainerStyleService {
   /**
    * Create object container style based on default value.
    * 
+   * If object belongs to a menu then hide border and background color.
+   * 
    * @param refId The object id.
+   * @param isInsideMenu Boolean to identify is object belong to a menu (ex: navigation inside navigation bar)
    * @returns The container style saved.
    * @throws {NotFoundException} If default container style not found.
    */
-  async createObjectDefaultContainerStyle(refId: string) {
+  async createObjectDefaultContainerStyle(refId: string, isInsideMenu = false) {
     const defaultContainerStyle = await this.geDefaultContainerStyle();
 
     if (!defaultContainerStyle) {
@@ -50,6 +53,14 @@ export class ContainerStyleService {
 
     const { id, ...objectContainerStyle } = defaultContainerStyle;
     objectContainerStyle.refId = refId;
+
+    if (isInsideMenu) {
+      objectContainerStyle.isBackgroundTransparent = true;
+      objectContainerStyle.isBorderBottomHidden = true;
+      objectContainerStyle.isBorderLeftHidden = true;
+      objectContainerStyle.isBorderRightHidden = true;
+      objectContainerStyle.isBorderTopHidden = true;
+    }
 
     return this._containerStyleRepository.save(objectContainerStyle);
   }

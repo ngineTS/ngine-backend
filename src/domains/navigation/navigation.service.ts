@@ -413,11 +413,13 @@ export class NavigationService {
    * 4. If navigation is a menu button then create menu.
    * 
    * @param createNavigationDto The navigation to save.
+   * @param parentNavigation The parent navigation.
    * @param userId The user id from request.
    * @returns The navigation saved.
    */
   async saveNavigation(
     createNavigationDto: CreateNavigationDto,
+    parentNavigation: Navigation,
     userId: string,
   ): Promise<Navigation> {
     /* 1 */
@@ -438,8 +440,9 @@ export class NavigationService {
     const navigationSaved = await this._navigationRepository.save(createNavigationDto);
 
     /* 2. */
+    const isInsideMenu = parentNavigation.menu ? true : false;
     await this._containerLayoutService.createObjectContainerLayout({ refId: navigationSaved.id });
-    await this._containerStyleService.createObjectDefaultContainerStyle(navigationSaved.id);
+    await this._containerStyleService.createObjectDefaultContainerStyle(navigationSaved.id, isInsideMenu);
     await this._typographyStyleService.createObjectDefaultTypographyStyle(navigationSaved.id);
 
     /* 3. */
