@@ -23,7 +23,7 @@ export class CustomTableService {
     if (orderBy && order) {
       return this._dataSource.createQueryBuilder()
       .select('*')
-      .from(`custom_table.${tableName}`, 't')
+      .from(`${process.env.DB_SCHEMA}.${tableName}`, 't')
       .where('t."navigationId" = :navigationId', { navigationId })
       .orderBy(`"${orderBy}"`, order)
       .execute();
@@ -31,7 +31,7 @@ export class CustomTableService {
 
     return this._dataSource.createQueryBuilder()
       .select('*')
-      .from(`custom_table.${tableName}`, 't')
+      .from(`${process.env.DB_SCHEMA}.${tableName}`, 't')
       .where('t."navigationId" = :navigationId', { navigationId })
       .execute();
   }
@@ -46,7 +46,7 @@ export class CustomTableService {
   async addTableRow(tableName: string, payload: any) {
     return this._dataSource.createQueryBuilder()
       .insert()
-      .into(`custom_table.${tableName}`)
+      .into(`${process.env.DB_SCHEMA}.${tableName}`)
       .values(payload)
       .execute();
   }
@@ -61,7 +61,7 @@ export class CustomTableService {
    */
   async updateTableRow(tableName: string, id: string, payload: any) {
     return this._dataSource.createQueryBuilder()
-      .update(`custom_table.${tableName}`)
+      .update(`${process.env.DB_SCHEMA}.${tableName}`)
       .set(payload)
       .where("id = :id", { id: id })
       .execute();
@@ -77,7 +77,7 @@ export class CustomTableService {
   async deleteTableRow(tableName: string, id: string) {
     return this._dataSource.createQueryBuilder()
       .delete()
-      .from(`custom_table.${tableName}`)
+      .from(`${process.env.DB_SCHEMA}.${tableName}`)
       .where("id = :id", { id: id })
       .execute();
   }

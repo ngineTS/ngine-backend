@@ -80,7 +80,7 @@ export class CustomTableRoleGuard implements CanActivate {
   ): Promise<string> {
     const navigationIdAsArray = await this._datasource.createQueryBuilder()
       .select('"navigationId"')
-      .from(`custom_table.${tableName}`, 't')
+      .from(`${process.env.DB_SCHEMA}.${tableName}`, 't')
       .where("id = :id", { id: recordId })
       .take(1)
       .execute();
