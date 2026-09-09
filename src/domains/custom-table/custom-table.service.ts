@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
 
@@ -21,19 +21,27 @@ export class CustomTableService {
     order: 'ASC' | 'DESC' | undefined
   ) {
     if (orderBy && order) {
-      return this._dataSource.createQueryBuilder()
-      .select('*')
-      .from(`${process.env.DB_SCHEMA}.${tableName}`, 't')
-      .where('t."navigationId" = :navigationId', { navigationId })
-      .orderBy(`"${orderBy}"`, order)
-      .execute();
+      try {
+        return await this._dataSource.createQueryBuilder()
+        .select('*')
+        .from(`${process.env.DB_SCHEMA}.${tableName}`, 't')
+        .where('t."navigationId" = :navigationId', { navigationId })
+        .orderBy(`"${orderBy}"`, order)
+        .execute();
+      } catch (error) {
+        throw new BadRequestException(`Error occurred while fetching content for table ${tableName}: ${error.message}`);
+      }
     }
 
-    return this._dataSource.createQueryBuilder()
-      .select('*')
-      .from(`${process.env.DB_SCHEMA}.${tableName}`, 't')
-      .where('t."navigationId" = :navigationId', { navigationId })
-      .execute();
+    try {
+      return await this._dataSource.createQueryBuilder()
+        .select('*')
+        .from(`${process.env.DB_SCHEMA}.${tableName}`, 't')
+        .where('t."navigationId" = :navigationId', { navigationId })
+        .execute();
+    } catch (error) {
+      throw new BadRequestException(`Error occurred while fetching content for table ${tableName}: ${error.message}`);
+    }
   }
 
   /**
@@ -44,11 +52,15 @@ export class CustomTableService {
    * @returns The record saved.
    */
   async addTableRow(tableName: string, payload: any) {
-    return this._dataSource.createQueryBuilder()
-      .insert()
-      .into(`${process.env.DB_SCHEMA}.${tableName}`)
-      .values(payload)
-      .execute();
+    try {
+      return await this._dataSource.createQueryBuilder()
+        .insert()
+        .into(`${process.env.DB_SCHEMA}.${tableName}`)
+        .values(payload)
+        .execute();
+    } catch (error) {
+      throw new BadRequestException(`Error occurred while adding row to table ${tableName}: ${error.message}`);
+    }
   }
 
   /**
@@ -60,11 +72,15 @@ export class CustomTableService {
    * @returns An UpdateResult response.
    */
   async updateTableRow(tableName: string, id: string, payload: any) {
-    return this._dataSource.createQueryBuilder()
-      .update(`${process.env.DB_SCHEMA}.${tableName}`)
-      .set(payload)
-      .where("id = :id", { id: id })
-      .execute();
+    try {
+      return await this._dataSource.createQueryBuilder()
+        .update(`${process.env.DB_SCHEMA}.${tableName}`)
+        .set(payload)
+        .where("id = :id", { id: id })
+        .execute();
+    } catch (error) {
+      throw new BadRequestException(`Error occurred while updating row in table ${tableName}: ${error.message}`);
+    }
   }
 
   /**
@@ -75,11 +91,15 @@ export class CustomTableService {
    * @returns A DeleteResult response.
    */
   async deleteTableRow(tableName: string, id: string) {
-    return this._dataSource.createQueryBuilder()
-      .delete()
-      .from(`${process.env.DB_SCHEMA}.${tableName}`)
-      .where("id = :id", { id: id })
-      .execute();
+    try {
+      return await this._dataSource.createQueryBuilder()
+        .delete()
+        .from(`${process.env.DB_SCHEMA}.${tableName}`)
+        .where("id = :id", { id: id })
+        .execute();
+    } catch (error) {
+      throw new BadRequestException(`Error occurred while deleting row from table ${tableName}: ${error.message}`);
+    }
   }
   
 }
