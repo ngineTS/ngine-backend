@@ -156,6 +156,37 @@ export class UserService {
   }
 
   /**
+   * Find the authenticated user and active roles.
+   *
+   * @param userId The user id from the authentication token.
+   * @returns The authenticated user without its password.
+   */
+  async findCurrentUser(userId: string) {
+    const user = await this._userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect(
+        'user.userRoles',
+        'userRoles',
+        'userRoles.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'userRoles.role',
+        'role',
+        'role.deletedDate IS NULL'
+      )
+      .where('user.id = :userId', { userId })
+      .andWhere('user.deletedDate IS NULL')
+      .getOne();
+
+    if (!user) {
+      throw new NotFoundException(`User id ${userId} not found.`);
+    }
+
+    const { password, ...userInfo } = user;
+    return userInfo;
+  }
+
+  /**
    * Update user properties.
    * 
    * @param id The user id.
