@@ -1,14 +1,14 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
 
 export class CreateUserDto {
 
-    @IsOptional()
+    @IsNotEmpty()
     @IsString()
-    name?: string;
+    name: string;
 
-    @IsOptional()
+    @IsNotEmpty()
     @IsString()
-    lastName?: string;
+    lastName: string;
 
     @IsNotEmpty()
     @IsString()
@@ -21,4 +21,8 @@ export class CreateUserDto {
     @IsOptional()
     @IsBoolean()
     isDisabled?: boolean;
+
+    @IsOptional()
+    @IsUUID()
+    roleId?: string;
 }

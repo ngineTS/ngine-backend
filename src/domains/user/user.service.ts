@@ -27,34 +27,29 @@ export class UserService {
   ) { }
 
   /**
-   * Create User.
+   * Create user.
    * 
    * 1. Validate email address
    * 2. Create hash password and save user.
-   * 3. If first user of the app then assign him super admin role.
-   * 4. Sign in and return access token.
+   * 3. If first user of the app then assign him super admin role then sign in.
+   * 4. Else, if a specific role is provided, assign it to the user, else assign guest role then sign in.
    * 
    * @param createUserDto The user payload.
    * @returns Sign in response.
+   * @throws {BadRequestException} If role is not assigned to any pack.
    */
   async createUser(createUserDto: CreateUserDto) {
-    /* 1. */
-    createUserDto.emailAddress = createUserDto.emailAddress.toLowerCase();
-    const userExists = await this._userRepository.findOne({
-      where: { emailAddress: createUserDto.emailAddress }
-    });
-    if (userExists) {
-      throw new BadRequestException('This email address already exists.');
-    }
+    /* 1. Validate email address. */
+    await this.validateEmailAddress(createUserDto.emailAddress);
 
-    /* 2. */
+    /* 2. Create hash password and save user. */
     const pass = createUserDto.password;
     const saltOrRounds = 10;
     const hash = await bcrypt.hash(createUserDto.password, saltOrRounds);
     createUserDto.password = hash;
     const userSaved = await this._userRepository.save(createUserDto);
 
-    /* 3. */
+    /* 3. If first user of the app then assign him super admin role.*/
     const users = await this._userRepository.find({ 
       where: { 
         name: Not('guest'),
@@ -62,20 +57,83 @@ export class UserService {
       },
       take: 1,
     });
+    
     if (!users || users.length === 0) {
       const superAdminRole = await this._roleRepository.findOne({
         where: { name: 'super-admin' }
       });
+
       await this._userRoleRepository.save({
         userId: userSaved.id,
         roleId: superAdminRole?.id,
       })
-    }
 
-    /* 4. */
-    return await this._authService.signIn(createUserDto.emailAddress, pass);
+      return this._authService.signIn(createUserDto.emailAddress, pass);
+    }
+    
+    /* 4. Assign role to the user. */
+    await this.assignRoleToUser(userSaved.id, createUserDto.roleId);
+
+    return this._authService.signIn(createUserDto.emailAddress, pass);
   }
 
+  /**
+   * Validate email address.
+   * 
+   * @param emailAddress The email address to validate.
+   * @throws {BadRequestException} If email address already exists.
+   */
+  async validateEmailAddress(emailAddress: string) {
+    emailAddress = emailAddress.toLowerCase();
+
+    const userExists = await this._userRepository.findOne({
+      where: { emailAddress: emailAddress }
+    });
+
+    if (userExists) {
+      throw new BadRequestException('This email address already exists.');
+    }
+  }
+
+  /**
+   * Assign role from the authentication pack selected to the user.
+   * 
+   * If no role is provided, the guest role will be assigned to the user.
+   * 
+   * @param userId The id of the user created.
+   * @param roleId The id of the role to assign.
+   * @throws {BadRequestException} If role is not assigned to any pack.
+   * @throws {NotFoundException} If guest role is not found.
+   */
+  async assignRoleToUser(userId: string, roleId: string | undefined) {
+    if (roleId) {
+      const authPacks = await this._authService.getAuthPacks();
+      const roleExists = authPacks.find(pack => pack.roleId === roleId);
+
+      if (!roleExists) {
+        throw new BadRequestException('This role is not assigned to any pack');
+      }
+
+      await this._userRoleRepository.save({
+        userId: userId,
+        roleId: roleId,
+      });
+    }
+    else {
+      const guestRole = await this._roleRepository.findOne({
+        where: { name: 'guest' }
+      });
+
+      if (!guestRole) {
+        throw new NotFoundException('No guest role found.');
+      }
+
+      await this._userRoleRepository.save({
+        userId: userId,
+        roleId: guestRole?.id,
+      });
+    }
+  }
 
   /**
    * Find all users and their roles. Exclude guest user.

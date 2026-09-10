@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/domains/user/entities/user.entity';
-import { IsNull, Repository } from 'typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import { Request } from 'express';
 
 
@@ -13,7 +13,8 @@ export class AuthService {
   constructor(
     private _jwtService: JwtService,
     @InjectRepository(User)
-    private _userRepository: Repository<User>
+    private _userRepository: Repository<User>,
+    private _dataSource: DataSource
   ) {}
 
   /**
@@ -138,5 +139,27 @@ export class AuthService {
   private extractTokenFromHeader(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
+  }
+
+  async getAuthPacks(): Promise<
+    Array<{
+      id: string;
+      navigationId: string;
+      name: string;
+      description: string;
+      order: number;
+      price: number;
+      currency: string;
+      roleId: string;
+      stripePriceId: string;
+      isRecurringPayment: boolean;
+      interval: string;
+      isFree: boolean;
+    }>
+  > {
+    return this._dataSource.createQueryBuilder()
+      .select('*')
+      .from(`${process.env.DB_SCHEMA}.auth_pack`, 'authPack')
+      .execute();
   }
 }
