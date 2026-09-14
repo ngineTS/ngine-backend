@@ -9,7 +9,7 @@ export class StripePaymentService {
   
   constructor() {
     this.stripe = new Stripe(
-      'sk_test',
+      'test-k',
     );
   }
 
