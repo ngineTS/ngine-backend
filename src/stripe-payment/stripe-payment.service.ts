@@ -6,9 +6,10 @@ import Stripe = require('stripe');
 @Injectable()
 export class StripePaymentService {
 
+  
   constructor() {
     this.stripe = new Stripe(
-      'sk_test_51UDQgLDIdQiJDqfHXQWKq16s4rOiXzeRSCWdchPImiTo502cFfgWfyRPCCiXIc5yGpo9tGSivlGAElOadHMpr77w00EPA2o2kG',
+      'sk_test',
     );
   }
 
