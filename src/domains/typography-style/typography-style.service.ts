@@ -37,7 +37,7 @@ export class TypographyStyleService {
   /**
    * Create object typography style based on default value.
    * 
-   * @params The object id.
+   * @param The object id.
    * @returns The typography style saved.
    * @throws {NotFoundException} If default typography style not found.
    */

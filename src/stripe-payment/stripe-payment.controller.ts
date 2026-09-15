@@ -6,25 +6,8 @@ import { Request, Response } from 'express';
 
 @Controller('stripe-payment')
 export class StripePaymentController {
+  
   constructor(private readonly stripePaymentService: StripePaymentService) {}
-
-  /**
-   * Create Stripe checkout session by returning an url where user will fill payment information.
-   * 
-   * @param priceId The stripe reference of the product.
-   * @param roleId The role id selected by user.
-   * @param userId The user id.
-   * @returns The session url to process to the payment.
-   */
-  @Public()
-  @Get('create-checkout-session/:priceId/:roleId')
-  create(
-    @Param('priceId') priceId: string,
-    @Param('roleId') roleId: string,
-    @UserId() userId: string
-  ) {
-    return this.stripePaymentService.createCheckoutSession(priceId, userId, roleId);
-  }
 
   /**
    * This endpoint is called by stripe platform on event during the checkout/payment process.

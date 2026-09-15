@@ -48,7 +48,7 @@ export class AuthService {
    * @param password The user password.
    * @returns The JWT authentication token.
    */
-  async signIn(emailAddress: string, password: string): Promise<any> {
+  async signIn(emailAddress: string, password: string) {
     const user = await this._userRepository.findOne({
         where: { 
           emailAddress: emailAddress.toLowerCase(),

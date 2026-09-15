@@ -7,6 +7,7 @@ import { PasswordRecovery } from 'src/core/password-recovery/entities/password-r
 import { AuthService } from 'src/core/auth/auth.service';
 import { UserRole } from '../user-role/entities/user-role.entity';
 import { Role } from '../role/entities/role.entity';
+import { StripePaymentService } from 'src/stripe-payment/stripe-payment.service';
 
 @Module({
   imports:[
@@ -18,6 +19,6 @@ import { Role } from '../role/entities/role.entity';
     ])
   ],
   controllers: [UserController],
-  providers: [UserService, AuthService]
+  providers: [UserService, AuthService, StripePaymentService]
 })
 export class UserModule {}

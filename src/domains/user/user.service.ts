@@ -9,6 +9,7 @@ import { PasswordRecovery } from 'src/core/password-recovery/entities/password-r
 import { AuthService } from 'src/core/auth/auth.service';
 import { UserRole } from '../user-role/entities/user-role.entity';
 import { Role } from '../role/entities/role.entity';
+import { StripePaymentService } from 'src/stripe-payment/stripe-payment.service';
 
 
 @Injectable()
@@ -23,7 +24,8 @@ export class UserService {
     private _roleRepository: Repository<Role>,
     @InjectRepository(PasswordRecovery)
     private _passwordRecoveryRepository: Repository<PasswordRecovery>,
-    private _authService: AuthService
+    private _authService: AuthService,
+    private _stripePaymentService: StripePaymentService
   ) { }
 
   /**
@@ -31,8 +33,8 @@ export class UserService {
    * 
    * 1. Validate email address
    * 2. Create hash password and save user.
-   * 3. If first user of the app then assign him super admin role then sign in.
-   * 4. Else, if a specific role is provided, assign it to the user, else assign guest role then sign in.
+   * 3. Assign role to user up to the different scenarios.
+   * 4. Return checkout url or sign in response.
    * 
    * @param createUserDto The user payload.
    * @returns Sign in response.
@@ -47,33 +49,16 @@ export class UserService {
     const saltOrRounds = 10;
     const hash = await bcrypt.hash(createUserDto.password, saltOrRounds);
     createUserDto.password = hash;
+    createUserDto.emailAddress = createUserDto.emailAddress.toLowerCase();
     const userSaved = await this._userRepository.save(createUserDto);
-
-    /* 3. If first user of the app then assign him super admin role.*/
-    const users = await this._userRepository.find({ 
-      where: { 
-        name: Not('guest'),
-        emailAddress: Not(createUserDto.emailAddress)
-      },
-      take: 1,
-    });
     
-    if (!users || users.length === 0) {
-      const superAdminRole = await this._roleRepository.findOne({
-        where: { name: 'super-admin' }
-      });
+    /* 3. Assign role to the user. */
+    const resp = await this.assignRoleToUser(userSaved.id, createUserDto.roleId);
 
-      await this._userRoleRepository.save({
-        userId: userSaved.id,
-        roleId: superAdminRole?.id,
-      });
-
-      return this._authService.signIn(createUserDto.emailAddress, pass);
+    /* 4. */
+    if (resp?.url) {
+      return resp;
     }
-    
-    /* 4. Assign role to the user. */
-    await this.assignRoleToUser(userSaved.id, createUserDto.roleId);
-
     return this._authService.signIn(createUserDto.emailAddress, pass);
   }
 
@@ -96,35 +81,78 @@ export class UserService {
   }
 
   /**
-   * Assign role from the authentication pack selected to the user.
+   * Assign super admin role to user if it is the first user of the app.
    * 
-   * /!\ Only role associated to free packs can be assigned here. 
-   * The roles not assigned to free pack can only be assigned after Stripe payment.
-   * 
-   * If no role is provided, the guest role will be assigned to the user.
-   * 
-   * @param userId The id of the user created.
-   * @param roleId The id of the role to assign.
-   * @throws {BadRequestException} If role is not assigned to any free pack.
-   * @throws {NotFoundException} If guest role is not found.
+   * @param userId the user id.
    */
-  async assignRoleToUser(userId: string, roleId: string | undefined) {
-    if (roleId) {
-      const authPacks = await this._authService.getAuthPacks();
-      const roleExistsInFreePack = authPacks.find(pack => {
-        pack.roleId === roleId 
-        && (pack.isFree || pack.price === 0)
+  async assignAdminRoleIfFirstUser(userId: string) {
+    const users = await this._userRepository.find({ 
+      where: { 
+        name: Not('guest'),
+        id: Not(userId)
+      },
+      take: 1,
+    });
+    
+    if (!users || users.length === 0) {
+      const superAdminRole = await this._roleRepository.findOne({
+        where: { name: 'super-admin' }
       });
-
-      if (!roleExistsInFreePack) {
-        throw new BadRequestException('This role is not assigned to any pack');
-      }
 
       await this._userRoleRepository.save({
         userId: userId,
-        roleId: roleId,
+        roleId: superAdminRole?.id,
       });
     }
+  }
+
+  /**
+   * Assign role to the user.
+   * If payment is required then don't assign role, instead return checkout session url.
+   * 
+   * Process:
+   * - CASE 1: User is first user of the app.
+   * - CASE 2: If role is associated to a free pack -> assign role to user.
+   * - CASE 3: If role is associated to a paid pack -> create stripe checkout session.
+   * - CASE 4: No role is passed -> assign guest role to the user.
+   * 
+   * @param userId The id of the user created.
+   * @param roleId The id of the role to assign.
+   * @returns the checkout url if case 3, else null. 
+   * @throws {BadRequestException} If role is not assigned to any pack.
+   * @throws {NotFoundException} If guest role is not found.
+   */
+  async assignRoleToUser(userId: string, roleId: string | undefined) {
+    let checkoutUrl: { url: string | null } | null = null;
+
+    /* CASE 1 */
+    await this.assignAdminRoleIfFirstUser(userId);
+    
+    if (roleId) {
+      const authPacks = await this._authService.getAuthPacks();
+      const associatedPack = authPacks.find(pack => pack.roleId === roleId);
+
+      if (!associatedPack) {
+        throw new BadRequestException(`Role id ${roleId} This role is not assigned to any pack`);
+      }
+
+      /* CASE 2 */
+      if (associatedPack.isFree || associatedPack.price === 0) {
+        await this._userRoleRepository.save({
+          userId: userId,
+          roleId: roleId,
+        });
+      }
+      /* CASE 3 */ 
+      else {
+        checkoutUrl = await this._stripePaymentService.createCheckoutSession(
+          associatedPack.stripePriceId,
+          associatedPack.roleId,
+          userId
+        );
+      }
+    }
+    /* CASE 4 */
     else {
       const guestRole = await this._roleRepository.findOne({
         where: { name: 'guest' }
@@ -139,6 +167,8 @@ export class UserService {
         roleId: guestRole?.id,
       });
     }
+
+    return checkoutUrl;
   }
 
   /**
