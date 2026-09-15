@@ -4,13 +4,15 @@ import { Request, Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRole } from 'src/domains/user-role/entities/user-role.entity';
 import { Repository } from 'typeorm';
+import { AuthService } from 'src/core/auth/auth.service';
 
 @Injectable()
 export class StripePaymentService {
 
   constructor(
     @InjectRepository(UserRole)
-    private _userRoleRepository: Repository<UserRole>
+    private _userRoleRepository: Repository<UserRole>,
+    private _authService: AuthService
   ) {
     this.stripe = new Stripe(
       'test-k',
@@ -29,12 +31,18 @@ export class StripePaymentService {
    * @param roleId The role id selected by user.
    * @param userId The user id.
    * @returns The session url to process to the payment.
+   * @throws {BadRequestException} if no auth pack is found for given role and price id.
    */
   async createCheckoutSession(
     priceId: string,
     userId: string,
     roleId: string
   ) {
+    const authPack = await this._authService.getAuthPackByPriceAndRoleId(priceId, roleId);
+    if (!authPack || authPack.length === 0) {
+      throw new BadRequestException(`No authentication pack found for price id ${priceId} and role id ${roleId}.`)
+    }
+
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [{price: priceId, quantity: 1 }],

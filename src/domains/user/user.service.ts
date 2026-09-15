@@ -66,7 +66,7 @@ export class UserService {
       await this._userRoleRepository.save({
         userId: userSaved.id,
         roleId: superAdminRole?.id,
-      })
+      });
 
       return this._authService.signIn(createUserDto.emailAddress, pass);
     }
@@ -98,19 +98,25 @@ export class UserService {
   /**
    * Assign role from the authentication pack selected to the user.
    * 
+   * /!\ Only role associated to free packs can be assigned here. 
+   * The roles not assigned to free pack can only be assigned after Stripe payment.
+   * 
    * If no role is provided, the guest role will be assigned to the user.
    * 
    * @param userId The id of the user created.
    * @param roleId The id of the role to assign.
-   * @throws {BadRequestException} If role is not assigned to any pack.
+   * @throws {BadRequestException} If role is not assigned to any free pack.
    * @throws {NotFoundException} If guest role is not found.
    */
   async assignRoleToUser(userId: string, roleId: string | undefined) {
     if (roleId) {
       const authPacks = await this._authService.getAuthPacks();
-      const roleExists = authPacks.find(pack => pack.roleId === roleId);
+      const roleExistsInFreePack = authPacks.find(pack => {
+        pack.roleId === roleId 
+        && (pack.isFree || pack.price === 0)
+      });
 
-      if (!roleExists) {
+      if (!roleExistsInFreePack) {
         throw new BadRequestException('This role is not assigned to any pack');
       }
 
