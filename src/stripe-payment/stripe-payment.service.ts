@@ -1,11 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import Stripe = require('stripe');
 import { Request, Response } from 'express';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserRole } from 'src/domains/user-role/entities/user-role.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class StripePaymentService {
 
-  constructor() {
+  constructor(
+    @InjectRepository(UserRole)
+    private _userRoleRepository: Repository<UserRole>
+  ) {
     this.stripe = new Stripe(
       'test-k',
     );
@@ -52,7 +58,7 @@ export class StripePaymentService {
    * @param res The response to return.
    * @returns A confirmation of webhook reception.
    */
-  handleWebhook(req: Request, res: Response) {
+  async handleWebhook(req: Request, res: Response) {
     const sig = req.headers['stripe-signature'];
     let event: Stripe.Event;
     
@@ -71,9 +77,16 @@ export class StripePaymentService {
       const userId = session.client_reference_id;
       const roleId = session.metadata?.roleId;
 
-      if (session.payment_status === 'paid') {
-        //TODO: add check to be sure roleId is not already assigned to user when saving.
-        //await this.usersService.assignRole(userId, roleId);
+      if (userId && roleId && session.payment_status === 'paid') {
+        const userRoles = await this._userRoleRepository.find({
+          where: { userId: userId }
+        });
+
+        if (userRoles.find(obj => obj.roleId === roleId)) {
+          throw new BadRequestException(`Role id ${roleId} already assigned to the user`);
+        }
+
+        await this._userRoleRepository.save({ userId: userId, roleId: roleId });
       }
     }
 

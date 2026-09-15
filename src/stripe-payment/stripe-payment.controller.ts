@@ -38,8 +38,8 @@ export class StripePaymentController {
    * 2. Login to stripe from terminal: `stripe login`
    * 3. Send event: `stripe listen --forward-to localhost:3000/api/stripe-payment/webhook`
    * 4. Trigger event: `stripe trigger checkout_session.completed 
-   *    --override checkout_session:client_reference_id=user_123
-   *    --override checkout_session:"metadata[roleId]"=role_456`
+   *    --override checkout_session:client_reference_id=6b8effdb-1bf6-4415-8389-41be38051b24
+   *    --override checkout_session:"metadata[roleId]"=6b8effdb-1bf6-4415-8389-41be38051b24`
    *
    */
   @Public()
