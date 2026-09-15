@@ -16,6 +16,14 @@ export class StripePaymentService {
   successUrl = "http://localhost:4200/success";
   cancelUrl = "http://localhost:4200/cancel"
 
+  /**
+   * Create Stripe checkout session by returning an url where user will fill payment information.
+   * 
+   * @param priceId The stripe reference of the product.
+   * @param roleId The role id selected by user.
+   * @param userId The user id.
+   * @returns The session url to process to the payment.
+   */
   async createCheckoutSession(
     priceId: string,
     userId: string,
@@ -32,5 +40,43 @@ export class StripePaymentService {
     });
 
     return { url: session.url };
+  }
+
+  /**
+   * Assign roleId to the user if payment has been successful.
+   * 
+   * 1. Get signature and body from the request and valid them against webhook secret key
+   * 2. If event is a payment successful then assign roleId to the user.
+   * 
+   * @param req The request information.
+   * @param res The response to return.
+   * @returns A confirmation of webhook reception.
+   */
+  handleWebhook(req: Request, res: Response) {
+    const sig = req.headers['stripe-signature'];
+    let event: Stripe.Event;
+    
+    try {
+      event = this.stripe.webhooks.constructEvent(
+        req.body,
+        sig!,
+        'whsec'
+      );
+    } catch (err) {
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const userId = session.client_reference_id;
+      const roleId = session.metadata?.roleId;
+
+      if (session.payment_status === 'paid') {
+        //TODO: add check to be sure roleId is not already assigned to user when saving.
+        //await this.usersService.assignRole(userId, roleId);
+      }
+    }
+
+    res.json({ received: true });
   }
 }
