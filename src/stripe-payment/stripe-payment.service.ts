@@ -19,8 +19,8 @@ export class StripePaymentService {
 
   stripe: Stripe;
   currency = "USD";
-  successUrl = "http://localhost:4200/success";
-  cancelUrl = "http://localhost:4200/cancel"
+  successUrl = "http://localhost:4200/stripe-success";
+  cancelUrl = "http://localhost:4200/stripe-cancel"
 
   /**
    * Create Stripe checkout session by returning an url where user will fill payment information.
