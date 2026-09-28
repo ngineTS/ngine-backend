@@ -36,7 +36,8 @@ export class StripePaymentService {
   async createCheckoutSession(
     priceId: string,
     userId: string,
-    roleId: string
+    roleId: string,
+    isRecurringPayment: boolean,
   ) {
     if (!priceId) {
       throw new BadRequestException('stripe price id is required to initiate checkout session');
@@ -53,9 +54,9 @@ export class StripePaymentService {
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [{price: priceId, quantity: 1 }],
-      client_reference_id: userId,
-      metadata: { roleId: roleId },
-      mode: 'payment',
+      metadata: { userId, roleId },
+      subscription_data: { metadata: { userId, roleId }},
+      mode: isRecurringPayment ? 'subscription' : 'payment',
       success_url: this.successUrl,
       cancel_url: this.cancelUrl,
     });
@@ -89,7 +90,7 @@ export class StripePaymentService {
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
-      const userId = session.client_reference_id;
+      const userId = session.metadata?.userId;
       const roleId = session.metadata?.roleId;
 
       if (userId && roleId && session.payment_status === 'paid') {
@@ -103,6 +104,17 @@ export class StripePaymentService {
 
         await this._userRoleRepository.save({ userId: userId, roleId: roleId });
       }
+    }
+
+    if (event.type = 'invoice.payment_failed') {
+      const invoice = event.data.object as Stripe.Invoice;
+      const userId = invoice.parent?.subscription_details?.metadata?.userId;
+      const roleId = invoice.parent?.subscription_details?.metadata?.roleId;
+
+      await this._userRoleRepository.update(
+        { userId: userId, roleId: roleId },
+        { deletedDate: new Date(), deletedBy: '00000000-0000-0000-0000-000000000000' }
+      )
     }
 
     res.json({ received: true });

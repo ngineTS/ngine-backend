@@ -148,7 +148,8 @@ export class UserService {
         checkoutUrl = await this._stripePaymentService.createCheckoutSession(
           associatedPack.stripePriceId,
           associatedPack.roleId,
-          userId
+          userId,
+          associatedPack.isRecurringPayment
         );
       }
     }
