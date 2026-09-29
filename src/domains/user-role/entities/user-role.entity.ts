@@ -15,6 +15,9 @@ export class UserRole {
     roleId: string;
 
     @Column()
+    stripeSubscriptionId: string;
+
+    @Column()
     createdBy: string;
 
     @Column()

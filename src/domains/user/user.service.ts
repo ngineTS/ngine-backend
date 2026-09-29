@@ -201,11 +201,22 @@ export class UserService {
   async findCurrentUser(userId: string) {
     const user = await this._userRepository
       .createQueryBuilder('user')
-      .leftJoinAndSelect(
+      .leftJoin(
         'user.userRoles',
         'userRoles',
         'userRoles.deletedDate IS NULL'
       )
+      .addSelect([
+        'userRoles.id',
+        'userRoles.userId',
+        'userRoles.roleId',
+        'userRoles.createdBy',
+        'userRoles.createdDate',
+        'userRoles.updatedBy',
+        'userRoles.updatedDate',
+        'userRoles.deletedBy',
+        'userRoles.deletedDate',
+      ])
       .leftJoinAndSelect(
         'userRoles.role',
         'role',

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Req, Res } from '@nestjs/common';
+import { Controller, Get, Post, Param, Req, Res, Delete } from '@nestjs/common';
 import { StripePaymentService } from './stripe-payment.service';
 import { Public } from 'src/core/auth/auth.guard';
 import { UserId } from 'src/core/decorators/user.decorator';
@@ -29,6 +29,14 @@ export class StripePaymentController {
   @Post('webhook')
   handleWebhook(@Req() req: Request, @Res() res: Response) {
     this.stripePaymentService.handleWebhook(req, res);
+  }
+
+  @Delete('cancel/:roleId')
+  cancelSubscription(
+    @UserId() userId: string,
+    @Param('roleId') roleId: string,
+  ) {
+    return this.stripePaymentService.cancelUserSubscription(userId, roleId);
   }
 
 }
