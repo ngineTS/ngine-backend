@@ -3,7 +3,7 @@ import Stripe = require('stripe');
 import { Request, Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRole } from 'src/domains/user-role/entities/user-role.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 
 @Injectable()
 export class StripePaymentService {
@@ -163,7 +163,8 @@ export class StripePaymentService {
     const userRole = await this._userRoleRepository.findOne({
       where: {
         userId: userId,
-        roleId: userId
+        roleId: roleId,
+        deletedDate: IsNull(),
       }
     });
 
@@ -177,7 +178,7 @@ export class StripePaymentService {
       });
     }
     catch(error) {
-      return new BadRequestException(`Error to cancel subscription ${userRole.stripeSubscriptionId}`);
+      throw new BadRequestException(`Error to cancel subscription ${userRole.stripeSubscriptionId}`);
     }
 
     return this._userRoleRepository.update(

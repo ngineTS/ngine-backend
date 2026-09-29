@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Req, Res, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Param, Req, Res, Delete, Body } from '@nestjs/common';
 import { StripePaymentService } from './stripe-payment.service';
 import { Public } from 'src/core/auth/auth.guard';
 import { UserId } from 'src/core/decorators/user.decorator';
@@ -8,6 +8,38 @@ import { Request, Response } from 'express';
 export class StripePaymentController {
   
   constructor(private readonly stripePaymentService: StripePaymentService) {}
+
+  /**
+   * Create a new subscription.
+   * 
+   * If recurring payment subscription then cancel old one and create checkout session
+   * else simply create checkout session.
+   * 
+   * @param userId The user id.
+   * @param checkoutSessionPayload The checkout session payload
+   * @returns 
+   */
+  @Post('new-subscription')
+  async createNewSubscription(
+    @UserId() userId: string,
+    @Body() checkoutSessionPayload: {
+      priceId: string;
+      roleId: string;
+      isReccurringPayment: boolean;
+    }
+  ) {
+    if (checkoutSessionPayload.isReccurringPayment) {
+      await this.stripePaymentService.cancelUserSubscription(userId, checkoutSessionPayload.roleId);
+    }
+
+    return this.stripePaymentService.createCheckoutSession(
+      checkoutSessionPayload.priceId,
+      userId,
+      checkoutSessionPayload.roleId,
+      checkoutSessionPayload.isReccurringPayment,
+    );
+    
+  }
 
   /**
    * This endpoint is called by stripe platform on event during the checkout/payment process.
