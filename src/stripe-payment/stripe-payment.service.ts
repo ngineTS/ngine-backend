@@ -80,7 +80,7 @@ export class StripePaymentService {
    * 
    * @param req The request information.
    * @param res The response to return.
-   * @returns A confirmation of webhook reception.ç
+   * @returns A confirmation of webhook reception.
    * @throws {BadRequestException} If role is already assign to the user when session completed.
    */
   async handleWebhook(req: Request, res: Response) {
