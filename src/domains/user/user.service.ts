@@ -50,6 +50,8 @@ export class UserService {
     const hash = await bcrypt.hash(createUserDto.password, saltOrRounds);
     createUserDto.password = hash;
     createUserDto.emailAddress = createUserDto.emailAddress.toLowerCase();
+    createUserDto['createdDate'] = new Date();
+    createUserDto['updatedDate'] = new Date();
     const userSaved = await this._userRepository.save(createUserDto);
     
     /* 3. Assign role to the user. */
@@ -145,12 +147,18 @@ export class UserService {
       }
       /* CASE 3 */ 
       else {
-        checkoutUrl = await this._stripePaymentService.createCheckoutSession(
-          associatedPack.stripePriceId,
-          associatedPack.roleId,
-          userId,
-          associatedPack.isRecurringPayment
-        );
+        try {
+          checkoutUrl = await this._stripePaymentService.createCheckoutSession(
+            associatedPack.stripePriceId,
+            associatedPack.roleId,
+            userId,
+            associatedPack.isRecurringPayment
+          );
+        }
+        catch(error) {
+          this._userRepository.delete(userId);
+          throw new BadRequestException(error);
+        }
       }
     }
     /* CASE 4 */

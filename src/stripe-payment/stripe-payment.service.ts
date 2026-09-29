@@ -51,15 +51,20 @@ export class StripePaymentService {
       throw new BadRequestException('role id is requiredd to initiate checkout session');
     }
 
-    const session = await this.stripe.checkout.sessions.create({
+    const checkoutSessionPayload: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ['card'],
       line_items: [{price: priceId, quantity: 1 }],
       metadata: { userId, roleId },
-      subscription_data: { metadata: { userId, roleId }},
       mode: isRecurringPayment ? 'subscription' : 'payment',
       success_url: this.successUrl,
       cancel_url: this.cancelUrl,
-    });
+    }
+
+    if (isRecurringPayment) {
+      checkoutSessionPayload.subscription_data = { metadata: { userId, roleId }};
+    }
+
+    const session = await this.stripe.checkout.sessions.create(checkoutSessionPayload);
 
     return { url: session.url };
   }
@@ -167,13 +172,18 @@ export class StripePaymentService {
     }
 
     try {
-      return await this.stripe.subscriptions.update(userRole.stripeSubscriptionId, {
+      await this.stripe.subscriptions.update(userRole.stripeSubscriptionId, {
         cancel_at_period_end: true,
       });
     }
     catch(error) {
       return new BadRequestException(`Error to cancel subscription ${userRole.stripeSubscriptionId}`);
     }
+
+    return this._userRoleRepository.update(
+      { userId: userId, roleId: roleId },
+      { isCancelled: true }
+    );
   }
 
 }
