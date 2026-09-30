@@ -164,15 +164,4 @@ export class AuthService {
       .execute();
   }
 
-  async getAuthPackByPriceAndRoleId(
-    priceId: string,
-    roleId: string
-  ): ReturnType<typeof this.getAuthPacks> {
-    return this._dataSource.createQueryBuilder()
-      .select('*')
-      .from(`${process.env.DB_SCHEMA}.auth_pack`, 'authPack')
-      .where('authPack.stripePriceId = :priceId', { priceId })
-      .andWhere('authPack.roleId = :roleId', { roleId })
-      .execute();
-  }
 }

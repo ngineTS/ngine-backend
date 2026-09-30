@@ -9,36 +9,12 @@ export class StripePaymentController {
   
   constructor(private readonly stripePaymentService: StripePaymentService) {}
 
-  /**
-   * Create a new subscription.
-   * 
-   * If recurring payment subscription then cancel old one and create checkout session
-   * else simply create checkout session.
-   * 
-   * @param userId The user id.
-   * @param checkoutSessionPayload The checkout session payload
-   * @returns 
-   */
-  @Post('new-subscription')
+  @Get('change-subscription/:packId')
   async createNewSubscription(
     @UserId() userId: string,
-    @Body() checkoutSessionPayload: {
-      priceId: string;
-      roleId: string;
-      isReccurringPayment: boolean;
-    }
+    @Param('packId') packId: string,
   ) {
-    if (checkoutSessionPayload.isReccurringPayment) {
-      await this.stripePaymentService.cancelUserSubscription(userId, checkoutSessionPayload.roleId);
-    }
-
-    return this.stripePaymentService.createCheckoutSession(
-      checkoutSessionPayload.priceId,
-      userId,
-      checkoutSessionPayload.roleId,
-      checkoutSessionPayload.isReccurringPayment,
-    );
-    
+     return this.stripePaymentService.changeSubscription(userId, packId);
   }
 
   /**

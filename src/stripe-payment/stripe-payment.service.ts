@@ -3,7 +3,8 @@ import Stripe = require('stripe');
 import { Request, Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRole } from 'src/domains/user-role/entities/user-role.entity';
-import { IsNull, Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
+import { AuthService } from 'src/core/auth/auth.service';
 
 @Injectable()
 export class StripePaymentService {
@@ -11,6 +12,7 @@ export class StripePaymentService {
   constructor(
     @InjectRepository(UserRole)
     private _userRoleRepository: Repository<UserRole>,
+    private _authService: AuthService,
   ) {
     this.stripe = new Stripe(
       process.env.STRIPE_SECRET_KEY!,
@@ -184,6 +186,47 @@ export class StripePaymentService {
     return this._userRoleRepository.update(
       { userId: userId, roleId: roleId },
       { isCancelled: true }
+    );
+  }
+
+  /**
+   * Change user subscription.
+   * 
+   * If recurring payment pack then cancel old one and create checkout session
+   * else simply create checkout session.
+   * 
+   * @param userId The user id.
+   * @param packId The pack id.
+   * @returns The session url to process to the payment.
+   * @throws {NotFoundException} If pack id not found.
+   */
+  async changeSubscription(userId: string, packId: string) {
+    const authPacks = await this._authService.getAuthPacks();
+    const wishedPack = authPacks.find(pack => pack.id === packId);
+
+    if (!wishedPack) {
+      throw new NotFoundException(`Pack ${packId} doesn't exist.`)
+    }
+
+    if (wishedPack.isRecurringPayment) {
+      //here we assume user has only one subscription at a time
+      const currentUserSubscription = await this._userRoleRepository.findOne({
+        where: {
+          userId: userId,
+          stripeSubscriptionId: Not(IsNull())
+        },
+      })
+
+      if (currentUserSubscription) {
+        await this.cancelUserSubscription(userId, currentUserSubscription.roleId)
+      }
+    }
+
+    return this.createCheckoutSession(
+      wishedPack.stripePriceId,
+      userId,
+      wishedPack.roleId,
+      wishedPack.isRecurringPayment
     );
   }
 
