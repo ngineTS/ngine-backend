@@ -160,6 +160,7 @@ export class AuthService {
     return this._dataSource.createQueryBuilder()
       .select('*')
       .from(`${process.env.DB_SCHEMA}.auth_pack`, 'authPack')
+      .orderBy('"order"', 'ASC')
       .execute();
   }
 
