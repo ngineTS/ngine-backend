@@ -12,6 +12,11 @@ import { RolesGuard } from 'src/core/guards/role.guard';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @Get('me')
+  findCurrentUser(@UserId() userId: string) {
+    return this.userService.findCurrentUser(userId);
+  }
+
   @Permission('view')
   @UseGuards(RolesGuard)
   @Get()

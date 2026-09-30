@@ -21,6 +21,11 @@ export class AuthController {
     return this.authService.guestSignIn();
   }
 
+  @Get('auth-packs')
+  getAuthPacks() {
+    return this.authService.getAuthPacks();
+  }
+
   @Post('refresh')
   refresh(@Req() req: Request) {
     return this.authService.refresh(req);
