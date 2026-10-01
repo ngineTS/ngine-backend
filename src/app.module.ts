@@ -47,6 +47,8 @@ import { AppSetting } from './domains/app-setting/entities/app-setting.entity';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { StripePaymentModule } from './domains/stripe-payment/stripe-payment.module';
+import { BannerModule } from './domains/banner/banner.module';
+import { Banner } from './domains/banner/entities/banner.entity';
 
 
 
@@ -92,7 +94,8 @@ import { StripePaymentModule } from './domains/stripe-payment/stripe-payment.mod
         ContainerLayout,
         ContainerStyle,
         TypographyStyle,
-        AppSetting
+        AppSetting,
+        Banner
       ]
     }),
     ThrottlerModule.forRoot([
@@ -133,7 +136,8 @@ import { StripePaymentModule } from './domains/stripe-payment/stripe-payment.mod
     ContainerStyleModule,
     TypographyStyleModule,
     AppSettingModule,
-    StripePaymentModule
+    StripePaymentModule,
+    BannerModule
   ],
   controllers: [AppController],
   providers: [
