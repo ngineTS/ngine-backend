@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Navigation } from "src/domains/navigation/entities/navigation.entity";
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Banner {
@@ -26,4 +27,8 @@ export class Banner {
 
     @Column()
     url: string;
+
+    @OneToOne(() => Navigation, navigation => navigation)
+    @JoinColumn({ name: 'navigationId', referencedColumnName: 'id'})
+    navigation: Navigation;
 }

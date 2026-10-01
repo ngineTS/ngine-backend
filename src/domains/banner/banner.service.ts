@@ -19,7 +19,8 @@ export class BannerService {
 
   findAll() {
     return this._bannerRepository.find({
-      order: { startDate: 'DESC' }
+      relations: ['navigation'],
+      order: { startDate: 'DESC' },
     });
   }
 

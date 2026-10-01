@@ -134,4 +134,9 @@ export class NavigationController {
     );
     return this._navigationService.cancelNavigationChanges(navigationGroupId, userId);
   }
+
+  @Get('redirect-buttons')
+  getRedirectButtons() {
+    return this._navigationService.getRedirectButtons();
+  }
 }
