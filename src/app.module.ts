@@ -46,7 +46,7 @@ import { AppSettingModule } from './domains/app-setting/app-setting.module';
 import { AppSetting } from './domains/app-setting/entities/app-setting.entity';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { StripePaymentModule } from './stripe-payment/stripe-payment.module';
+import { StripePaymentModule } from './domains/stripe-payment/stripe-payment.module';
 
 
 

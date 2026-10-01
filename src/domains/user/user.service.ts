@@ -9,7 +9,7 @@ import { PasswordRecovery } from 'src/core/password-recovery/entities/password-r
 import { AuthService } from 'src/core/auth/auth.service';
 import { UserRole } from '../user-role/entities/user-role.entity';
 import { Role } from '../role/entities/role.entity';
-import { StripePaymentService } from 'src/stripe-payment/stripe-payment.service';
+import { StripePaymentService } from 'src/domains/stripe-payment/stripe-payment.service';
 
 
 @Injectable()
