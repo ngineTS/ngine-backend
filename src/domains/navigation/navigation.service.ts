@@ -905,4 +905,25 @@ export class NavigationService {
       ]
     });    
   }
+
+  /**
+   * Get navigations where navigation type is redirect-button only.
+   * 
+   * @returns A promise of array of navigations.
+   */
+  async getRedirectButtons() {
+    return this._navigationRepository.find({
+      relations: ['navigationType'],
+      where: {
+        isDraft: true,
+        navigationType: {
+          name: 'redirect-button'
+        }
+      },
+      order: {
+        displayLabel: 'ASC'
+      }
+    })
+  }
+  
 }
