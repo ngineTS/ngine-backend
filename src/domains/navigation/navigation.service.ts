@@ -909,12 +909,13 @@ export class NavigationService {
   /**
    * Get navigations where navigation type is redirect-button only.
    * 
-   * @returns A promise of array of navigations.
+   * @returns A promise of an array of navigations.
    */
   async getRedirectButtons() {
     return this._navigationRepository.find({
       relations: ['navigationType'],
       where: {
+         deletedDate: IsNull(),
         isDraft: true,
         navigationType: {
           name: 'redirect-button'
