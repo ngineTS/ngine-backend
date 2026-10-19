@@ -12,7 +12,10 @@ export class Navigation {
     id: string;
 
     @Column()
-    parentId: string;
+    groupId: string;
+
+    @Column()
+    parentGroupId: string;
 
     @Column()
     name: string;
@@ -42,6 +45,12 @@ export class Navigation {
     url: string;
 
     @Column()
+    isDraft: boolean;
+
+    @Column({ type: 'text', array: true })
+    unpublishedChanges: Array<string>
+
+    @Column()
     createdBy: string;
 
     @Column()
@@ -64,11 +73,11 @@ export class Navigation {
     navigationType: NavigationType;
 
     @OneToMany(() => Navigation, navigation => navigation.parent)
-    @JoinColumn({name: 'id', referencedColumnName: 'parentId'})
+    @JoinColumn({name: 'groupId', referencedColumnName: 'parentGroupId'})
     children: Navigation[];
 
     @ManyToOne(() => Navigation, navigation => navigation.children)
-    @JoinColumn({name: 'parentId', referencedColumnName: 'id' })
+    @JoinColumn({name: 'parentGroupId', referencedColumnName: 'groupId' })
     parent: Navigation;
 
     @OneToOne(() => Menu, menu => menu)

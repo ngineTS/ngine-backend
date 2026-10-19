@@ -45,7 +45,7 @@ export class RoleNavigationPermissionService {
     /* store rnp ids removed by user */
     for (const dbRnp of dbRoleNavigationPermissions) {
       if (!createRoleNavigationPermissionDtoArray.find(rnp => 
-        dbRnp.navigationId === rnp["navigationId"] && dbRnp.permissionId === rnp["permissionId"]
+        dbRnp.navigationGroupId === rnp["navigationGroupId"] && dbRnp.permissionId === rnp["permissionId"]
       )) {
         roleNavigationPermissionIdsToDelete.push(dbRnp.id);
       }
@@ -53,7 +53,7 @@ export class RoleNavigationPermissionService {
     /* store rnp payloads added by user */
     for (const rnp of createRoleNavigationPermissionDtoArray) {
       if (!dbRoleNavigationPermissions.find(dbRnp => 
-        rnp["navigationId"] === dbRnp.navigationId && rnp["permissionId"] === dbRnp.permissionId
+        rnp["navigationGroupId"] === dbRnp.navigationGroupId && rnp["permissionId"] === dbRnp.permissionId
       )) {
         roleNavigationPermissionsPayloadToSave.push(rnp);
       }

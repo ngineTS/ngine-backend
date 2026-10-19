@@ -15,6 +15,12 @@ export class UserRole {
     roleId: string;
 
     @Column()
+    stripeSubscriptionId: string;
+
+    @Column()
+    isCancelled: boolean;
+
+    @Column()
     createdBy: string;
 
     @Column()

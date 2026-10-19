@@ -8,7 +8,7 @@ export class TypographyStyleController {
    
   @Get('default')
   getTypographyStyle() {
-    return this._typographyStyleService.geDefaultTypographyStyle();
+    return this._typographyStyleService.getDefaultTypographyStyle();
   }
 
 }

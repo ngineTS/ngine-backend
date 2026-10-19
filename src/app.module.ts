@@ -44,6 +44,12 @@ import { ContainerStyleModule } from './domains/container-style/container-style.
 import { TypographyStyleModule } from './domains/typography-style/typography-style.module';
 import { AppSettingModule } from './domains/app-setting/app-setting.module';
 import { AppSetting } from './domains/app-setting/entities/app-setting.entity';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { StripePaymentModule } from './domains/stripe-payment/stripe-payment.module';
+import { BannerModule } from './domains/banner/banner.module';
+import { Banner } from './domains/banner/entities/banner.entity';
+
 
 
 @Module({
@@ -88,9 +94,27 @@ import { AppSetting } from './domains/app-setting/entities/app-setting.entity';
         ContainerLayout,
         ContainerStyle,
         TypographyStyle,
-        AppSetting
+        AppSetting,
+        Banner
       ]
     }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000, // 1 second
+        limit: 5,  // 5 requests per second
+      },
+      {
+        name: 'medium',
+        ttl: 10000, // 10 seconds
+        limit: 25,
+      },
+      {
+        name: 'long',
+        ttl: 60000, // 1 minute
+        limit: 100,
+      },
+    ]),
     NavigationModule,
     NavigationTypeModule,
     QuillEditorModule,
@@ -111,9 +135,17 @@ import { AppSetting } from './domains/app-setting/entities/app-setting.entity';
     ContainerLayoutModule,
     ContainerStyleModule,
     TypographyStyleModule,
-    AppSettingModule
+    AppSettingModule,
+    StripePaymentModule,
+    BannerModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+     {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

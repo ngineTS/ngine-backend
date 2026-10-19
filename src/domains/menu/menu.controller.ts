@@ -15,23 +15,36 @@ export class MenuController {
   ) {}
 
   @Get('create-navigation-bar/:navigationId/:navigationBarType')
-  createNavigationBar(
+  async createNavigationBar(
     @Param('navigationId', new ParseUUIDPipe()) navigationId: string,
     @Param('navigationBarType') navigationBarType: 'vertical' | 'horizontal',
     @UserId() userId: string,
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    this._menuValidatorService.validPermissionToCreateNavigationBar(navigationId, userNavigationPermissions);
-    return this._menuService.createNavigationBar(navigationId, userId, navigationBarType);
+    const navigation = await this._menuValidatorService.validPermissionToCreateNavigationBar(navigationId, userNavigationPermissions);
+    return this._menuService.createNavigationBar(navigation, userId, navigationBarType);
   }
 
+  // /!\ This API is also used to modify navigation style properties, not only menu ones.
   @Patch(':refId')
   async updateStyleProperties(
     @Param('refId') refId: string,
     @Body() updateMenuDto: UpdateMenuDto,
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    await this._menuValidatorService.validPermissionToUpdateStyle(refId, userNavigationPermissions);
-    return this._menuService.updateStyleProperties(refId, updateMenuDto);
+    const navigation = await this._menuValidatorService.validPermissionToUpdateStyle(refId, userNavigationPermissions);
+    return this._menuService.updateStyleProperties(navigation, refId, updateMenuDto);
   }
+
+  @Patch('default/:refId')
+  async updateDefaultStyleProperties(
+    @Param('refId') refId: string,
+    @Body() updateDefaultStyleDto: UpdateMenuDto,
+    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
+  ) {
+    await this._menuValidatorService.validPermissionToUpdateDefaultStyle(userNavigationPermissions);
+    return this._menuService.updateDefaultStyleProperties(refId, updateDefaultStyleDto);
+  }
+
+
 }

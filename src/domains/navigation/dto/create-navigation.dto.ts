@@ -4,7 +4,7 @@ export class CreateNavigationDto {
 
     @IsNotEmpty()
     @IsUUID()
-    parentId: string;
+    parentGroupId: string;
 
     @IsNotEmpty()
     @IsString()

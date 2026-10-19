@@ -1,5 +1,5 @@
 export type NavigationPermissions = Array<{
-  navigationId: string;
+  navigationGroupId: string;
   permissionName: string;
   navigationTypeName: string;
 }>

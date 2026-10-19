@@ -1,0 +1,50 @@
+import { Controller, Get, Post, Param, Req, Res, Delete, Body } from '@nestjs/common';
+import { StripePaymentService } from './stripe-payment.service';
+import { Public } from 'src/core/auth/auth.guard';
+import { UserId } from 'src/core/decorators/user.decorator';
+import { Request, Response } from 'express';
+
+@Controller('stripe-payment')
+export class StripePaymentController {
+  
+  constructor(private readonly stripePaymentService: StripePaymentService) {}
+
+  @Get('change-subscription/:packId')
+  async createNewSubscription(
+    @UserId() userId: string,
+    @Param('packId') packId: string,
+  ) {
+     return this.stripePaymentService.changeSubscription(userId, packId);
+  }
+
+  /**
+   * This endpoint is called by stripe platform on event during the checkout/payment process.
+   * It used to insure the payment has been successfull before assigning roleId to the user.
+   * 
+   * In production, the route name has to be registered in your stripe dashboard.
+   * 
+   * In local, to test this enpoint, follow the below process:
+   * 
+   * 1. Install Stripe CLI: `npm i -g @ stripe/cli @ latest`
+   * 2. Login to stripe from terminal: `stripe login`
+   * 3. Send event: `stripe listen --forward-to localhost:3000/api/stripe-payment/webhook`
+   * 4. Trigger event: `stripe trigger checkout.session.completed 
+   *    --override checkout_session:client_reference_id=6b8effdb-1bf6-4415-8389-41be38051b24
+   *    --override checkout_session:"metadata[roleId]"=6b8effdb-1bf6-4415-8389-41be38051b24`
+   *
+   */
+  @Public()
+  @Post('webhook')
+  handleWebhook(@Req() req: Request, @Res() res: Response) {
+    this.stripePaymentService.handleWebhook(req, res);
+  }
+
+  @Delete('cancel/:roleId')
+  cancelSubscription(
+    @UserId() userId: string,
+    @Param('roleId') roleId: string,
+  ) {
+    return this.stripePaymentService.cancelUserSubscription(userId, roleId);
+  }
+
+}

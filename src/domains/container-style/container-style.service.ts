@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ContainerStyle } from './entities/container-style.entity';
 import { Repository } from 'typeorm';
 import { UpdateContainerStyleDto } from './dto/update-container-style.dto';
+import { CreateContainerStyleDto } from './dto/create-container-style.dto';
 
 @Injectable()
 export class ContainerStyleService {
@@ -11,6 +12,16 @@ export class ContainerStyleService {
     @InjectRepository(ContainerStyle)
     private _containerStyleRepository: Repository<ContainerStyle>
   ) { }
+
+  /**
+   * Create container style.
+   * 
+   * @param createContainerStyleDto The container style properties.
+   * @returns The container style saved.
+   */
+  createObjectContainerStyle(createContainerStyleDto: CreateContainerStyleDto) {
+    return this._containerStyleRepository.save(createContainerStyleDto);
+  }
 
   /**
    * Get default container style.
@@ -24,13 +35,16 @@ export class ContainerStyleService {
   }
 
   /**
-   * Create object containr style based on default value.
+   * Create object container style based on default value.
+   * 
+   * If object belongs to a menu then hide border and background color.
    * 
    * @param refId The object id.
+   * @param isInsideMenu Boolean to identify is object belong to a menu (ex: navigation inside navigation bar)
    * @returns The container style saved.
    * @throws {NotFoundException} If default container style not found.
    */
-  async createObjectContainerStyle(refId: string) {
+  async createObjectDefaultContainerStyle(refId: string, isInsideMenu = false) {
     const defaultContainerStyle = await this.geDefaultContainerStyle();
 
     if (!defaultContainerStyle) {
@@ -39,6 +53,14 @@ export class ContainerStyleService {
 
     const { id, ...objectContainerStyle } = defaultContainerStyle;
     objectContainerStyle.refId = refId;
+
+    if (isInsideMenu) {
+      objectContainerStyle.isBackgroundTransparent = true;
+      objectContainerStyle.isBorderBottomHidden = true;
+      objectContainerStyle.isBorderLeftHidden = true;
+      objectContainerStyle.isBorderRightHidden = true;
+      objectContainerStyle.isBorderTopHidden = true;
+    }
 
     return this._containerStyleRepository.save(objectContainerStyle);
   }

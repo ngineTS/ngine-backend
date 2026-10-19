@@ -1,47 +1,76 @@
-import { ForbiddenException, Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Menu } from "./entities/menu.entity";
 import { Repository } from "typeorm";
 import { NavigationPermissions } from "src/core/models/navigation-permissions.interface";
+import { Navigation } from "../navigation/entities/navigation.entity";
 
 @Injectable()
 export class MenuValidatorService {
 
   constructor(
     @InjectRepository(Menu)
-    private _menuRepository: Repository<Menu>
+    private _menuRepository: Repository<Menu>,
+    @InjectRepository(Navigation)
+    private _navigationRepository: Repository<Navigation>
   ) { }
 
   /**
    * Valid permission to update style.
    * 
-   * Check if user has edit permission for given refId.
-   * If not, it's possible refId is a menu and not a navigation so we fetch the menu from table by refId.
-   * If there is no menu, refId is a navigation so we throw Forbidden error.
-   * If there is a menu then we compare user navigation permissions with menu navigationId.
+   * Check if user has edit permission on given ref for below scenario:
+   * - ref is a menu --> check against associated navigation
+   * - ref is a navigation --> check against it
    * 
-   * @param refId The refId (menu id or navigation id).
+   * @param refId The ref id (menu id or navigation id).
    * @param userNavigationPermissions The user navigation permissions.
-   * @throws {ForbiddenException} If the user doesn't have edit permission on the navigation associated to the ref.
+   * @returns The navigation associated to the ref id.
+   * @throws {NotFoundException} If ref is not found.
+   * @throws {ForbiddenException} If navigation associated to the ref is a 'publish' record.
+   * @throws {ForbiddenException} If user doesn't have edit permission on the navigation associated to the ref.
    */
   async validPermissionToUpdateStyle(
     refId: string,
     userNavigationPermissions: NavigationPermissions
-  ) {
-    if(
-      !userNavigationPermissions.find(obj => obj.navigationId === refId)
-        ?.permissionName.includes('edit')
-    ) {
+  ): Promise<Navigation> {
+    const navigation = await this._navigationRepository.findOneBy({ id: refId });
+
+    //if ref is a menu
+    if (!navigation) {
       const menu = await this._menuRepository.findOneBy({ id: refId });
-      if (!menu) {
-        throw new ForbiddenException();
+      const navigationAssociatedToMenu = await this._navigationRepository.findOneBy({ id: menu?.navigationId });
+
+      if (!navigationAssociatedToMenu) {
+        throw new NotFoundException(`Navigation associated to menu with id ${refId} has not been found.`);
       }
-      else if (
-        !userNavigationPermissions.find(obj => obj.navigationId === menu.navigationId)
+
+      if (!navigationAssociatedToMenu?.isDraft) {
+        throw new ForbiddenException(`'Publish' record cannot be edited.`);
+      }
+
+      if (
+        !userNavigationPermissions.find(obj => obj.navigationGroupId === navigationAssociatedToMenu?.groupId)
           ?.permissionName.includes('edit')
       ) {
         throw new ForbiddenException();
       }
+
+      return navigationAssociatedToMenu;
+    }
+    //if ref is a navigation
+    else {
+      if (!navigation.isDraft) {
+        throw new ForbiddenException(`'Publish' record cannot be edited.`);
+      }
+
+      if (
+        !userNavigationPermissions.find(obj => obj.navigationGroupId === navigation.groupId)
+          ?.permissionName.includes('edit')
+      ) { 
+        throw new ForbiddenException();
+      }
+
+      return navigation;
     }
   }
 
@@ -50,15 +79,45 @@ export class MenuValidatorService {
    * 
    * @param navigationId The navigation id.
    * @param userNavigationPermissions The user navigation permissions.
-   * @throws {ForbiddenException} If user doesn't have 'add' access on navigation.
+   * @returns The navigation entity associated to the navigation id.
+   * @throws {NotFoundException} If navigation is not found.
+   * @throws {ForbiddenException} If user doesn't have 'edit' access on navigation.
+   * @this {ForbiddenException} If navigation is a 'publish' record.
    */
-  validPermissionToCreateNavigationBar(
+  async validPermissionToCreateNavigationBar(
     navigationId: string,
     userNavigationPermissions: NavigationPermissions
   ) {
+    const navigation = await this._navigationRepository.findOneBy({ id: navigationId });
+    if (!navigation) {
+      throw new NotFoundException(`Navigation with id ${navigationId} not found.`);
+    }
+
+    if (!navigation.isDraft) {
+      throw new ForbiddenException(`'Publish' record cannot be edited`);
+    }
+
     if (
-      !userNavigationPermissions.find(obj => obj.navigationId === navigationId)
-        ?.permissionName.includes('add')
+      !userNavigationPermissions.find(obj => obj.navigationGroupId === navigation.groupId)
+        ?.permissionName.includes('edit')
+    ) {
+      throw new ForbiddenException();
+    }
+
+    return navigation;
+  }
+
+  /**
+   * Valid permission to update default style.
+   * 
+   * User must have global edit permission to edit default style of the application.
+   * 
+   * @param userNavigationPermissions The user navigation permissions.
+   */
+  async validPermissionToUpdateDefaultStyle(userNavigationPermissions: NavigationPermissions) {
+    if (
+      !userNavigationPermissions.find(obj => obj.navigationGroupId === '00000000-0000-0000-0000-000000000000')
+        ?.permissionName.includes('edit')
     ) {
       throw new ForbiddenException();
     }

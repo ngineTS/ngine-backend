@@ -13,7 +13,7 @@ export class RoleNavigationPermission {
     roleId: string;
 
     @Column()
-    navigationId: string;
+    navigationGroupId: string;
 
     @Column()
     permissionId: string;
@@ -41,7 +41,7 @@ export class RoleNavigationPermission {
     permission: Permission;
 
     @OneToOne(() => Navigation, navigation => navigation)
-    @JoinColumn({name: 'navigationId', referencedColumnName: 'id'})
+    @JoinColumn({name: 'navigationGroupId', referencedColumnName: 'id'})
     navigation: Navigation;
 
     @ManyToOne(() => Role, role => role.roleNavigationPermissions)
